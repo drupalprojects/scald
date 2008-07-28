@@ -1,0 +1,4 @@
+Scald
+New social media platform from Chicago Technology Cooperative
+
+* Finish writing & import alpha
