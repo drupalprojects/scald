@@ -1,0 +1,70 @@
+<?php
+// $Id;
+
+/**
+ * @file
+ * Implementation of hook_install().
+ */
+ function mee_install() {
+   drupal_load('module', 'content');
+   content_notify('install', 'mee');
+   drupal_install_schema('mee');  
+ }
+
+/**
+ * Implementation of hook_uninstall().
+ */
+ function mee_uninstall() {
+   drupal_load('module', 'content');
+   content_notify('uninstall', 'mee');
+   drupal_uninstall_schema('mee');  
+ }
+
+/**
+ * Implementation of hook_disable().
+ */
+ function mee_disable() {
+   drupal_load('module', 'content');
+   content_notify('disable', 'mee');
+ }
+
+/**
+ * Add separate column for the required status
+ */
+function mee_update_6001() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("ALTER TABLE {mee_ressources} ADD required INT NOT NULL DEFAULT 0");
+      break;
+  }
+  return $ret;
+}
+
+/**
+ * Include the 'field' field in the primary key.
+ */
+function mee_update_6002() {
+  $ret = array();
+  $ret[] = update_sql("ALTER TABLE {mee_ressources} DROP PRIMARY KEY, ADD PRIMARY KEY(content_nid, atom_sid, field)");
+  return $ret;
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+	function mee_schema() {  
+	  $schema['mee_ressources'] = array(
+	    'fields' => array(
+	      'content_nid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+	      'atom_sid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+	      'field' => array('type' => 'varchar', 'length' => 31, 'not null' => TRUE, 'default' => ''),
+	      'weight' => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
+	      'required' => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
+	    ),
+	    'primary key' => array('content_nid', 'atom_sid', 'field'),
+	  );
+	
+	  return $schema;
+	}

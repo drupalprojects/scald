@@ -1,0 +1,353 @@
+Scald Provider API Documentation
+================================================================================
+
+Scald Core Version: 0.7
+Documentation Updated: 2009-05-05
+
+NOTE: For a general understanding of Scald's architecture, definitions of
+      various terms, or additional information about the use of Scald, please
+      reference docs/scald_overview.txt
+
+Contents
+--------
+1 Conventions
+2 Scald Hooks
+3 Scald Hook Example Implementations
+4 Scald Hook Execution Stack
+
+
+
+
+1 CONVENTIONS
+=============
+
+  Throughout this spec, various parameters or members will be marked as
+"Public", "Admin", or "Dev" (for instance the display title of the Unified
+Type).  Anything which is marked as "Public" will be visible to the average User
+of Scald.  Most items marked "Public" are also configurable by Admins (e.g. your
+"Really cool" Unified Type might get overriden to "Really stupid" in the Admin
+interface).  Finally, items marked "Dev" are not explicitly intended for display
+to Admins or the Public.
+
+
+
+
+2 SCALD HOOKS
+=============
+
+  Below are the function declarations for all Scald Core hooks grouped by Scald
+Provider type.  Hooks which are common to multiple types are listed in each
+section.  See "SCALD CORE HOOK EXAMPLE IMPLEMENTATIONS" for specifics about each
+hook.  For hooks with the $mode parameter, $mode will be one of: type, atom,
+context, transcoder, relationship, action.
+
+<?php
+
+// Type Provider Hooks
+function hook_scald_provider();
+function hook_scald_register_atom(&$atom, &$values, $mode);
+function hook_scald_update_atom(&$atom, &$values, $mode);
+function hook_scald_unregister_atom($atom, $mode);
+function hook_scald_fetch(&$atom, $mode);
+function hook_scald_prerender(&$atom, $mode);
+
+// Atom Provider Hooks
+function hook_scald_provider();
+function hook_scald_register_atom(&$atom, &$values $mode);
+function hook_scald_update_atom(&$atom, &$values, $mode);
+function hook_scald_unregister_atom($atom, $mode);
+function hook_scald_fetch(&$atom, $mode);
+function hook_scald_prerender(&$atom, $mode);
+function hook_scald_action(&$atom, $action, $mode);
+
+// Context Provider Hooks
+function hook_scald_provider();
+function hook_scald_prerender(&$atom, $context, $options, $mode);
+function hook_scald_render($atom, $context, $options);
+function hook_scald_rendered_to_sas_LANGUAGE($text);
+
+// Transcoder Provider Hooks
+function hook_scald_provider();
+function hook_scald_register_atom($atom, &$values, $mode);
+function hook_scald_update_atom($atom, &$values, $mode);
+function hook_scald_unregister_atom($atom, $mode);
+function hook_scald_prerender(&$atom, $mode);
+
+// Relationship Provider Hooks
+function hook_scald_provider();
+function hook_scald_register_atom(&$atom, &$values, $mode);
+function hook_scald_update_atom(&$atom, &$values, $mode);
+function hook_scald_unregister_atom($atom, $mode);
+
+// Action Provider Hooks
+function hook_scald_provider();
+function hook_scald_action(&$atom, $action, $mode);
+
+?>
+
+
+
+
+3 SCALD HOOK EXAMPLE IMPLEMENTATIONS
+====================================
+
+  Below are sample implementations for each of the Scald Core hooks.  Hooks
+which might be implemented by more than one type of Scald Provider are shown
+as if the implementing module advertised each possible type of Scald Provider.
+
+<?php
+/**
+ * Advertise what Scald Providers this module implements to Scald Core.
+ *
+ * A module can define zero or more Scald Providers of each Provider Type (more
+ *  than one slug/definition array can be included in each provider-type array).
+ *
+ * NOTE: Scald Context Providers: specifying formats for types is
+ *   only necessary if the Context is going to do something specific with the
+ *   data included in Scald Atoms of that type.  If no format is specified for
+ *   a given type by default, one can be specified in the Admin interface, but
+ *   it is not required.  In fact, it is discouraged because the more formats
+ *   that are specified for Scald Contexts, the more work the Transcoders need
+ *   to do.
+ *
+ * @return
+ *  A structured array which includes the required data for the Provisions
+ *   provided by the Scald Provider.  The array takes the format indicated
+ *   below.  Examples are provided in square brakets.
+ */
+function hook_scald_provider() {
+  return array(
+    'types'         => array(
+      'type-slug' => array(                                                                             // Dev
+        'title'               => t('Display title for the type. [Image]'),                              // Public
+        'description'         => t('A description of the Type. [Image files of most standard types.]'), // Admin
+        'description_default' => t('Default description for Atoms of this Type. [A photo or graphic]'), // Public
+        'thumbnail_source'    => drupal_get_path('module', 'scald') . '/thumb.jpg',                     // Public (the image itself)
+      ),
+      // More type slugs with their definition arrays here
+    ),
+
+    'atoms'         => array(
+      'type-slug' => array(                                   // Dev
+        t('Base Entity description. [Drupal Node titles.]'),  // Admin
+        // More Base Entity descriptions here
+      ),
+      // Additional type slugs & Base Entity descriptions arrays here
+    ),
+
+    'contexts'      => array(
+      'context-slug' => array(                                                                                // Dev
+        'title'           => t('Display title for the context. [Editor Representation]'),                     // Admin
+        'description'     => t('Description of the context. [What the user sees in the rich-text editor.]'),  // Admin
+        'render_language' => 'language-slug',                                                                 // Dev
+        'parseable'       => TRUE,                                                                            // Admin
+        'formats'         => array(
+          'type-slug' => 'format-slug',                                                                       // Dev
+          // Additional type-slug/format-slug pairs here
+        ),
+      ),
+      // Additional context slugs & definition arrays here
+    ),
+
+    'transcoders'   => array(
+      'transcoder-slug' => array(                                                                                     // Dev
+        'title'       => t('Display title for the transcoder. [Imagecache Preset X]'),                                // Admin
+        'description' => t('Description of transcoder. [Uses the Imagecache Preset to prepare images for display.]'), // Admin
+        'formats'     => array(
+          'type-slug' => 'format-slug',                                                                               // Dev
+          // Additional type-slug/format-slug pairs here
+        ),
+      ),
+      // Additional transcoder slugs & definition arrays here
+    ),
+
+    'relationships' => array(
+      'relationship-slug' => array(                                                                               // Dev
+        'title'         => t('Short relationship descriptor, left-to-right. [includes]'),                         // Public
+        'title_reverse' => t('Short relationship descriptor, right-to-left. [is included by]'),                   // Public
+        'description'   => t('Description of the nature of the relationship. [When one Atom includes another.]'), // Admin
+      ),
+      // Additional relationship slug & definition arrays here
+    ),
+
+    'actions'       => array(
+      'action-slug' => array(                                                                         // Dev
+        'title'       => t('Short verb-like action title. [edit]'),                                   // Public
+        'description' => t('In-depth description of the action. [Editing the details of an Atom.]'),  // Admin
+      ),
+      // Additional action slugs & definition arrays here
+    ),
+  );
+}
+
+
+
+/**
+ * Responds to an Atom's registration by modifying the Atom Object or taking
+ *  additional action.
+ *
+ * @param $atom
+ *  
+ * @param &$values
+ *  
+ * @param $mode
+ *  
+ * @return void
+ *  Nothing.  $atom and $values are modified directly.
+ */
+function hook_scald_register_atom(&$atom, &$values, $mode) {
+  switch ($mode) {
+    case 'type':
+      if (isset($values['foobar'])) {
+        // Insert the $atom->sid, $values['foobar'] into a {my_provider_table}
+
+        $atom->foobar = $values['foobar'];
+        unset($values['foobar']);
+        $values['type-specific-thingie'] = // something of relevance to a later-firing Provider.
+      }
+      break; // end 'type'
+
+    case 'atom':
+      $atom->title = // Some sort of a complicated lookup based on $atom->base_id or something
+      break; // end 'atom'
+    
+    case 'transcoder':
+      $scald_config = variable_get('scald_config', 0);
+      // Use the special $values key '@context' (set by Scald Core for each call
+      //  of this Hook) to determine the appropriate target format.
+      $target_format = $scald_config->contexts[$values['@context']]['type_format'][$atom->type]['file_format']
+
+      // Take $atom->file_source, transcode it, and store it and $atom->sid,
+      //  $atom->type, $values['@context'] and anything else necessary in
+      //  {my_transcoder_table} (or in the filesystem somewhere).
+
+      unset($values['@context']);
+      break; // end 'transcode';
+
+    case 'relationship':
+      // Analyze $atom and/or $values and see if any additional entries in
+      //  $atom->relationships['forward'] need to be made.  DO NOT write to
+      //  {scald_atom_relationships}; Scald Core handles that!
+      break; // end 'relationship'
+
+    default:
+      return;
+      break; // end default
+  }
+} // end hook_scald_register_atom()
+
+
+
+/**
+ *
+ */
+function hook_scald_update_atom(&$atom, &$values, $mode) {
+
+} // end hook_scald_update_atom()
+
+
+
+/**
+ *
+ */
+function hook_scald_unregister_atom($atom, $mode) {
+
+} // end hook_scald_unregister_atom()
+
+
+
+/**
+ *
+ */
+function hook_scald_fetch($atom, $mode) {
+  $atom->description    = 'description';
+  $atom->source_file    = 'source path';
+  $atom->thumbnail_file = 'thumbnail path';
+  $atom->base_entity    = node_load($atom->sid);  // Typically, for Atom Providers which are based on Drupal nodes, the $node object is attached to the $atom as the base_entity member.
+} // end hook_scald_fetch()
+
+
+
+/**
+ *
+ */
+function hook_scald_prerender(&$atom, $mode) {
+
+} // end hook_scald_prerender()
+
+
+
+/**
+ *
+ */
+function hook_scald_render($atom, $mode) {
+
+} // end hook_scald_render()
+
+
+
+/**
+ *
+ */
+function hook_scald_rendered_to_sas_LANGUAGE($text) {
+
+} // hook_scald_rendered_to_sas_LANGUAGE()
+
+
+
+/**
+ *
+ */
+function hook_scald_action(&$atom, $action, $mode) {
+
+} // end hook_scald_action()
+
+?>
+
+
+
+
+4 SCALD HOOK EXECUTION STACK
+============================
+
+  The order in which the hooks execute can be fairly important.  Each hook might
+add more information to the Atom object or potentially even remove some. Knowing
+when a given hook fires relative to others is important.  Note that each hook
+will be called for each module that implements it in turn.  The order in which
+the module's hooks are called is determined by their relative weight in the
+{system} table.
+
+  The following illustrate when each of the various hooks are called relative
+to one another.  Keep in mind that there is often prior and intervening code
+which could have a significant impact on the contents of $atom or the other
+variables being passed to the hooks.
+
+<?php
+system_modules_submit() [The form at /admin/build/modules is submitted]
+  -> {provider}_install() [Drupal hook]
+  -> {provider}_enable() [Drupal hook]
+  -> {provider}_scald_provider()
+  // @@@TODO: The mass-registration callback
+  // @@@TODO: The relationship calculation callback
+
+scald_render()
+  -> scald_fetch()
+    -> {type_provider}_scald_fetch($mode = 'type')
+    -> {atom_provider}_scald_fetch($mode = 'atom')
+  -> scald_prerender()
+    -> {type_provider}_scald_prerender($mode = 'type')
+    -> {atom_provider}_scald_prerender($mode = 'atom')
+    -> {transcoder_provider}_scald_prerender($mode = 'transcoder')
+    -> {context_provider}_scald_prerender($mode = 'context')
+  -> {context_provider}_scald_render()
+
+scald_register_atom(), scald_update_atom(), scald_unregister_atom()
+  -> {type_provider}_scald_fetch($mode = 'type')
+  -> {atom_provider}_scald_fetch($mode = 'atom')
+  -> {relationship_provider}_scald_prerender($mode = 'relationship')
+  -> {transcoder_provider}_scald_prerender($mode = 'transcoder')
+
+scald_rendered_to_sas()
+  -> scald_rendered_to_sas_LANGUAGE()
+?>
+

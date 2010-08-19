@@ -1,0 +1,7 @@
+; $Id$
+name = Scald Audio
+description = "Scald Atom Provider: provides Audio Atoms from files attached to Drupal Nodes."
+version = 0.1
+package = Scald
+core = 6.x
+dependencies[] = scald

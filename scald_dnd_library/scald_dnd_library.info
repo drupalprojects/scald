@@ -1,0 +1,8 @@
+; $Id$
+name = Scald DnD Library
+description = "Bridge between Scald and DnD"
+version = 0.1
+package = Scald
+core = 6.x
+dependencies[] = scald
+dependencies[] = dnd

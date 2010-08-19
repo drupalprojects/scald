@@ -1,0 +1,5 @@
+name = Scald Dailymotion
+core = 6.x
+version = 6.x-1.0
+package = Scald
+description = Provider: Provides Video atoms linked to DailyMotion videos

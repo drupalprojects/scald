@@ -1,0 +1,65 @@
+This is a quick'n'dirty guide, intended for developers, explaining
+how to setup a Scald enabled instance.
+
+I] Activate a bunch of modules that'll make the whole thing usable:
+ o  DnD
+ o  MEE
+ o  Scald
+ o  Scald DnD Library
+ o  Scald Dailymotion (will provide quickly a bunch of video atoms for
+    testing purpose)
+
+II] Permissions:
+  1 - Give every role that as the "access content" permission the
+      "use scald" permissions
+  2 - Go to Administer -> Content -> Scald -> Actions, and gives
+      every listed role the Fetch and View actions
+  3 - Go to Administer -> Content -> Scald -> Types, and for each
+      of Audio, Video and Image, change the default actions
+      bitstring to 5.
+
+III] Atoms generation
+  1 - Use the DailyMotion video search interface to search for a
+      video an import it as your first atom
+  2 - Add one or more automatic import at Administer > Site configuration
+     -> DailyMotion imports
+     (Suggestion: Type: Tag / Identifier: Drupal)
+  3 - Go to cron.php to launch batch processing
+  4 - If you have Views installed, a bunch of atoms should now appears
+      at Administer -> Content -> Scald -> Atoms
+
+IV] Input format configuration
+  1 - Go to Administer -> Site configuration -> Input format
+  2 - Choose the configure link next to the input format you'll be using
+      for your multimedia enabled contents
+  3 - Check the box in front of Scald Atom Shorthand Filter, click Save
+      configuration.
+  4 - Click the configure link again
+  5 - Go to the Rearrange tab, and check that the Scald Atom Shorthand
+      Filter is the last filter in the list.
+
+(Those instruction assume that you will be using Scald / MEE in a mode
+where users can't edit the ressource options when its dragged into the
+RTE, which is the safe choice.
+*If* you're in a situation where you're sure that only trusted users will
+have access to this input format, and you want them to be able to
+change the ressource HTML output on a case by case basis, then you
+should instead the the "mee_store_sas" variable to FALSE, and edit the
+input filter to allow all the html tags that your atoms providers will
+output. In this case, Scald won't alter the output unless the user
+viewing the content don't have access to the including atom)
+
+V] Configure a Scald-enabled CCK Field
+(Given as an example)
+  1 - Edit a content type, go to Manage fields screen
+  2 - Add a new field, of type Multimedia Editorial Element (MEE),
+      choosing the only available formatter.
+  3 - In the field settings, use the following settings
+      Rows: 60
+      Number of values: 1 (don't work with multiple fiedls for now,
+      patches welcome :-))
+      Text processing: Filtered text
+      Library Callback URL: scald/library_dnd
+      Scald Editor Context: Editor representation
+
+V] Go to the node form, enjoy

@@ -1,4 +1,128 @@
-Scald
-New social media platform from Chicago Technology Cooperative
+==== v0.9 / initial dev release ====
 
-* Finish writing & import alpha
+@@@TODO: In admin section, when a transcoder is assigned to a Scald Context, the Scald Transcoder should be given the opportunity to handle all of the Atoms which it is now responsible for transcoding into a given format.  Providing a mechanism for handing it all the SIDs is probably adequate; the Scald Transcoder should then be responsible for *intelligently* transcoding them all (i.e. not trying to loop through all million Atoms & transcode them before the request execution limit is reached).
+
+@@@TODO: When an admin selects a new nodetype for use as base entities for Atoms, scald_composites.module should register all the new Atoms.  Probably batch-processed.  This is explicitly the responsibility of the Atom Provider (e.g. a YouTube Provider would need to do the same upon receiving username/passwords or an RSS feed or what have you).
+
+@@@TODO: Determine if it's worth the overhead of adding in the "Author" Actions pseudo-role.  It would be potentially expensive to load up the list of authors of an Atom if it wasn't already loaded.  Maybe make it a conditional situation so that if it *is* loaded, check it, if not, don't?  Since the Actions bitstring is used as part of the Cache ID in the render stack, it would introduce a guaranteed additional db query to the render stack because the Atom is rarely pre-loaded.  If not, determine how to handle the situation where an Author is a User on the site and indicated.  Theoretically, they should therefore have some control over the Atom.
+
+@@@TODO: The Composite Atom Provider provides composite Atoms from Drupal node bodies of nodetypes which are configured to be Composites.  Scald admin should provide an interface for specifying which nodetypes to use as the basis for composite Atoms.  Scald admin should also insert a way to specify a nodetype as a 'Composite' as part of the nodetype configuration interface.  In both places, the admin should be able to choose an "editor representation" which is used to prepare the body field for editing.  Scald should then also process the body of that nodetype upon submission and change the 'editor representation' of the Atoms into SAS.  When the node is prepared for editing, it Scald should render the Atoms in the 'editor representation' context.  Output rendering should be handled by the SAS Filter (basically *all* the SAS filter does is look for SAS & render it to Atoms based on the context, an overriden context, or the default context.).  The Admin is responsible for specifying the SAS filter for the body as appropriate.  Nodetypes are to be stored in variable_set('scald_composite_nodetypes');
+
+@@@TODO: Add an admin interface to allow Admins to select the "editor context" for Scald Composites.  Store in variable_set('scald_composite_editor_contexts') which is an array keyed with nodetypes.  Note that *only* Contexts which are parseable should be listed.
+
+@@@TODO: Implement a custom CCK fieldtype in scald_composites.module
+
+@@@TODO: Implement basic file and fielfield (and <type>field) -based Atom Provider modules
+
+@@@TODO: Build an imagecache.module Transcoder that turns every imagecahce profile into a Transcoder
+
+@@@TODO: Determine what hook_scald_action() should actually do from Atom Providers.  Should it add elements to a form & a submit function?  Should it provide a URL that gets forwarded to?  Should it take specific parameters and just execute the changes (probably not; less flexible, though more tightly defines what an "Action" really is, though some actions like 'edit' might be broader).
+
+@@@TODO: Complete docs/scald_provider_api.txt
+
+@@@TODO: No hanging @@@TODOs in the modules (they should be corrected or in this roadmap)
+
+@@@TODO: Proper inline doc on all code; proper code cleanup
+
+@@@TODO: Add explanatory messages in hook_enable() to direct Admins to the right places to do more!
+
+@@@TODO: Figure out how Relationship Providers should work -- should they be *very* basic and just provide the Slugs and naming info?  If not, when and how do they get "hooked" without needing to be Type and Atom-Provider specific (e.g. the "includes" Provider needs to examine any & all text to see if there's SAS in it :-/).  Implement 'includes' Hooks.
+
+@@@TODO: Determine how to handle deleted Atoms -- should they remain in the db and therefore functions like scald_fetch() and scald_is_registered() need to account for this somehow and flag the $atom object (or maybe just not load it as far as was expected?)?  Encode the fact that it's deleted in the Actions bitstring & add checks throughout Scald Core to ensure that ops are attempted on deleted Atoms?
+
+@@@TODO: Add a "mass registration callback" member to the hook_scald_provider()['atoms']['type-slug'] array to allow for Atom Providers to have a function that is called after the Provider is fully registered to allow the Provider to register any existing Atoms.
+
+@@@TODO: Add code to the Provider Registration stack to let a Relationship Provider have a chance to look over existing Atoms and calculate Relationships
+
+
+
+
+
+
+==== v1.0 / initial general release ====
+
+@@@TODO: Figure out IF it makes sense to cache SAS filter results and then if so, when to invalidate Filter Cache.  The filter cache is keyed on the MD5 of the text string and so determining when to invalidate it is probably unrealisticly expensive.  *sigh*.  An update to an Atom should probably invalidate any filtering caches which include that Atom, however determining this probably requires a lookup of all Composites which include the Atom, a back-reference to the Drupal node which Provides the Composite and then a careful parsing of {cache_filter} to remove *only* those cache entries which correspond to the Composite.
+
+@@@TODO: Add an admin interface for adding lots of authors at once.  CSV upload perhaps or a copy-and-paste/manual entry textarea
+
+@@@TODO: Add a scald_authors() function that could be used as a callback for Drupal auto-completes
+
+@@@TODO: Figure out if Context options like "parseable" and "nocache" should be implemented as members of $atom->rendered or as members of $scald_config->contexts['context'].
+
+@@@TODO: Determine if it is possible to move the cache check earlier in scald_render() to avoid incurring more than one db query if *at all* possible.
+
+@@@TODO: Views integration
+
+@@@TODO: Determine if using Views as primary mechanism for generating searches makes sense (AKA "can you easily override the Views-generated queries?") or if scald_search() should continue to exist.
+
+@@@TODO: Write tests for Scald Core!!
+
+@@@TODO: Build out interface for manipulating Actions into Licenses
+
+@@@TODO: Determine if there should be accessor functions for things like generating an options array for all the Contexts (as used in hook_filter, for instance).
+
+
+
+
+
+
+==== v1.1 / D6 release ====
+
+@@@TODO: Refactor render stack to enforce permissions more harshly & provide *only* $atom->rendered (perhaps fleshed out with more details, but possibly not.  At least the SID, though) to context rendering functions along with a mechanism for indicating that certain elements are *required* (e.g. "author").  Contexts would still have full autonomy to mis-implement by scald_fetch()-ing the Atom and going to town.
+
+@@@TODO: Add a utility to the Admin section for Contexts that looks for registered contexts that claim render_language of XHTML, push a sample Atom through their rendering function & then test the output to see if scald_rendered_to_sas() detects any Atoms.  If it doesn't, alter the Admin so that they can modify the templates prior to using that Context as an input format (e.g. as the editor representation for DnD).
+
+@@@TODO: Figure out a good way to solve Action bitstrings.  Storing them as ints is ideal for fast comparisions and determination of a given action, but MySQL limits an int to 64 bits (which *seems* like enough but is still an arbitrary limit) and PHP's int size is platform-dependent and only gauranteed to be 32 bits.  Signed (though that's largely irrelevant when treating the int as a bitstring).  Currently, only 31 actions are permitted (high bit is used to indicate 'admin mode').
+
+@@@TODO: Add created & updated timestamps to Atoms
+
+@@@TODO: Introduce a prerender cache that would store the pre-rendered $atom.  The hook_prerender for the $context would still need to be called, but saving the overhead of the standard pre-rendering (which is several db calls) would be worthwhile.  $sid:$actions.
+
+@@@TODO: Hand off only $atom->rendered to hook_scald_render to help "enforce" permissions
+
+@@@TODO: Turn Unified Types into first-class entities.  Currently they are second-class as whatever Atom Provider initially claims to provide an Atom of that type basically defines the characteristics (really just title :) of the type.  Should be more extensive & specify Atom object members, etc.  Consider introducing "permitted filetype" and other such concepts.
+
+@@@TODO: Build a media_mover-based Transcoder Provider.  Each Media Mover profile (or whatever) becomes a Transcoder
+
+@@@TODO: Build an Admin interface for determining the Context Fallback order by render language and by type. Store in variable_set('scald_context_fallbacks').  Format:
+          array(
+            'XHTML' => array(
+              'audio'     => array('context', 'another-context'),
+              'type'      => array('other-context'),
+              '@default'  => array('default-XHTML-fallback'),
+            ),
+            '@default' => array('context12', 'context32')
+          );
+
+@@@TODO: Views compatibility
+
+@@@TODO: Provide Relationship-related functionality including accessing functionality and possibly the ability for a Relationship Provider to join the already-crowded rendering stack?
+
+@@@TODO: Determine if Atoms should *always* pull their titles & descriptions from their Base Entities and if not, allow for overriding of the titles/descs provided by the Base Entities (possibly an "override" bool in the {scald_atoms} table 1 == title overriden, 2 == desc, 3 == both, 0 == neither?) and through the "Edit" action.
+
+@@@TODO: Write a "Scald Themer" module which automagically takes contexts and registers theme functions, template files, etc. to make it simpler for themers to work with Scald
+
+@@@TODO: Figure out how to integrate taxonomy into Scald.  Ideally Atoms should be taking terms, just like Node.  Anything node-based should bubble up taxonomy from the node but allow it to be tweaked.  Anything non-node-based should grab taxes, etc. from other sources.
+
+@@@TODO: Allow Scald Providers to extend scald_search() through hooks.
+
+@@@TODO: Determine if validation of $atom->publisher as a legit Drupal UID is necessary and if so, implement in Scald Atom CRUD.
+
+@@@TODO: Determine if validation of $atom->authors AIDs as legit Scald Author IDs is necessary and if so, implement in Scald Atom CRUD.
+
+@@@TODO: Determine if validation of $atom->relationships SIDs as legit Scald Atom IDs is necessary and if so, implement in Scald Atom CRUD.
+
+@@@TODO: Optimize (single-query) insert/update of $atom->relationships & $atom->authors in the DB.  Implement in Scald Atom CRUD.
+
+@@@TODO: Determine if invalid values for any of Scald Core Atom members, validated members, or FALSE returns from the hooks during Scald Atom CRUD warrants a failure in the operation.
+
+@@@TODO: Determine if/when Scald Core should do checks for changes of SID and/or other essential Scald Atom Object members (e.g. after a hook invokation, should Scald Core check to verify that members which aren't supposed to be modified aren't?).  This is something that would be a non-issue if using an OO approach
+
+
+
+
+==== v2.0 / D7 rewrite ====
+
+@@@TODO: Refactor Scald to be OOP with inheritance from Atom -> Unified Type Atom -> Provider-specific Unified Type Atom.  Accessor members with lazy loading.  Object caching in the DB in addition to rendering caching.  Render Objects built and handed off to Render functions rather than full Atom objects.
+
+

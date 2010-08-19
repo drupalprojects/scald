@@ -1,0 +1,231 @@
+<?php
+// $Id$
+/**
+ * @file
+ *   Defines a DailyMotion provider for Scald.
+ */
+define('DAILYMOTION_RSS', 'http://www.dailymotion.com/rss/');
+define('NS_MEDIA',              'http://search.yahoo.com/mrss');
+define('NS_DM',                 'http://www.dailymotion.com/dmrss');
+
+/**
+ * Implements hook_scald_providers.
+ * Tell Scald that we'll be providing some video atoms.
+ */
+function scald_dailymotion_scald_provider() {
+  return array(
+    'atoms' => array(
+      'video' => array('A video hosted on DailyMotion')
+    )
+  );
+}
+
+/**
+ * Implements hook_scald_fetch.
+ */
+function scald_dailymotion_scald_fetch(&$atom) {
+  $file = file_directory_path() . '/dailymotion/'. $atom->base_id .'.jpg';
+  if (file_exists($file)) {
+    $atom->thumbnail_source = $file;
+    $atom->file_source = $atom->thumbnail_source;
+  }
+}
+
+/**
+ * Implements hook_scald_prerender.
+ */
+function scald_dailymotion_scald_prerender(&$atom, $context, $options, $type) {
+  if ($type == 'atom') {
+    if ($context != 'sdl_library_item') {
+      $atom->rendered->player = theme('scald_dailymotion_player', $atom->base_id, $atom->thumbnail_source);
+    }
+  }
+}
+
+/**
+ * Implements hook_theme.
+ */
+function scald_dailymotion_theme() {
+  return array(
+    'scald_dailymotion_player' => array(
+      'arguments' => array('video' => NULL, 'thumbnail' => NULL),
+      'template' => 'scald_dailymotion_player'
+    ),
+    'scald_dailymotion_imports_table' => array(
+      'arguments' => array('form' => NULL),
+      'file' => 'scald_dailymotion.admin.inc'
+    ),
+    'scald_dailymotion_search_results_table' => array(
+      'arguments' => array('form' => NULL),
+      'file' => 'scald_dailymotion.pages.inc'
+    )
+  );
+}
+
+/**
+ * Implements hook_perm.
+ */
+function scald_dailymotion_perm() {
+  return array('administer dailymotion imports', 'import dailymotion videos');
+}
+
+/**
+ * Implements hook_cron.
+ */
+function scald_dailymotion_cron() {
+  $imports = variable_get('scald_dailymotion_imports', array());
+  foreach ($imports as $import) {
+    $items = scald_dailymotion_feed($import['type'], $import['value']);
+    foreach ($items as $item) {
+      scald_dailymotion_register($item);
+    }
+  }
+}
+
+/**
+ * Implements hook_menu.
+ */
+function scald_dailymotion_menu() {
+  $items = array();
+  $items['admin/settings/scald_dailymotion'] = array(
+    'title' => 'DailyMotion imports',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('scald_dailymotion_imports_form'),
+    'access arguments' => array('administer dailymotion imports'),
+    'description' => 'Configure the videos that should be automatically imported from DailyMotion',
+    'file' => 'scald_dailymotion.admin.inc'
+  );
+  $items['dailymotion/search'] = array(
+    'title' => 'DailyMotion Video search',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('scald_dailymotion_search_form', 2),
+    'access arguments' => array('import dailymotion videos'),
+    'description' => 'Search for new videos to import into this site',
+    'file' => 'scald_dailymotion.pages.inc'
+  );
+  return $items;
+}
+
+/**
+ * Creates an atom based on a DailyMotion video id or an object
+ * containing the video informations..
+ * @param $video
+ *   Unique identifier of the video on dailymotion, or object
+ *   returned by scald_dailymotion_video.
+ * @return integer
+ *   Unique identifier of the new atom
+ */
+function scald_dailymotion_register($video) {
+  global $user;
+  // Fetch the needed informations from DailyMotion
+  if (is_object($video)) {
+    $infos = $video;
+  }
+  else {
+    $infos = scald_dailymotion_video($video);
+  }
+  // Check if the video has already been imported to prevent duplicated
+  $old = scald_dailymotion_already_imported($infos->id);
+  if ($old) {
+    return $old;
+  }
+  // Download a copy of the video thumbnail. This makes it possible
+  // to do interesting things when used with ImageCache for example.
+  $thumb = drupal_http_request($infos->thumbnail['src']);
+  $dir = file_directory_path() . '/dailymotion';
+  if ($thumb->code == 200 && file_check_directory($dir)) {
+    $dest = $dir . '/' . $infos->id . '.jpg';
+    $file = file_save_data($thumb->data, $dest);
+  }
+  // Create an atom
+  $atom = new stdClass;
+  $atom->type      = 'video';
+  $atom->provider  = 'scald_dailymotion';
+  $atom->base_id   = $infos->id;
+  $atom->publisher = $user->uid;
+  $atom->title     = $infos->title;
+  $aid = scald_author_get_id(array('name' => $infos->author));
+  $atom->authors   = array($aid);
+  // And save it
+  $atom_sid = scald_register_atom((array)$atom);
+  // Finally, return this id
+  return $atom_sid;
+}
+
+/**
+ * Analyze a DailyMotion RSS feed, reformating the informations about its
+ * items in an easy to manipulate objects containing the informations we're
+ * interested in.
+ * @param $type
+ *   DailyMotion RSS feed type. Examples include 'user', 'video', 'tag'...
+ * @param $id
+ *   The identifier, related to the type mentionned above. If you're requestion
+ *   a user feed, then, its the username...
+ * @return array
+ *   Each array value is an object containing the following members:
+ *     - id: the DailyMotion video id
+ *     - author: the DailyMotion username of the user who uploaded the video
+ *     - title: the video title
+ *     - thumbnail: an associative array, containing the source ('src'), width
+ *       and height of the video's thumbnail
+ *     - pubDate: the publication date of the video
+ */
+function scald_dailymotion_feed($type, $id) {
+  $url = DAILYMOTION_RSS . $type .'/'. urlencode($id);
+  $xml = drupal_http_request($url);
+  $items = array();
+  if ($xml->code != 404 && !empty($xml->data)) {
+    $dom = DOMDocument::loadXML($xml->data);
+    if ($dom) {
+      foreach($dom->getElementsByTagName('item') as $item) {
+        $info = new stdClass();
+        // Fetch from the feed
+        // ... the video id
+        $info->id = $item->getElementsByTagNameNS(NS_DM, 'id')->item(0)->nodeValue;
+        // ... its title
+        $title = $item->getElementsByTagName('title')->item(0);
+        $info->title = $title->nodeValue;
+        // ... and usefull informations about its thumbnails
+        $thumb = $item->getElementsByTagNameNS(NS_MEDIA, 'thumbnail')->item(0);
+        $info->thumbnail = array(
+          'src'    => $thumb->getAttribute('url'),
+          'width'  => $thumb->getAttribute('width'),
+          'height' => $thumb->getAttribute('height')
+        );
+        // ... also get the author
+        $info->author = $item->getElementsByTagNameNS(NS_DM, 'author')->item(0)->nodeValue;
+        // ... and the publication date
+        $info->pubDate = date('c', strtotime($item->getElementsByTagName('pubDate')->item(0)->nodeValue));
+        $items[] = $info;
+      }
+    }
+  }
+  return $items;
+}
+
+/**
+ * Get information on a specific video.
+ * @param $id
+ *   The video id
+ * @return object
+ *   An object containing the video informations. For information on
+ *   the object format, see @scald_dailymotion_feed.
+ */
+function scald_dailymotion_video($id) {
+  $items = scald_dailymotion_feed('video', $id);
+  return $items[0];
+}
+
+/**
+ * Checks if a video has already been imported, based on its video
+ * id.
+ * @param $id
+ *   The video identifier
+ * @return mixed
+ *   FALSE if the video was never imported, the scald identifier of
+ *   the video otherwise.
+ */
+function scald_dailymotion_already_imported($id) {
+  $query = array('provider' => 'scald_dailymotion', 'base_id' => $id);
+  return scald_search($query, FALSE, TRUE);
+}

@@ -1,0 +1,70 @@
+<?php
+/* $Id$ */
+
+/**
+ * @file
+ * Scald Images Installation
+ */
+
+
+
+/**
+ * Implementation of hook_install().
+ */
+function scald_image_install() {
+  // @@@TODO: Pre-populate appropriate variables/configuration
+}
+
+
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function scald_image_uninstall() {
+  // @@@TODO: Delete all variables/configs/blocks/etc.
+}
+
+
+
+/**
+ * Implementation of hook_enable().
+ */
+function scald_image_enable() {
+  // @@@TODO: Batch-register any existing Atoms
+}
+
+
+
+/**
+ * Implementation of hook_disable().
+ */
+function scald_image_disable() {
+  // @@@TODO: Determine if any settings/variables need to be unset upon disable.  NOTE: Unregistering all Atoms happens automagically.
+}
+
+/**
+ * Implements hook_update_N().
+ * Converts our imagecache based transcoders to use the presetname instead of the presetid as
+ * a key. This is more robust to change such as putting presets in code.
+ */
+function scald_image_update_6001() {
+  $ret = array();
+  if (module_exists('imagecache')) {
+    // Delete the old presets
+    $ret[] = update_sql("DELETE FROM {scald_transcoders} WHERE transcoder LIKE 'imagecache-%' AND provider='scald_image'");
+    // Create new ones
+    _scald_register_provider('scald_image', scald_image_scald_provider(), TRUE);
+    // Try to migrate the context transcoder settings
+    $presets = imagecache_presets();
+    foreach ($presets as $id => $preset) {
+      $old = 'imagecache-' . $id;
+      $new = 'imagecache-' . $preset['presetname'];
+      if ($new != $old) {
+        $ret[] = update_sql("UPDATE {scald_context_type_transcoder} SET transcoder='$new' WHERE transcoder='$old'");
+      }
+    }
+    // Rebuild config
+    scald_config_rebuild();
+  }
+  return $ret;
+}

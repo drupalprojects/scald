@@ -1,0 +1,13 @@
+<?php
+/* $Id$ */
+
+/**
+ * @file
+ * Scald Composite Installation
+ */
+
+function scald_composite_uninstall() {
+  variable_del('scald_composite_nodetypes');
+  variable_del('scald_composite_editor_contexts');
+}
+

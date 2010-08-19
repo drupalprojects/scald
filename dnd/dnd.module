@@ -1,0 +1,151 @@
+<?php
+
+// A suffix for auto generated IDs
+define('DND_ID_SUFFIX', '-dnd-library');
+
+/**
+ * Implementation of hook_menu().
+ */
+function dnd_menu() {
+  $items = array();
+  $items['admin/settings/dnd'] = array(
+    'title' => 'Drag and Drop Library',
+    'page callback' => 'dnd_admin',
+    'description' => 'Configure drag-and-drop enabled textareas.',
+    'access arguments' => array('administer dnd'),
+    'file' => 'dnd.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function dnd_perm() {
+  return array('administer dnd');
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function dnd_theme() {
+  return array(
+    'dnd_library_wrapper' => array('arguments' => array('settings' => NULL, 'element' => NULL)),
+  );
+}
+
+
+/**
+ * Implementation of hook_elements().
+ *
+ * Overload textareas.
+ */
+function dnd_elements() {
+  $type = array();
+  $type['textarea'] = array(
+    '#dnd-enabled' => FALSE,
+    '#dnd-settings' => NULL,
+    '#process' => array('form_expand_ahah', 'dnd_process_textarea'),
+  );
+  return $type;
+}
+
+/**
+ * Settings array:
+ * What should it take, if anything?  Probably a source * maybe editor specific configuration shit? 
+ *
+ * - source for library json/ajax shit
+ * - target selector
+ * - item selector
+ *
+ * perhaps like so:  
+ *
+ * global => 
+ *   droppable targets
+ *   library source for textarea
+ * 
+ * tinymce/othereditor =>
+ *   target selector logic
+ *   configuration options
+ *   callback should be smart about attachment and detachment
+ */
+function dnd_process_textarea($element, $edit, $form_state, $form) {
+  if ($element['#dnd-enabled']) {
+
+    $settings = array();
+
+    // We take a string or an object or an array
+    if (is_string($element['#dnd-settings'])) {
+      // @TODO load settings
+    } 
+    else if (is_object($element['#dnd-settings'])) {
+      $settings = (array) $element['#dnd-settings'];
+    }
+    else if (is_array($element['#dnd-settings'])) {
+      $settings = $element['#dnd-settings'];
+    }
+
+    $settings = array('library_id' => $element['#id'] . DND_ID_SUFFIX) + $settings;
+
+    // BeautyTips
+    drupal_add_js(drupal_get_path('module', 'dnd') .'/js/bt/other_libs/excanvas_0002/excanvas-compressed.js');
+    drupal_add_js(drupal_get_path('module', 'dnd') .'/js/bt/other_libs/jquery.hoverIntent.minified.js');
+    drupal_add_js(drupal_get_path('module', 'dnd') .'/js/bt/jquery.bt.js');
+
+    // Dependencies
+    drupal_add_js(drupal_get_path('module', 'dnd') .'/js/jquery.url.packed.js');
+    drupal_add_js(drupal_get_path('module', 'dnd') .'/js/jquery.fieldselection.js');
+    drupal_add_js('misc/jquery.form.js');
+
+    // Drag and drop
+    drupal_add_js(drupal_get_path('module', 'dnd') .'/js/jquery.draganddrop.js');
+    drupal_add_js(drupal_get_path('module', 'dnd') .'/js/dnd-library.js');
+
+    drupal_add_js(array(
+      'dndEnabledLibraries' => array($element['#id'] => $settings),
+    ), 'setting');
+
+    // Generate 
+    $element['#prefix'] .= '<div class="dnd-library-wrapper" id="'. $settings['library_id'] .'"></div><div class="dnd-fields-wrapper">';
+    $element['#suffix'] = '</div>';
+    if (module_exists('mee')) {
+      drupal_add_css(drupal_get_path('module', 'mee') .'/css/mee.css');
+    }
+
+  }
+  return $element;
+}
+
+/**
+ * Implementation of hook_wywiwyg_plugin().
+ */
+function dnd_wysiwyg_plugin($editor, $version=0) {
+  $plugins = array();
+  switch ($editor) {
+    case 'tinymce':
+      if ($version > 3) {
+        $plugins['forcecontainer'] = array(
+          'title' => t('Force Container Plugin'),
+          'description' => t('A custom plugin to forces a selection up to the outer container of a given element.'),
+          'extensions' => array('forcecontainer' => t('Force Container')),
+          'path' => drupal_get_path('module', 'dnd') .'/js/tinymce/forcecontainer/editor_plugin_src.js', 
+          'load' => TRUE,
+          'options' => array(
+            'forcecontainer_class' => 'dnd-drop-wrapper',
+            'forcecontainer_trigger_dnd' => TRUE,
+          ),
+        );
+      }
+      break;
+  }
+  return $plugins;
+}
+
+
+/**
+ * Theme the markup that will surround a library loaded via JSON.
+ */
+function theme_dnd_library_wrapper($settings, $element = NULL) {
+  return '<div id="'. $settings['library_id'] .'" class="dnd-library-wrapper"></div>';
+}
+

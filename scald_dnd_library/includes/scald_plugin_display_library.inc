@@ -1,0 +1,121 @@
+<?php
+class scald_plugin_display_library extends views_plugin_display_page {
+  /**
+   * The library won't go through the normal theming / page rendering
+   * process. Instead, we'll just fetch / render the atoms, and print
+   * the JSON by itself.
+   * We won't be returning anything, which tells Drupal that everything
+   * is already rendered.
+   */
+  function execute() {
+    // Hide the links that Views would normally display, as they confuse
+    // DnD. 
+    $library = array();
+    // Execute the view to get all the filter that applies.
+    $this->view->execute();
+    // And now extract a summary from all the options that were filled.
+    foreach ($this->view->filter as $id => $filter) {
+      if ($filter->options['exposed']) {
+        $value = $filter->value;
+        // For Date filters, we need to preprocess a bit the date. Well,
+        // ok, more than a bit...
+        if ($filter instanceof date_api_filter_handler) {
+          $dates = array();
+          if ($filter->operator == 'between') {
+            if ($value['min']) {
+              $d = date_make_date($value['min']);
+              $dates['min'] = '>'. date_format($d, $filter->format);
+            }
+            if ($value['max']) {
+              $d = date_make_date($value['max']);
+              $dates['max'] = '<'. date_format($d, $filter->format);
+            }
+          }
+          else {
+            if ($value['value']) {
+              $d = date_make_date($value['value']);
+              $dates['value'] = date_format($d, $filter->format);
+            }
+          }
+          $value = $dates;
+        }
+        // For terms, we get the tids, which doesn't make the summary
+        // really usefull. We'll get replace them with the term names.
+        elseif ($filter instanceof views_handler_filter_term_node_tid && is_array($value)) {
+          $names = array();
+          // When migrating to D7, use the very useful _multiple variant
+          // to reduce the number of queries.
+          foreach ($value as $tid) {
+            $term = taxonomy_get_term($tid);
+            $names[] = $term->name;
+          }
+          $value = $names;
+        }
+        // For user names, the situation is pretty much like for terms:
+        // we get the uids.
+        elseif ($filter instanceof views_handler_filter_user_name && is_array($value)) {
+          $names = array();
+          foreach ($value as $uid) {
+            $account = user_load(array('uid' => $uid));
+            $names[] = $account->name;
+          }
+          $value = $names;
+        }
+        // For boolean operators, we don't want to display anything if
+        // <Any> was selected.
+        elseif ($filter instanceof views_handler_filter_boolean_operator) {
+          if ($value == 'All') {
+            $value = '';
+          }
+          else {
+            $value = $filter->value_options[$value];
+          }
+        }
+        elseif (is_array($value) && $filter->value_options) {
+          foreach ($value as $k => $key) {
+            if ($filter->value_options[$key]) {
+              $value[$k] = $filter->value_options[$key];
+            }
+          }
+        }
+        if (is_array($value)) {
+          $value = implode(', ', $value);
+        }
+        if ($value) {
+          $summary[] = $filter->options['expose']['label'] .': '. $value;
+        }
+      }
+    }
+    // Add info about how we sort the view.
+    if ($this->view->style_plugin->active) {
+      $sort = $this->view->style_plugin->active;
+      $label = $this->view->field[$sort]->options['label'];
+      $order = $this->view->style_plugin->order;
+      $orders = array('asc' => t('Ascending'), 'desc' => t('Descending'));
+      $summary[] = t('Sort'). ': '. $label .' '. $orders[$order];
+    }
+    $this->view->hide_admin_links = TRUE;
+    $view = $this->view->render();
+    $messages = theme('status_messages');
+    $library['library'] = $messages . $view;
+    if ($summary) {
+      $summary = theme('item_list', $summary);
+      $library['library'] = str_replace('</fieldset>', '</fieldset>'. $summary, $library['library']);
+    }
+    foreach ($this->view->result as $result) {
+      $sid = $result->sid;
+      $atom = scald_fetch($sid);
+      scald_prerender($atom, 'sdl_editor_representation');
+      $library['editor_representations'][$sid] = array(
+        'body'  => scald_render($atom, 'sdl_editor_representation'),
+        'title' => $atom->title,
+        'meta'  => array(
+          'action' => $atom->base_entity->license->action_fin,
+          'legend' => theme('sdl_editor_legend', $atom)
+        )
+      );
+      $library['library_previews']['sdl-'. $sid] = scald_render($sid, 'sdl_preview');
+    }
+    drupal_json($library);
+  }
+}

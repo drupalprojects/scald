@@ -1,0 +1,711 @@
+<?php
+/* $Id$ */
+
+/**
+ * @file
+ * Scald Installation
+ *
+ * The database schema is heavily commented; review for details.
+ *
+ * NOTE: For the registries which are essentially the makeup of the Scald
+ *  Configuration Object, no indexes are specified because they are usually
+ *  referenced only to retrieve all the data.  In fact, there should never be a
+ *  situation in which a module is querying directly against those tables.
+ *
+ * @ingroup scald
+ */
+
+require_once('scald.constants.inc');
+
+
+
+/**
+ * Implementation of hook_schema().
+ */
+function scald_schema() {
+  $schema = array();
+
+  $schema['cache_scald'] = drupal_get_schema_unprocessed('system', 'cache');
+
+  // Scald Atom Registry
+  $schema['scald_atoms'] = array(
+    'description' => t('The Scald Atom registry.'),
+    'fields'      => array(
+      'sid'       => array(
+        'description' => t('The Scald Identifier, a unique integer ID for a given Scald Atom.'),
+        'type'        => 'serial',
+        'size'        => 'big',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+      ),
+      'provider'  => array(
+        'description' => t('The name of the module which provides this Atom.  The Provider module should implement the Scald Provider API for Atoms.  FK {system}.name'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => 'scald',
+      ),
+      'type'      => array(
+        'description' => t('The Scald Unified Type slug for this Atom\'s type.  FK {scald_types}.type'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'composite',
+      ),
+      'base_id'   => array(
+        'description' => t('The identifier used by the Scald Atom Provider that registered Atom to determine additional properties (e.g. a Drupal NID or a YouTube ID).  FK'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => FALSE,
+        'default'     => NULL,
+      ),
+      'publisher' => array(
+        'description' => t('The Drupal User ID of the user who *registered* this Atom.  Makes no implications about the Authorship.  FK {users}.uid'),
+        'type'        => 'int',
+        'size'        => 'big',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'actions'   => array(
+        'description' => t('The Scald Actions bitstring for this Atom.'),
+        'type'        => 'int',
+        'size'        => 'big',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'title'     => array(
+        'description' => t('The title of this Scald Atom.'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => '',
+      ),
+    ),
+    'primary key' => array('sid'),
+    'unique keys' => array(
+      'u_provider_type_base_id' => array(array('provider', 64), array('type', 64), array('base_id', 64)),
+    ),
+    'indexes'     => array(
+      'i_sid_provider_base_id'  => array('sid', array('provider', 64), array('base_id', 64)),
+      'i_sid_actions'           => array('sid', 'actions'),
+      'i_type_sid'              => array('type', 'sid'),
+      'i_publisher_sid'         => array('publisher', 'sid'),
+    ),
+  );
+  
+  $schema['scald_atom_providers'] = array(
+    'description' => t('Mapping between Providers of Atoms and the Types they provide.'),
+    'fields'      => array(
+      'type'             => array(
+        'description' => t('The Scald Unified Type slug for a Type.  FK {scald_types}.type'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'composite',
+      ),
+      'provider'         => array(
+        'description' => t('The name of the module which provides Atoms.  The Provider module should implement the Scald Provider API for Atoms.  FK {system}.name'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => 'scald',
+      ),
+      'base_description' => array(
+        'description' => t('A description of what Base Entities are used for Atoms provided by this Provider.'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => FALSE,
+      ),
+    ),
+    'primary key' => array(array('type', 64), array('provider', 64), array('base_description', 64)),
+  );
+
+  // Scald Author Registry
+  $schema['scald_authors'] = array(
+    'description' => t('The Scald Author registry.'),
+    'fields'      => array(
+      'aid'  => array(
+        'description' => t('The Author ID.'),
+        'type'        => 'serial',
+        'size'        => 'big',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+      ),
+      'name' => array(
+        'description' => t('The name of the Author -- no first & last, just a single string.'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => '',
+      ),
+      'uid'  => array(
+        'description' => t('The Drupal User ID of the Author, *if* they are a user of the site.  A null value implies the author is not a Drupal user.  FK {users}.uid'),
+        'type'        => 'int',
+        'size'        => 'big',
+        'unsigned'    => TRUE,
+        'default'     => NULL,
+      ),
+      'url'  => array(
+        'description' => t('A URL at which the Author can be reached.  Preferred to an email address for privacy.'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'default'     => NULL,
+      ),
+    ),
+    'primary key' => array('aid'),
+    'indexes'     => array(
+      'i_aid_uid'      => array('aid', 'uid'),
+      'i_uid_aid'      => array('uid', 'aid'),
+      'i_aid_name_url' => array('aid', array('name', 64), array('url', 64)),
+    ),
+  );
+
+  $schema['scald_atom_authors'] = array(
+    'description' => t('Mapping between Scald Atoms and the Authors of those Atoms.'),
+    'fields'      => array(
+      'sid'     => array(
+        'description' => t('The Atom ID.  FK {scald_atoms}.sid'),
+        'type'        => 'int',
+        'size'        => 'big',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'aid'     => array(
+        'description' => t('The Author ID of an author of the Atom.  FK {scald_authors}.aid'),
+        'type'        => 'int',
+        'size'        => 'big',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'weight'  => array(
+        'description' => t('Used for determining the order of the Authors for an Atom.'),
+        'type'        => 'int',
+        'size'        => 'big',
+        'unsigned'    => TRUE,
+        'default'     => NULL,
+      ),
+    ),
+    'primary key' => array('sid', 'aid'),
+    'unique keys' => array(
+      'k_sid_weight' => array('sid', 'weight'),
+    ),
+  );
+
+  // Scald Unified Type Registry
+  $schema['scald_types'] = array(
+    'description' => t('The Scald Unified Type registry.'),
+    'fields'      => array(
+      'type'         => array(
+        'description' => t('The Scald Unified Type slug, used to uniquely identify the Type'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'composite',
+      ),
+      'provider'         => array(
+        'description' => t('The name of the module which provides this Type.  The Provider module should implement the Scald Provider API for Types.  FK {system}.name'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => 'scald',
+      ),
+      'title'       => array(
+        'description' => t('The human-readable title of this Type.  Publicly Viewable'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => t('Scald Composite'),
+      ),
+      'description' => array(
+        'description' => t('A description of the Type for the benefit of Admins and Devs.'),
+        'type'        => 'text',
+        'size'        => 'medium',
+      ),
+    ),
+    'primary key' => array('type'),
+  );
+
+  // Scald Context Registry
+  $schema['scald_contexts'] = array(
+    'description' => t('The Scald Context registry.'),
+    'fields'      => array(
+      'context'         => array(
+        'description' => t('The Scald Context slug, used to uniquely identify the Context.'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'title',
+      ),
+      'provider'        => array(
+        'description' => t('The name of the module which provides this Context.  The Provider module should implement the Scald Provider API for Contexts.  FK {system}.name'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => 'scald',
+      ),
+      'title'           => array(
+        'description' => t('A human-readable title for the Context for the benefit of Admins & Devs.'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => t('Scald Display Context Default Title'),
+      ),
+      'description'     => array(
+        'description' => t('A description of a given Context for the benefit of Admins and Devs.'),
+        'type'        => 'text',
+        'size'        => 'medium',
+      ),
+      'render_language' => array(
+        'description' => t('The target format for this Context (e.g. XHTML, JSON, XML)'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'XHTML',
+      ),
+      'parseable'       => array(
+        'description' => t('Indicates whether a Context is designed to be parsed as input by Scald Core or not.'),
+        'type'        => 'int',
+        'size'        => 'tiny',
+        'not null'    => TRUE,
+        'default'     => 1,
+      ),
+    ),
+    'primary key' => array('context'),
+  );
+
+  $schema['scald_context_type_formats'] = array(
+    'description' => t('A listing of which File Formats a Context will accept for a given Type.'),
+    'fields'      => array(
+      'context'    => array(
+        'description' => t('The Scald Context slug for a Scald Context.  Fk {scald_contexts}.context'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'title',
+      ),
+      'type'       => array(
+        'description' => t('The Scald Unified Type slug for a Scald Unified Type.  FK {scald_types}.type'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'composite',
+      ),
+      'file_format'     => array(
+        'description' => t('A file format slug.  Could be just about anything, but this is supposed to coincide with the format specifiers used by Scald Transcoders.'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'passthrough',
+      ),
+   ),
+    'primary key' => array(array('type', 64), array('context', 64), array('file_format', 64)),
+  );
+
+  $schema['scald_context_type_transcoder'] = array(
+    'description' => t('A mapping between Types, Contexts, file formats, and Transcoders'),
+    'fields'      => array(
+      'context'    => array(
+        'description' => t('The Scald Context slug for a Scald Context.  Fk {scald_contexts}.context'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'title',
+      ),
+      'type'       => array(
+        'description' => t('The Scald Unified Type slug for a Scald Unified Type.  FK {scald_types}.type'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'composite',
+      ),
+      'file_format'     => array(
+        'description' => t('A file format slug.  Could be just about anything, but this is supposed to coincide with the format specifiers used by Scald Transcoders.'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'passthrough',
+      ),
+      'transcoder' => array(
+        'description' => t('The Scald Transcoder slug for a Scald Transcoder.  FK {scald_transcoders}.transcoder'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'passthrough',
+      ),
+    ),
+    'primary key' => array('type', 'context'),
+  );
+
+  // Scald Action Registry
+  $schema['scald_actions'] = array(
+    'description' => t('The Scald Action registry.'),
+    'fields'      => array(
+      'action'      => array(
+        'description' => t('The Scald Action slug, used to uniquely identify the Action.'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'edit',
+      ),
+      'power'       => array(
+        'description' => t('The power of 2 in the Scald Actions bitstring which this Action corresponds to.'),
+        'type'        => 'int',
+        'size'        => 'tiny',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 1,
+      ),
+       'provider'    => array(
+        'description' => t('The name of the module which provides this Action.  The Provider module should implement the Scald Provider API for Actions.  FK {system}.name'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => 'scald',
+      ),
+      'title'       => array(
+        'description' => t('The human-readable name of this Action (often used in links).'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => t('Scald Action Default Title'),
+      ),
+      'description' => array(
+        'description' => t('A description of a given Action for the benefit of Admins & Devs.'),
+        'type'        => 'text',
+        'size'        => 'medium',
+      ),
+   ),
+    'primary key' => array('action'),
+    'unique keys' => array(
+      'k_power' => array('power'),
+    ),
+    'indexes'     => array(
+      'i_power_action'    => array('power', 'action'),
+      'i_action_provider' => array('action', array('provider', 64)),
+      'i_action_title'    => array('action', array('title', 64)),
+    ),
+  );
+
+  $schema['scald_role_actions'] = array(
+    'description' => t('The mapping of various Actions to Drupal user roles.'),
+    'fields'      => array(
+      'rid'     => array(
+        'description' => t('A Drupal user role ID.  FK {role}.rid'),
+        'type'        => 'int',
+        'size'        => 'big',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'actions' => array(
+        'description' => t('The Scald Action bitstring for this role.'),
+        'type'        => 'int',
+        'size'        => 'big',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+    ),
+    'primary key' => array('rid'),
+  );
+
+  $schema['scald_licenses'] = array(
+    'description' => t('Definitions of Licenses as sets of permitted Scald Actions'),
+    'fields'      => array(
+      'lid'         => array(
+        'description' => t('The License ID; an arbitrarily defined identifier for the license.'),
+        'type'        => 'serial',
+        'size'        => 'big',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+      ),
+      'title'       => array(
+        'description' => t('The human-readable name of this License (often presented as an alternative for users).'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => t('Scald License Default Title'),
+      ),
+      'description' => array(
+        'description' => t('A description of a given License for public consumption.'),
+        'type'        => 'text',
+        'size'        => 'medium',
+      ),
+      'actions'     => array(
+        'description' => t('The Scald Action bitstring for this License.'),
+        'type'        => 'int',
+        'size'        => 'big',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+    ),
+    'primary key' => array('lid'),
+  );
+
+  // Scald Transcoder Registry
+  $schema['scald_transcoders'] = array(
+    'description' => t('The Scald Transcoder registry.'),
+    'fields'      => array(
+      'transcoder'  => array(
+        'description' => t('The Scald Transcoder slug, used to uniquely identify the Transcoder.'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'default-transcoder',
+      ),
+      'provider'    => array(
+        'description' => t('The name of the module which provides this Transcoder.  The Provider module should implement the Scald Provider API for Transcoders.  FK {system}.name'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => 'scald',
+      ),
+      'title'       => array(
+        'description' => t('The human-readable name of this Transcoder (used in the Admin pages).'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => t('Scald Transcoder Default Title'),
+      ),
+      'description' => array(
+        'description' => t('A description of a given Transcoder for the benefit of Admins & Devs.'),
+        'type'        => 'text',
+        'size'        => 'medium',
+      ),
+    ),
+    'primary key' => array('transcoder'),
+  );
+
+  $schema['scald_transcoder_formats'] = array(
+    'description' => t('A mapping indicating what file formats a Scald Transcoder can generate from given Scald Unified Types.'),
+    'fields'      => array(
+      'transcoder' => array(
+        'description' => t('The Scald Transcoder slug for a Scald Transcoder.  Fk {scald_transcoders}.transcoder'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'passthrough',
+      ),
+      'type'       => array(
+        'description' => t('The Scald Unified Type slug for a Scald Unified Type.  FK {scald_types}.type'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'composite',
+      ),
+      'file_format'     => array(
+        'description' => t('A file format slug.  Could be just about anything but should coincide with formats used by Scald Contexts (e.g. "JPEG").'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'passthrough',
+      ),
+    ),
+    'primary key' => array(array('transcoder', 64), array('type', 64), array('file_format', 64)),
+  );
+
+  // Scald Relationship Registry
+  $schema['scald_relationships'] = array(
+    'description' => t('The Scald Relationship registry.'),
+    'fields'      => array(
+      'relationship'  => array(
+        'description' => t('The Scald Relationship slug, used to uniquely identify the Relationship.'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'includes',
+      ),
+      'provider'      => array(
+        'description' => t('The name of the module which provides this Relationship.  The Provider module should implement the Scald Provider API for Relationships.  FK {system}.name'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => 'scald',
+      ),
+      'title'         => array(
+        'description' => t('The human-readable version of this Relationship (used to display how one Atom is related to another e.g. A "includes" B).'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => t('includes'),
+      ),
+      'title_reverse' => array(
+        'description' => t('The human-readable version of *reverse* of this Relationship (used to display how one Atom is related to another e.g. B "is included by" A).'),
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => t('is included by'),
+      ),
+      'description'  => array(
+        'description' => t('A description of a given Relationship for the benefit of Admins & Devs.'),
+        'type'        => 'text',
+        'size'        => 'medium',
+      ),
+    ),
+    'primary key' => array('relationship'),
+  );
+
+  $schema['scald_atom_relationships'] = array(
+    'description' => t('The Scald Relationship registry.'),
+    'fields'      => array(
+      'sid_left'     => array(
+        'description' => t('The "left-hand" Atom ID.  A in the "A relates to B" equation.  FK {scald_atoms}.sid'),
+        'type'        => 'int',
+        'size'        => 'big',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'relationship' => array(
+        'description' => t('A Scald Relationship slug, used to identify the Relationship between the two Atoms.'),
+        'type'        => 'varchar',
+        'length'      => SCALD_SLUG_MAX_LENGTH,
+        'not null'    => TRUE,
+        'default'     => 'includes',
+      ),
+      'sid_right'   => array(
+        'description' => t('The "right-hand" Atom ID.  B in the "A relates to B" equation.  FK {scald_atoms}.sid'),
+        'type'        => 'int',
+        'size'        => 'big',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+    ),
+    'primary key' => array('sid_left', 'relationship', 'sid_right'),
+  );
+
+  return $schema;
+}
+
+
+
+/**
+ * Implementation of hook_install().
+ *
+ * Installs the schema and then ensure that the hooks implemented by Scald Core
+ *  will fire before those implemented by any Scald Providers (a direct
+ *  modification of the {system} table is the only way to accomplish this).
+ */
+function scald_install() {
+  drupal_install_schema('scald');
+  db_query("UPDATE {system} SET weight = -50 WHERE name = 'scald'");
+}
+
+
+
+/**
+ * Implementation of hook_uninstall().
+ *
+ * Removes the database tables and persistant variables managed through Drupal.
+ *  Anything set in the Scald Admin Interface will be forgotten.
+ *
+ * Uninstall the DB schema and clean up as much as is feasible.
+ */
+function scald_uninstall() {
+  drupal_uninstall_schema('scald');
+
+  variable_del('scald_config');
+  variable_del('scald_providers');
+  variable_del('scald_atom_defaults');
+  variable_del('scald_context_fallbacks');
+  variable_del('scald_actions_publisher');
+  
+  // @@@TODO: Delete all Filter-based variables
+
+  // @@@TODO: Clean up blocks, variables, caches, etc.
+}
+
+
+
+/**
+ * Implementation of hook_enable().
+ *
+ * Ensures that various configuration options are set so that Scald Core can
+ *  make certain assumptions about the contents of variables.
+ */
+function scald_enable() {
+  variable_set('scald_context_fallbacks', array('@default' => array('title')));
+
+  // Must be run *here* so that everything Scald Core provides is registered.
+  //  Other Provider modules will have the function run for them on the basis
+  //  of a custom submit handler on the Drupal System Modules form.
+  scald_update_providers();
+
+  // Register all existing Users as Scald Authors
+  batch_set(array(
+    'title'             => t('Registering all Users as potential Scald Authors'),
+    'operations'        => array(
+      array('scald_enable_batch', array()),
+    ),
+    'progress_message'  => '',  // No message because the batch function provides its own
+    'file'              => drupal_get_path('module', 'scald') . '/scald.install',
+  ));
+  batch_process('admin/build/modules');
+}
+
+
+
+/**
+ * Implementation of hook_disable().
+ *
+ * Settings configured in the Scald Admin Interface should remain.  Lower-levl
+ *  configurations, however, are removed as they will need to be rebuilt if the
+ *  Scald Core is re-enabled later.
+ */
+function scald_disable() {
+  // TODO: Determine what variables & settings should be unset at this point
+  variable_del('scald_config');
+}
+
+
+
+/**
+ * Batch addition of all Users as Scald Authors.
+ */
+function scald_enable_batch(&$context) {
+  if (!isset($context['sandbox']['last_uid'])) {
+    $context['sandbox']['progress']   = 0;
+    $context['sandbox']['last_uid']   = 0;
+    $context['sandbox']['total']      = db_result(db_query("
+      SELECT
+        COUNT(uid)
+      FROM
+        {users}
+      WHERE
+        uid > 0
+      ORDER BY
+        uid
+    "));
+  }
+
+  $users_results = db_query_range(
+    "
+      SELECT
+        uid,
+        name
+      FROM
+        {users}
+      WHERE
+        uid > %d
+      ORDER BY
+        uid
+    ",
+    $context['sandbox']['last_uid'],
+    0,
+    SCALD_ENABLE_BATCH_LIMIT
+  );
+  while ($user_raw = db_fetch_array($users_results)) {
+    scald_register_author($user_raw);
+    $context['sandbox']['last_uid'] = $user_raw['uid'];
+    $context['sandbox']['progress']++;
+  }
+
+  $context['message']   = t('Updated @current of @total users.', array('@current' => $context['sandbox']['progress'], '@total' => $context['sandbox']['total']));
+  $context['finished']  = $context['sandbox']['progress'] / $context['sandbox']['total'];
+}

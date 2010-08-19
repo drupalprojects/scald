@@ -1,0 +1,189 @@
+<?php
+// $Id$
+
+/**
+ * @ingroup scald Scald is Content, Attribution, Licensing, & Distribution
+ * 
+ */
+
+/**
+ * @file
+ * Scald Composites, a Scald Atom Provider for Composite Atoms based on Drupal
+ *  Nodes.
+ */
+
+/*******************************************************************************
+ * SCALD HOOK IMPLEMENTATIONS
+ ******************************************************************************/
+
+/**
+ * Implementation of hook_scald_provider().
+ */
+function scald_composite_scald_provider() {
+  $provides = array(
+    'atoms'    => array(
+      'composite' => array(
+        t('The body field of Drupal Nodes of selected nodetypes.'),
+      ),
+    ),
+  );
+
+  if (module_exists('content')) {
+    $provides['atoms']['composite'][] = t('The Scald Composite CCK field.');
+  }
+
+  return $provides;
+}
+
+
+
+/**
+ * Implementation of hook_scald_register_atom().
+ */
+function scald_composite_scald_register_atom(&$atom, &$values, $mode) {
+  if ($mode != 'atom') {
+    return FALSE;
+  }
+
+} // end scald_composite_scald_register_atom()
+
+
+
+/**
+ * Implementation of hook_scald_update_atom().
+ */
+function scald_composite_scald_update_atom(&$atom, &$values, $mode) {
+  if ($mode != 'atom') {
+    return FALSE;
+  }
+
+} // end scald_composite_scald_update_atom()
+
+
+
+/**
+ * Implementation of hook_scald_unregister_atom().
+ */
+function scald_composite_scald_unregister_atom($atom, $mode) {
+  if ($mode != 'atom') {
+    return FALSE;
+  }
+
+} // end scald_composite_scald_unregister_atom()
+
+
+
+/**
+ * Implementation of hook_scald_fetch().
+ */
+function scald_composite_scald_fetch(&$atom, $mode) {
+  if ($mode != 'atom') {
+    return FALSE;
+  }
+
+  // Node Body mode
+  if (is_numeric($atom->base_id)) {
+    $node = node_load($atom->base_id);
+    $atom->title = $node->title;
+  }
+  else {
+    // @@@TODO: Handle Scald Composite CCK Field instance
+  }
+} // end scald_composite_scald_fetch()
+
+
+
+/**
+ * Implementation of hook_scald_prerender().
+ */
+function scald_composite_scald_prerender(&$atom, $context, $options, $mode) {
+  if ($mode != 'atom') {
+    return FALSE;
+  }
+
+} // end scald_composite_scald_prerender()
+
+
+
+
+
+
+/*******************************************************************************
+ * DRUPAL HOOK IMPLEMENTATIONS
+ ******************************************************************************/
+
+/**
+ * Implementation of hook_nodeapi().
+ *
+ * Since this Atom Provider makes use of the body of specific nodes
+ */
+function scald_composite_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  // Only continue if the nodetype is one which has been selected as a source
+  //  for Scald Atoms 
+  $scald_composite_nodetypes = variable_get('scald_composites_nodetypes', array());
+  if (!in_array($node->type, $scald_composite_nodetypes)) {
+    return;
+  }
+// @@@TODO: Determine if it's necessary to check at this point (the CCK hooks might render such update checks *here* unnecessary)
+//  elseif (module_exists('content')) {
+//    // @@@TODO: Do a check to see if this nodetype has a Scald Composite CCK field!
+//  }
+//  else {
+//  }
+
+  switch ($op) {
+    case 'delete':
+      $sid = db_result(db_query("SELECT sid FROM {scald_atoms} WHERE base_id = %d", $node->nid));
+      if ($sid) {
+        scald_unregister_atom($sid);
+      }
+      break;
+
+    case 'insert':
+      $scald_included = scald_included($node->body);
+      $sid = scald_register_atom(array(
+        'type'          => 'composite',
+        'provider'      => 'scald_composite',
+        'base_id'       => $node->nid,
+        'publisher'     => $node->uid,
+        'title'         => $node->title,
+        'authors'       => array(scald_uid_to_aid($node->uid)),
+        'relationships' => array('forward' => (empty($scald_included) ? array() : array('includes' => $scald_included)), 'reverse' => array()),
+      ));
+      break;
+
+    case 'prepare':
+      $edit_context = variable_get('scald_composite_editor_contexts', array());
+      if (!empty($edit_context[$node->type])) {
+        $node->body = scald_sas_to_rendered($node->body, $edit_context[$node->type], TRUE);
+      }
+      break;
+
+    case 'presave':
+      $node->body = scald_rendered_to_sas($node->body);
+      break;
+
+    case 'update':
+      $sid = scald_search(
+        array('provider' => 'scald_composite', 'base_id' => $node->nid),
+        FALSE,
+        TRUE
+      );
+      if ($sid) {
+        $atom = scald_fetch($sid);
+        $scald_included = scald_included($node->body);
+        $temp_atom->relationships = array( 'forward' => empty($scald_included) ? array() : array('includes' => $scald_included), 'reverse' => array());
+        $atom->title = $node->title;
+        $atom->publisher = $node->uid;
+        $atom->authors = array(scald_uid_to_aid($node->uid));
+        scald_update_atom($atom);
+      }
+      break;
+
+    default:
+      break;
+  }
+} // end scald_nodeapi()
+
+
+

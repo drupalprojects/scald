@@ -1,0 +1,2948 @@
+<?php
+// $Id$
+
+/**
+ * @defgroup scald Scald is Content, Attribution, Licensing, & Distribution
+ * 
+ */
+
+/**
+ * @file
+ * The Scald Core, which handles all Scald Registries and dispatch.
+ *
+ * The Scald Core handles the Scald Registries for all the aspects of Scald.
+ * The Scald API is also defined here; the majority of a developer's
+ * interaction with Scald will be through the Scald API defined herein.  See
+ * the docs folder for more detailed information.
+ *
+ * @ingroup scald
+ */
+
+require_once('scald.constants.inc');
+
+
+
+
+
+
+/*******************************************************************************
+ * SCALD PROVIDERS & CONFIGURATION
+ ******************************************************************************/
+
+/**
+ * Register a Scald Provider with Scald Core.
+ *
+ * NOTE: This function does *not* automatically update the list of registered
+ *  Scald Providers maintained by Scald Core.
+ *
+ * @param $provider
+ *   The name of the Scald Provider being registered.  Should be the name of a
+ *    Drupal module (though technically, a prefix for which all the appropriate
+ *    Scald hooks were implemented would probably work).
+ * @param $definitions
+ *   A structured array with data specifying what the Scald Provider is
+ *    providing.  Expected to match spec for the return value of
+ *    hook_scald_provider().
+ * @param $additional
+ *   A boolean indicating whether $definitions should be evaluated as a full
+ *    Provider specification or as a re-run looking for additional things to
+ *    register.  If FALSE, duplicate registrations result in function failure.
+ *    If TRUE, duplicate registration attempts are ignored.  Note that even
+ *    when $additional is TRUE, the function can fail if db queries fail or a
+ *    bad slug is provided.  Setting $additional to TRUE only removes the
+ *    failures which are due to duplication.  Duplicate registrations won't be
+ *    inserted into the DB, either, they just won't cause an error.
+ * @return
+ *   FALSE if one of the registrations of a Scald Provider failed.
+ *   TRUE if all of the registrations succeeded.
+ */
+function _scald_register_provider($provider = '', $definitions = array(), $additional = FALSE) {
+  // Argument validation
+  if (empty($provider) || empty($definitions) || !is_array($definitions)) {
+    return FALSE;
+  }
+
+  $scald_config = variable_get('scald_config', 0);
+
+  foreach ($definitions as $provider_type => $provisions) {
+    foreach ($provisions as $slug => $details) {
+      // Check for slug validity
+      if (strlen($slug) > SCALD_SLUG_MAX_LENGTH || !preg_match(SCALD_SLUG_MATCH_PATTERN, $slug)) {
+        return FALSE;
+      }
+
+      switch ($provider_type) {
+        case 'types':
+          // Only register the Scald Unified Type if it isn't already in the
+          //  Scald Unified Types Registry
+          if (empty($scald_config->types[$slug])) {
+            $success = db_query(
+              "
+                INSERT INTO
+                  {scald_types}
+                SET
+                  type        = '%s',
+                  provider    = '%s',
+                  title       = '%s',
+                  description = '%s'
+              ",
+              $slug,
+              $provider,
+              $details['title'],
+              $details['description']
+            );
+            if (!$success) {
+              return FALSE;
+            }
+
+            // Set the per-Type defaults for Atom objects
+            $scald_atom_defaults = variable_get('scald_atom_defaults', 0);
+            $scald_atom_defaults->thumbnail_source[$slug] = $details['thumbnail_source'];
+            $scald_atom_defaults->description[$slug] = $details['description_default'];
+            variable_set('scald_atom_defaults', $scald_atom_defaults);
+          }
+          else {
+            if (!$additional) {
+              return FALSE;
+            }
+          }
+          break; // end 'types'
+
+
+        case 'atoms':
+          // Fail if the Scald Unified Type is not registered
+          if (empty($scald_config->types[$slug])) {
+            return FALSE;
+          }
+
+          foreach ($details as $base_description) {
+            // The Primary Key constraint on {scald_atom_providers} will prevent
+            //  the duplicate registration of the exact same facet of an Atom
+            //  Provider twice.
+            $success = db_query(
+              "
+                INSERT" . ($additional ? " IGNORE " : " ") . "INTO
+                  {scald_atom_providers}
+                SET
+                  type             = '%s',
+                  provider         = '%s',
+                  base_description = '%s'
+              ",
+              $slug,
+              $provider,
+              $base_description
+            );
+            if (!$success) {
+              // @@@TODO: Make this handle both query failures and key constraint violations (the former should actually return FALSE regardless, the latter on if !$additional).
+              if (!$additional) {
+                return FALSE;
+              }
+            }
+          }
+          break; // end 'atoms'
+
+
+        case 'contexts':
+          // Skip registration if this Scald Context is already registered and
+          //  fail if it is not registered to this Scald Provider.
+          if (!empty($scald_config->contexts[$slug])) {
+            if ($scald_config->contexts[$slug]['provider'] != $provider) {
+              if (!$additional) {
+                return FALSE;
+              }
+              else {
+                continue;
+              }
+            }
+            else {
+              continue;
+            }
+          }
+
+          $success = db_query(
+            "
+              INSERT INTO
+                {scald_contexts}
+              SET
+                context         = '%s',
+                provider        = '%s',
+                title           = '%s',
+                description     = '%s',
+                render_language = '%s',
+                parseable       = %d
+            ",
+            $slug,
+            $provider,
+            $details['title'],
+            $details['description'],
+            $details['render_language'],
+            $details['parseable']
+          );
+          if (!$success) {
+            return FALSE;
+          }
+
+          // Ignore inefficiency of mutiple queries for clarity and because
+          //  this registration code runs very infrequently.
+          foreach ($details['formats'] as $type => $formats) {
+            if (!is_array($formats)) {
+              $formats = array($formats);
+            }
+            foreach ($formats as $format) {
+              $success = $success && db_query(
+                "
+                  INSERT INTO
+                    {scald_context_type_formats}
+                  SET
+                    context     = '%s',
+                    type        = '%s',
+                    file_format = '%s'
+                ",
+                $slug,
+                $type,
+                $format
+              );
+            }
+          }
+          if (!$success) {
+            // @@@TODO: Handle a failure here more gracefully.  Just returning false results in a db with only *some* (or none) of the Scald Context's type/format mappings specified but no way to re-register the Scald Context Provider because re-running the registration routine will indicate that the provider is already registered.
+            return FALSE;
+          }
+          break; // end 'contexts'
+
+
+        case 'actions':
+          // Skip registration if this Action is already registered to this
+          //  Provider; fail if it's already registered to another Provider.
+          if (!empty($scald_config->actions[$slug])) {
+            if ($scald_config->actions[$slug]['provider'] != $provider) {
+              if (!$additional) {
+                return FALSE;
+              }
+              else {
+                continue;
+              }
+            }
+            else {
+              continue;
+            }
+          }
+
+          // Since the Scald Actions bitstring is limited to 31 bits and the
+          //  high bit is reserved by Scald, only 30 actions can be registered.
+          //  See scald.constants.inc or docs/scald_provider_api.txt for
+          //  additional details.
+          $max_power= db_result(db_query("SELECT MAX(power) FROM {scald_actions}"));
+          if ($max_power >= SCALD_ACTIONS_MAX_POWER) {
+            return FALSE;
+          }
+
+      	  if (!db_query(
+      	    "
+      	      INSERT INTO
+	              {scald_actions}
+      	      SET
+	              action      = '%s',
+      	        provider    = '%s',
+	              title       = '%s',
+      	        description = '%s',
+                power        = %d
+      	    ",
+	          $slug,
+      	    $provider,
+	          $details['title'],
+      	    $details['description'],
+            (int) $max_power + 1
+      	  )) {
+      	    return FALSE;
+          }
+          break; // end 'actions'
+
+
+        case 'transcoders':
+          // Skip registration if this Transcoder is already registered to this
+          //  Provider; fail if it's already registered to another Provider.
+          if (!empty($scald_config->transcoders[$slug])) {
+            if ($scald_config->transcoders[$slug]['provider'] != $provider) {
+              if (!$additional) {
+                return FALSE;
+              }
+              else {
+                continue;
+              }
+            }
+            else {
+              continue;
+            }
+          }
+
+          if (!db_query(
+            "
+              INSERT INTO
+                {scald_transcoders}
+              SET
+                transcoder  = '%s',
+                provider    = '%s',
+                title       = '%s',
+                description = '%s'
+            ",
+            $slug,
+            $provider,
+            $details['title'],
+            $details['description']
+          )) {
+            return FALSE;
+          }
+
+          foreach ($details['formats'] as $type => $format) {
+            $success = $success && db_query(
+              "
+                INSERT INTO
+                  {scald_transcoder_formats}
+                SET
+                  transcoder  = '%s',
+                  type        = '%s',
+                  file_format = '%s'
+              ",
+              $slug,
+              $type,
+              $format
+            );
+          }
+          if (!$success) {
+            // @@@TODO: Handle a failure here more gracefully.  Just returning false results in a db with only *some* (or none) of the Transcoder's type/format mappings specified but no way to re-register the Scald Transcoder Provider because re-running the registration routine will indicate that the provider is already registered.
+            return FALSE;
+          }
+	        break; // end 'transcoders'
+
+
+        case 'relationships':
+          // Skip registration if this Relationship is already registered to
+          //  this Provider; fail if it's already registered to another
+          //  Provider.
+          if (!empty($scald_config->relationships[$slug])) {
+            if ($scald_config->relationships[$slug]['provider'] != $provider) {
+              if (!$additional) {
+                return FALSE;
+              }
+              else {
+                continue;
+              }
+            }
+            else {
+              continue;
+            }
+          }
+
+          if (!db_query(
+            "
+              INSERT INTO
+                {scald_relationships}
+              SET
+                relationship  = '%s',
+                provider      = '%s',
+                title         = '%s',
+                title_reverse = '%s',
+                description   = '%s'
+            ",
+            $slug,
+            $provider,
+            $details['title'],
+            $details['title_reverse'],
+            $details['description']
+          )) {
+            return FALSE;
+          }
+	        break; // end 'relationships'
+
+
+        default:
+          // The registration type slug was not recognized.  Fail.
+          return FALSE;
+          break; // end default
+      } // end switch $provider_type
+    } // end foreach $definitions
+  } // end foreach $provisions
+
+  return TRUE;
+} // end _scald_register_provider()
+
+
+
+/**
+ * Unregister a Scald Provider.
+ *
+ * NOTE: This function does *not* update the internally-maintained list of
+ *  Scald Providers.  That happens in scald_update_providers().  Also, this
+ *  function will execute *AFTER* hook_disable() but *before* hook_uinstall().
+ *  This is relevant because it means that when the Provider module's
+ *  hook_uninstall() executes, all the Atoms it Provides will have been
+ *  unregistered.
+ *
+ * @param $provider
+ *   The name of a Scald Provider (Drupal module).
+ * @return
+ *   TRUE/FALSE based on the success of the unregistration action.
+ */
+function _scald_unregister_provider($provider) {
+  // @@@TODO: Figure out what needs to happen at this point!
+  //           Clearly any configuration options which reference the provider should be reset, though determining that will be difficult.  Depending on what the Provider provides (e.g. Atoms), actual data might need to be removed.  If it's an Atom Provider, batch-remove all Atoms.  The Provider module is responsible for handling any Transcoder-related cache-deletion, etc.  If it's any other kind of Provider, dropping all the data from the db should probably be adaquate.
+  // @@@TODO: *DON'T* call scald_config_rebuild() here; this is a private function and scald_config_rebuild() should be called by the calling stack.  
+} // end _scald_unregister_provider()
+
+
+
+/**
+ * Determine if Scald Providers have been enabled or disabled and update the
+ *  Scald Registries as necessary.
+ *
+ * This function generates a list of all Drupal Modules which implement the 
+ *  scald_provider() hook.  That list is compared against Scald Core's list of
+ *  registered Providers and the Provider (un)registration functions are called
+ *  in order to bring the two into sync.  Necessarily, the Scald Configuration
+ *  Object is rebuilt afterwards.
+ *
+ * NOTE: Because there is no convenient way to fire a function upon the enabling
+ *  of a new module, this function must masquerade as a form sumbission handler.
+ *  It is nothing of the kind, however, and ignores the required arguments
+ *  completely.
+ *
+ * @param $form
+ *   Ignored.  Included for function definition parity.
+ * @param $form_state
+ *   Ignored.  Included for function definition parity.
+ * @return
+ *   Void.
+ */
+function scald_update_providers($form = NULL, &$form_state = NULL) {
+  $registered_providers = variable_get('scald_providers', array());
+  $current_implementers = module_implements('scald_provider');
+
+  $to_register = array_diff($current_implementers, $registered_providers);
+  foreach ($to_register as $module) {
+    _scald_register_provider($module, module_invoke($module, 'scald_provider'));
+  }
+
+  $to_unregister = array_diff($registered_providers, $current_implementers);
+  foreach ($to_unregister as $module) {
+    _scald_unregister_provider($module);
+  }
+
+  // @@@TODO: Make the list dependent on successful registration.  Need a more sophistocated return value in _scald_register_provider() to accomplish this.
+  variable_set('scald_providers', $current_implementers); 
+  scald_config_rebuild();
+} // end scald_update_providers()
+
+
+
+/**
+ * Rebuild the Scald Configuration Object & other key configuration variables.
+ *
+ * NOTE: The Scald Configuration Object only includes information relevant to
+ *  the internal operation of Scald.  If a label is available for "public"
+ *  viewing (e.g. the title of an Action), it is included, but if it is only
+ *  for the benefit of Admins or Devs (e.g. the title of a Transcoder) it is
+ *  *not* included in the Scald Configuration Object.
+ *
+ * @param $sections
+ *   A string specifying the section of the Scald Configuration Object to
+ *   rebuild OR an array with more one such string. Permitted strings are:
+ *   'types', 'actions', 'contexts', 'transcoders', and 'relationships'.
+ *   If unspecified, all sections are rebuilt.
+ * @return
+ *   TRUE/FALSE based on success of object building.
+ */
+function scald_config_rebuild($sections = NULL) {
+
+  // Argument validation
+  $available_sections = array(
+    'types',
+    'contexts',
+    'actions',
+    'transcoders',
+    'relationships',
+  );
+
+  if (empty($sections)) {
+    $sections = $available_sections;
+  }
+  else if (!is_array($sections)) { 
+    $sections = array($sections);
+  }
+
+
+  // Build the Scald Configuration Object
+  $scald_config = variable_get('scald_config', 0);
+  if (!$scald_config) {
+    $scald_config = new stdClass;
+  }
+
+  foreach ($sections as $section) {
+    switch ($section) {
+      case 'types':
+        $scald_config->types         = _scald_types();
+        // Early save to fascilitate the build functions for Contexts and
+        //  Transcoders.
+        variable_set('scald_config', $scald_config);
+        break;
+      case 'contexts':
+        $scald_config->contexts      = _scald_contexts();
+        break;
+      case 'actions':
+        $scald_config->actions       = _scald_actions();
+        break;
+      case 'transcoders':
+        $scald_config->transcoders   = _scald_transcoders();
+        break;
+      case 'relationships':
+        $scald_config->relationships = _scald_relationships();
+        break;
+    }
+  }
+
+  variable_set('scald_config', $scald_config);
+
+
+  // Build the Scald Atom Defaults Object
+  $scald_atom_defaults = variable_get('scald_atom_defaults', 0);
+  if (empty($scald_atom_defaults)) {
+    $scald_atom_defaults = new stdClass;
+  }
+
+  foreach ($scald_config->types as $type => $details) {
+    // NOTE: Using isset rather than empty because NULL is a valid default
+    if (!isset($scald_atom_defaults->file_source[$type])) {
+      $scald_atom_defaults->file_source[$type] = NULL;
+    }
+    // NOTE: A thumbnail of some sort *must* be provided, however; No NULLs here
+    if (empty($scald_atom_defaults->thumbnail_source[$type])) {
+      $scald_atom_defaults->thumbnail_source[$type] = drupal_get_path('module', 'scald') . '/assets/thumbnail_default.png';
+    }
+    if (!isset($scald_atom_defaults->description[$type]) || is_null($scald_atom_defaults->description[$type])) {
+      $scald_atom_defaults->description[$type] = 'A ' . $type . ' Scald Atom.';
+    }
+    if (empty($scald_atom_defaults->actions[$type])) {
+      $scald_atom_defaults->actions[$type] = 0;
+    }
+  }
+
+  variable_set('scald_atom_defaults', $scald_atom_defaults);
+
+  return TRUE;
+} // end scald_config_rebuild()
+
+
+
+/**
+ * Get the available Scald Unified Types
+ *
+ * This function determines and returns a structured array specifying all the
+ *  currently provided Scald Unified Types.  The Scald Unified Types array has
+ *  the following format:
+ *  array(
+ *    'type-slug' => array(
+ *      'title'     => 'Plain-text title',
+ *      'providers' => array(
+ *        'provider',
+ *        ...
+ *    ),
+ *    ...
+ *  );
+ *
+ * @return
+ *   The Scald Unified Types array
+ */
+function _scald_types() {
+  $scald_types = array();
+
+  $types_results = db_query('SELECT type, title, provider FROM {scald_types}');
+  while ($type_raw = db_fetch_array($types_results)) {
+    $scald_types[$type_raw['type']] = array(
+      'provider'        => $type_raw['provider'],
+      'title'           => $type_raw['title'],
+      'atom_providers'  => array(),
+    );
+  }
+
+  // Ensure only a single entry is recorded for each type/provider mapping to
+  //  avoid unnecessary executions of hooks.
+  $providers_results = db_query('SELECT DISTINCT type, provider FROM {scald_atom_providers}');
+  while ($provider_raw = db_fetch_array($providers_results)) {
+    $scald_types[$provider_raw['type']]['atom_providers'][] = $provider_raw['provider'];
+  }
+
+  return $scald_types;
+} // end _scald_types()
+
+
+
+/**
+ * Get available Scald Contexts
+ *
+ * NOTE: Having $scald_config->types properly populated is a prerequisite for
+ *  this function.
+ *
+ * This function determines and returns a structured array specifying all the
+ *  currently provided Scald Contexts.  The Scald Contexts array is cached in
+ *  the Drupal variables table and only rebuilt upon request from this function.
+ *  The Scald Contexts array has the following format:
+ *  array(
+ *    'context-slug' => array(
+ *      'provider'        => 'provider-name',
+ *      'render_language' => 'language-slug',   // e.g. 'XHTML'
+ *      'type_format'         => array(
+ *        'type-slug'   => array(
+ *          'file_format' => 'format-slug'
+ *          'transcoder'  => 'transcoder-slug'
+ *        ),
+ *        ...
+ *      ),
+ *    ),
+ *    ...
+ *  );
+ *
+ * @return
+ *   The Scald Contexts array
+ */
+function _scald_contexts() {
+  // Build the type_format array for 'debug', which is passthrough for
+  //  every type *always*
+  $scald_config = variable_get('scald_config', 0);
+  $type_formats = array();
+  foreach (array_keys($scald_config->types) as $type) {
+    $type_formats[$type] = array(
+      'file_format' => 'passthrough',
+      'transcoder'  => 'passthrough',
+    );
+  }
+
+  // Build the hard-coded 'debug' context which shouldn't live in the database
+  $scald_contexts = array();
+  $scald_contexts['debug'] = array(
+    'provider'        => 'scald',
+    'render_language' => 'XHTML',
+    'parseable'       => FALSE,
+    'type_format'     => $type_formats,
+  );
+
+  // Grab all the contexts from the db
+  $contexts_results = db_query('
+    SELECT
+      context,
+      provider,
+      render_language,
+      parseable
+    FROM
+     {scald_contexts}
+  ');
+  while ($context_raw = db_fetch_array($contexts_results)) {
+    $scald_contexts[$context_raw['context']] = array(
+      'provider'        => $context_raw['provider'],
+      'render_language' => $context_raw['render_language'],
+      'parseable'       => $context_raw['parseable'],
+      'type_format'     => array(),
+    );
+  }
+
+  // Pull the context => type/format mappings from the db
+  $format_results = db_query('
+    SELECT
+      context,
+      type,
+      file_format,
+      transcoder
+    FROM
+      {scald_context_type_transcoder}
+  ');
+  while ($format_raw = db_fetch_array($format_results)) {
+    $scald_contexts[$format_raw['context']]['type_format'][$format_raw['type']] = array(
+        'file_format' => $format_raw['file_format'],
+        'transcoder'  => $format_raw['transcoder']
+    );
+  }
+
+  return $scald_contexts;
+} // end _scald_contexts()
+
+
+
+/**
+ * Get the available Scald Actions
+ *
+ * This function returns a structured array which specifies all the currently
+ *  provided Scald Actions.  The actions are in an array with one or more 
+ *  elements in the format:
+ *  array(
+ *    'action-slug' => array(
+ *      'provider' => 'provider-name',
+ *      'title'    => 'Plain-text title',
+ *      'mask'     => 0x04,
+ *    ),
+ *    ..
+ *  );
+ *
+ * @return
+ *  The Scald Actions array.
+ */
+function _scald_actions() {
+  $scald_actions = array();
+
+  $scald_actions['@admin'] = array(
+    'provider'  => 'scald',
+    'title'     => t('Admin Mode'),
+    'mask'      => SCALD_ACTIONS_ADMIN_BIT,
+  );
+  $scald_actions['fetch'] = array(
+    'provider' => 'scald',
+    'title'    => t('Fetch'),
+    'mask'     => SCALD_ACTIONS_FETCH,
+  );
+
+  $actions_results = db_query('
+    SELECT
+      action,
+      power,
+      provider,
+      title
+    FROM
+      {scald_actions}
+  ');
+  while ($action_raw = db_fetch_array($actions_results)) {
+    $scald_actions[$action_raw['action']] = array(
+      'provider' => $action_raw['provider'],
+      'title'    => $action_raw['title'],
+      'mask'     => pow(2, $action_raw['power']),
+    );
+  }
+
+  return $scald_actions;
+} // end _scald_actions()
+
+
+
+/**
+ * Get the available Scald Transcoders
+ *
+ * NOTE: Having $scald_config->types properly populated is a prerequisite for
+ *  this function.
+ *
+ * This function returns a structured array which specifies all the currently
+ *  provided Scald Transcoders.  The actions are in an array with one or more
+ *  elements in the format:
+ *  array(
+ *    'transcoder-slug' => array(
+ *      'provider' => 'provider-name',
+ *      'formats'  => array(
+ *        'type-slug' => 'file_format',
+ *        ...
+ *    ),
+ *    ...
+ *  );
+ *
+ * @return
+ *   The Scald Transcoders array
+ */
+function _scald_transcoders() {
+  // Build the formats array for 'passthrough', *always* includes every Type
+  //  currently registered with Scald Core.
+  $scald_config = variable_get('scald_config', 0);
+  $type_formats = array();
+  foreach (array_keys($scald_config->types) as $type) {
+    $type_formats[$type] = 'passthrough';
+  }
+
+  $scald_transcoders = array();
+  $scald_transcoders['passthrough'] = array(
+    'provider' => 'scald',
+    'formats'  => $type_formats,
+  );
+
+  $transcoder_results = db_query('
+    SELECT
+      transcoder,
+      provider
+    FROM
+      {scald_transcoders}
+  ');
+  while ($transcoder_raw = db_fetch_array($transcoder_results)) {
+    $scald_transcoders[$transcoder_raw['transcoder']] = array(
+      'provider' => $transcoder_raw['provider'],
+      'formats'  => array(),
+    );
+  }
+
+  $format_results = db_query('
+    SELECT
+      transcoder,
+      type,
+      file_format
+    FROM
+      {scald_transcoder_formats}
+  ');
+  while ($format_raw = db_fetch_array($format_results)) {
+    $scald_transcoders[$format_raw['transcoder']]['formats'][] = array(
+      $format_raw['type'] => $format_raw['file_format'],
+    );
+  }
+
+  return $scald_transcoders;
+} // end _scald_transcoders()
+
+
+
+/**
+ * Get the available Scald Relationships
+ *
+ * This function returns a structured array which specifies all the currently
+ *  provided Scald Relationships.  The actions are in an array with one or more
+ *  elements in the format:
+ *  array(
+ *    'relationship-slug' => array(
+ *      'provider'      => 'provider-name',
+ *      'title'         => 'Plain-text title',
+ *      'title_reverse' => 'Plain-text reverse title',
+ *    ),
+ *    ...
+ *  );
+ *
+ * @return
+ *  The Scald Relationships array
+ */
+function _scald_relationships() {
+  $scald_relationships = array();
+
+  $relationship_results = db_query('
+    SELECT
+      relationship,
+      provider,
+      title,
+      title_reverse
+    FROM
+      {scald_relationships}
+  ');
+  while ($relationship_raw = db_fetch_array($relationship_results)) {
+    $scald_relationships[$relationship_raw['relationship']] = array(
+      'provider'      => $relationship_raw['provider'],
+      'title'         => $relationship_raw['title'],
+      'title_reverse' => $relationship_raw['title_reverse'],
+    );
+  }
+
+  return $scald_relationships;
+} // end _scald_relationships()
+
+
+
+
+
+
+/*******************************************************************************
+ * SCALD ATOM CRUD
+ ******************************************************************************/
+
+/**
+ * Register a new Scald Atom with Scald Core.
+ *
+ * @param $values
+ *  An associative array with keys which correspond to Scald Atom Object members
+ *   At minimum, 'type', 'provider', and 'base_id' (which uniquely identifies a
+ *   given Atom) are required.  Additional included values which are keyed by
+ *   recognized Scald Atom Object members will be used for those members and
+ *   any additional values will be passed along to the Providers.
+ * @return
+ *   The Scald ID upon successful registration
+ *   FALSE upon failure
+ */
+function scald_register_atom($values) {
+  // Argument validation
+  if (!is_array($values) || empty($values)) {
+    return FALSE;
+  }
+
+
+  // Begin building the Atom object
+  $atom = new stdClass;
+
+  foreach ($values as $key => $value) {
+    switch ($key) {
+      // Recognized Atom object memebers are assigned and removed from $values
+      case 'provider':
+      case 'type':
+      case 'base_id':
+      case 'publisher':
+      case 'actions':
+      case 'title':
+      case 'authors':
+      case 'relationships':
+        $atom->$key = $value;
+        unset($values[$key]);
+        break;
+
+      // Recognized Atom object members which cannot reasonably be assigned
+      //  either by Scald Core or by one of the Providers are simply removed.
+      case 'sid':
+      case 'fetched':
+        unset($values[$key]);
+      break;
+
+      default:
+        break;
+    }
+  }
+
+
+  // First pass Atom object validation
+  $scald_config = variable_get('scald_config', 0);
+
+  // Verify type & provider
+  if (empty($scald_config->types[$atom->type]) || !in_array($atom->provider, $scald_config->types[$atom->type]['atom_providers'])) {
+    return FALSE;
+  }
+
+  // Ensure the Atom Object has all the required members
+  if (!isset($atom->publisher)) {
+    $atom->publisher = NULL;
+  }
+  if (!isset($atom->actions)) {
+    $atom->actions = NULL;
+  }
+  if (!isset($atom->title)) {
+    $atom->title = '';
+  }
+  if (!isset($atom->authors)) {
+    $atom->authors = array();
+  }
+  if (!isset($atom->relationships)) {
+    $atom->relationships = array(
+      'forward' => array(),
+      'reverse' => array(),
+    );
+  }
+
+
+  // The Type Provider can implement some other defaults at this point, but
+  //  the Atom Provider may override them.
+  module_invoke($scald_config->types[$atom->type]['provider'], 'scald_register_atom', $atom, $values, 'type');
+
+  // Hand the new Atom off to the Atom Provider to do additional processing and
+  //  population
+  // NOTE: Providers explicitly have access to change the Atom's basic members
+  //  to allow for hypothetical "dispatch Providers" which would determine the
+  //  appropriate Provider and/or characteristics of an Atom upon registration.
+  module_invoke($atom->provider, 'scald_register_atom', $atom, $values, 'atom');
+
+
+  // Another round of member validation is necessary due to the potential for
+  //  the Providers to modify them.  By design!
+  if (empty($atom->type) || empty($atom->provider)) {
+    return FALSE;
+  }
+
+  if (empty($scald_config->types[$atom->type]) || !in_array($atom->provider, $scald_config->types[$atom->type]['atom_providers'])) {
+    return FALSE;
+  }
+
+  // Only supply defaults for the Actions bitstring if the Provider did nothing.
+  //  Otherwise assume that the bitstring is intentional.
+  if (is_null($atom->actions)) {
+    $scald_atom_defaults = variable_get('scald_atom_defaults', 0);
+    $atom->actions = $scald_atom_defaults->actions[$atom->type];
+  }
+
+  // Do "poor-man's" UID validation.
+  if (empty($atom->publisher) || !is_numeric($atom->publisher) || !($atom->publisher > 0)) {
+    global $user;
+    $publisher = $user->uid;
+  }
+
+
+  // Put the basic data in the Scald Atom Registry
+  if (
+    !db_query(
+      "
+        INSERT INTO
+          {scald_atoms}
+        SET
+          provider = '%s',
+          type = '%s',
+          base_id = '%s',
+          publisher = %d,
+          actions = %d,
+          title = '%s'
+      ",
+      $atom->provider,
+      $atom->type,
+      $atom->base_id,
+      $atom->publisher,
+      $atom->actions,
+      $atom->title
+    )
+  ) {
+    return FALSE;
+  }
+
+  $atom->sid = db_last_insert_id('scald_atoms', 'sid');
+
+  // Handle a common error in the $values array.
+
+  if (is_array($atom->relationships) && !isset($atom->relationships['forward'])) {
+    $atom->relationships = array(
+      'forward' => $atom->relationships,
+      'reverse' => array(),
+    );
+  }
+
+
+  // Authors
+  foreach ($atom->authors as $weight => $author_id) {
+    db_query(
+      "
+        INSERT INTO
+          {scald_atom_authors}
+        SET
+          sid = %d,
+          aid = %d,
+          weight = %d
+      ",
+      $atom->sid,
+      $author_id,
+      $weight
+    );
+  }
+
+
+  // Relationships
+  foreach ($scald_config->relationships as $relationship) {
+    module_invoke($relationship['provider'], 'scald_register_atom', $atom, $values, 'relationship');
+  }
+
+  // Only worry about the "forward" Relationships.  "reverse" Relationships are
+  //  populated in scald_fetch() and are updated when the other Atom is updated
+  foreach ($atom->relationships['forward'] as $relationship => $atoms) {
+    foreach ($atoms as $sid_right) {
+      db_query(
+        "
+          INSERT INTO
+            {scald_atom_relationships}
+          SET
+            sid_left = %d,
+            relationship = '%s',
+            sid_right = %d
+        ",
+        $atom->sid,
+        $relationship,
+        $sid_right
+      );
+    }
+  }
+
+
+  // Transcoding
+  // Only fire hook_register_atom() for Transcoder Providers that might be
+  //  responsible for transcoding this Atom (based on the currently-configured
+  //  Context and Transcoder settings).
+  foreach ($scald_config->contexts as $context => $details) {
+    $transcoder = $details['type_format'][$atom->type]['transcoder'];
+    $values['@context'] = $context;
+    module_invoke($scald_config->transcoders[$transcoder]['provider'], 'scald_register_atom', $atom, $values, 'transcoder');
+  }
+
+
+  return $atom->sid;
+} // end scald_register_atom()
+
+
+
+/**
+ * Update a Scald Atom
+ *
+ * Passing just a SID will trigger hook_scald_update_atom() without updating any
+ *  core Atom object values.
+ *
+ * @param $atom
+ *  An Atom object which has a registered SID
+ *  OR a SID
+ * @param $values
+ *  An optional array keyed with member names and values.  For recognized Atom
+ *  members, the Atom is updated directly.  The array is passed to the Providers
+ *  as well.
+ * @return
+ *  The fully-updated Atom object.  FALSE upon failure.
+ */
+function scald_update_atom($atom, $values = NULL) {
+  // Argument validation
+  if (is_object($atom)) {
+    $sid = $atom->sid;
+  }
+  else {
+    $sid = $atom;
+  }
+
+  if ($my_atom = scald_is_registered($sid) === FALSE) {
+    return FALSE;
+  }
+
+  if (!is_object($atom)) {
+    $atom = $my_atom;
+  }
+
+  // If using the $values array
+  if (is_array($values) && !empty($values)) {
+    foreach ($values as $key => $value) {
+      switch ($key) {
+        // Recognized Atom object memebers are updated and removed from $values
+        case 'provider':
+        case 'type':
+        case 'base_id':
+        case 'publisher':
+        case 'actions':
+        case 'title':
+        case 'authors':
+        case 'relationships':
+          $atom->$key = $value;
+          unset($values[$key]);
+          break;
+
+        // Recognized Atom object members which cannot reasonably be updated
+        //  either by Scald Core or by one of the Providers are simply removed.
+        case 'sid':
+        case 'fetched':
+          unset($values[$key]);
+          break;
+
+        default:
+          break;
+      }
+    }
+  }
+
+  // Handle a common error in the $values array.
+  if (is_array($atom->relationships) && !isset($atom->relationships['forward'])) {
+    $atom->relationships = array(
+      'forward' => $atom->relationships,
+      'reverse' => array(),
+    );
+  }
+
+  $scald_config = variable_get('scald_config', 0);
+
+
+  // Run the Provider Hooks
+  module_invoke($scald_config->types[$atom->type]['provider'], 'scald_update_atom', $atom, $values, 'type');
+  module_invoke($atom->provider, 'scald_update_atom', $atom, $values, 'atom');
+
+  foreach ($scald_config->relationships as $relationship) {
+    module_invoke($relationship['provider'], 'scald_update_atom', $atom, $values, 'relationship');
+  }
+
+  foreach ($scald_config->contexts as $context => $details) {
+    $transcoder = $details['type_format'][$atom->type]['transcoder'];
+    module_invoke($scald_config->transcoders[$transcoder]['provider'], 'scald_update_atom', $atom, $values, 'transcoder');
+  }
+
+
+  // @@@TODO: Enforce defaults/valid values (as in scald_register_atom())
+
+  // Update the basic data in the Scald Atom Registry
+  if (
+    !db_query(
+      "
+        UPDATE
+          {scald_atoms}
+        SET
+          provider = '%s',
+          type = '%s',
+          base_id = '%s',
+          publisher = %d,
+      	  actions = %d,
+          title = '%s'
+        WHERE
+          sid = %d
+      ",
+      $atom->provider,
+      $atom->type,
+      $atom->base_id,
+      $atom->publisher,
+      $atom->actions,
+      $atom->title,
+      $atom->sid
+    )
+  ) {
+    return FALSE;
+  }
+
+
+  // @@@TODO: Figure out a good way to *not* brute-force this
+  db_query("DELETE FROM {scald_atom_authors} WHERE sid = %d", $atom->sid);
+
+  foreach ($atom->authors as $weight => $author_id) {
+    db_query(
+      "
+        INSERT INTO
+          {scald_atom_authors}
+        SET
+          sid = %d,
+          aid = %d,
+          weight = %d
+      ",
+      $atom->sid,
+      $author_id,
+      $weight
+    );
+  }
+
+  // @@@TODO: Figure out a good way to *not* brute-force this
+  db_query("DELETE FROM {scald_atom_relationships} WHERE sid_left = %d", $atom->sid);
+
+  // @@@TODO: Figure out how to invalidate any 'reverse' Relationships *and* re-calculate them effectively.
+
+  foreach ($atom->relationships['forward'] as $relationship => $atoms) {
+    foreach ($atoms as $sid_right) {
+      db_query(
+        "
+          INSERT INTO
+            {scald_atom_relationships}
+          SET
+            sid_left = %d,
+            relationship = '%s',
+            sid_right = %d
+        ",
+        $atom->sid,
+        $relationship,
+        $sid_right
+      );
+    }
+  }
+
+ 
+  // Clear the render cache
+  cache_clear_all($atom->sid . ':', 'cache_scald', TRUE);
+  // Clear the memory caches
+  return scald_fetch($atom->sid, TRUE);
+} // end scald_update_atom()
+
+
+
+/**
+ * Unregister a Scald Atom
+ *
+ * @param $sid
+ *  The Scald ID of the Atom being unregistered *OR* the Atom object.
+ */
+function scald_unregister_atom($sid) {
+  if (is_object($sid)) {
+    $sid = $sid->sid;
+  }
+
+  // Force a rebuild to ensure that the most-current instance is being used as
+  //  when informing Providers of the impending destruction.
+  $atom = scald_fetch($sid, TRUE);
+
+  $scald_config = variable_get('scald_config', 0);
+
+  // @@@TODO: Figure out exactly what needs to be done in order to safely remove (or suppress the ability to retrieve) the Atom from the registry.
+  db_query("UPDATE {scald_atoms} SET actions = 0 WHERE sid = %d", $sid);
+
+  // Alert the Providers that this Atom is gone
+  module_invoke($scald_config->types[$atom->type]['provider'], 'scald_unregister_atom', $atom, 'type');
+  module_invoke($atom->provider, 'scald_unregister_atom', $atom, 'atom');
+  foreach ($scald_config->relationships as $relationship) {
+    module_invoke($relationship['provider'], 'scald_unregister_atom', $atom, 'relationship');
+  }
+  foreach ($scald_config->contexts as $context => $details) {
+    $transcoder = $details['type_format'][$atom->type]['transcoder'];
+    module_invoke($scald_config->transcoders[$transcoder]['provider'], 'scald_unregister_atom', $atom, 'transcoder');
+  }
+
+  // Clear the memory cache
+  scald_is_registered($sid, TRUE);
+  // Clear the render cache
+  cache_clear_all($sid . ':', 'cache_scald', TRUE);
+} // end scald_unregister_atom()
+
+
+
+/**
+ * Determine if a Scald Atom is registered with Scald Core or not.
+ *
+ * @param $sid
+ *   The Scald ID being tested.
+ * @return
+ *   A Scald Atom Object if the Scald ID is valid.  The Atom Object is *ONLY*
+ *    populated with the following members: type, provider, base_id, actions,
+ *    and fetched *set to FALSE*.
+ *   FALSE if $sid is not a valid Scald ID (int) or if it does not reference an
+ *    Atom.
+ */
+function scald_is_registered($sid, $rebuild = FALSE) {
+  // Argument validation
+  if (!is_numeric($sid)) {
+    return FALSE;
+  }
+  $sid = (int) $sid;
+
+  static $scald_atoms;
+  if (!isset($scald_atoms)) {
+    $scald_atoms = array();
+  }
+
+  // Reference the memory cache when appropriate
+  if (!$rebuild && isset($scald_atoms[$sid])) {
+    return $scald_atoms[$sid];
+  }
+
+  // Build the Atom from the db
+  $registration_results = db_query("SELECT * FROM {scald_atoms} WHERE sid = %d", $sid);
+  if (!$registration_results) {
+    // Ensure that no Atoms linger improperly post-deletion
+    unset($scald_atoms[$sid]);
+    return FALSE;
+  }
+  $atom = db_fetch_object($registration_results);
+
+  if (!empty($atom)) {
+    $atom->fetched = FALSE;
+  }
+  else {
+    return FALSE;
+  }
+
+  $scald_atoms[$sid] = $atom;
+  
+  return $scald_atoms[$sid];
+} // end scald_is_registered()
+
+
+
+/**
+ * Load a Scald Atom.
+ *
+ * @param $sid
+ *   The Scald ID of the Atom to load.
+ * @param $rebuild
+ *   If set to TRUE, the Atom will be reloaded from the DB even if it is already
+ *    present in the memory cache.
+ * @return
+ *   A populated Scald Atom object
+ *   FALSE if SID is invalid or if $user is not permitted to fetch the Scald Atom
+ */
+function scald_fetch($sid, $rebuild = FALSE) {
+  // Verify the SID is legit and fetch basic info about the Atom
+  $atom = scald_is_registered($sid, $rebuild);
+  if (!$atom) {
+    return FALSE;
+  }
+
+
+  // Verify that the current user is allowed to fetch this Atom
+  if (!scald_action_permitted($atom, 'fetch')) {
+    return FALSE;
+  }
+
+
+  // Check the memory cache for the Atom
+  static $scald_atoms;
+  if (empty($scald_atoms)) {
+    $scald_atoms = array();
+  }
+
+  if (!$rebuild && isset($scald_atoms[$sid])) {
+    return $scald_atoms[$sid];
+  }
+
+
+  // Let the Atom Type Provider handle any defaults
+  $scald_config = variable_get($scald_config, 0);
+
+  module_invoke($scald_config->types[$atom->type]['provider'], 'scald_fetch', $atom, 'type');
+
+  $atom->authors = array();
+  $authors_result = db_query("
+    SELECT
+      weight,
+      aid
+    FROM
+      {scald_atom_authors}
+    WHERE
+      sid = %d
+    ORDER BY
+      weight
+  ", $sid);
+  while ($authors_raw = db_fetch_array($authors_result)) {
+    $atom->authors[$authors_raw['weight']] = $authors_raw['aid'];
+  }
+
+  $atom->relationships = array(
+    'forward' => array(),
+    'reverse' => array(),
+  );
+  $relationships_result = db_query("
+    SELECT
+      sid_left,
+      relationship,
+      sid_right
+    FROM
+      {scald_atom_relationships}
+    WHERE
+      sid_left = %d
+      OR sid_right = %d
+  ", $sid, $sid);
+  while ($relationship_raw = db_fetch_array($relationships_result)) {
+    if ($sid == $relationship_raw['sid_left']) {
+      $atom->relationships['forward'][$relationship_raw['relationship']][] = $relationship_raw['sid_right'];
+    }
+    else {
+      $atom->relationships['reverse'][$relationship_raw['relationship']][] = $relationship_raw['sid_left'];
+    }
+  }
+
+  $atom->base_entity = NULL;
+
+  module_invoke($atom->provider, 'scald_fetch', $atom, 'atom');
+
+  // If the Providers tried to mess with "protected" Atom object members, fail!
+  if ($sid != $atom->sid) {
+    return FALSE;
+  }
+
+  // Ensure all required Atom members are populated with at minimum default
+  //  values.  NOTE: it is assumed that Atom Providers won't be monkeying with
+  //  the "essentials" like the Type, Provider, SID, etc.
+  $scald_atom_defaults = variable_get('scald_atom_defaults', 0);
+  if (empty($atom->file_source)) {
+    $atom->file_source = $scald_atom_defaults->file_source[$atom->type];
+  }
+  if (empty($atom->thumbnail_source)) {
+    $atom->thumbnail_source = $scald_atom_defaults->thumbnail_source[$atom->type];
+  }
+  if (empty($atom->description)) {
+    $atom->description = $scald_atom_defaults->description[$atom->type];
+  }
+
+  $atom->fetched = TRUE;
+  $scald_atoms[$sid] = $atom;
+
+  return $atom;
+} // end scald_fetch()
+
+
+
+/**
+ * Determine if a Scald Atom is fetched
+ *
+ * @param $atom
+ *   The Scald Atom to test
+ * @return
+ *   TRUE/FALSE
+ */
+function scald_is_fetched($atom = NULL) {
+  return (
+    is_object($atom)
+    && isset($atom->fetched)
+    && $atom->fetched
+  );
+} // end scald_is_fetched()
+
+
+
+/**
+ * Find Atoms matching a given set of characteristics.
+ *
+ * @param $query
+ *  A keyed array with one or more of the following keys:
+ *    'provider'
+ *    'type'
+ *    'base_id'
+ *    'publisher'
+ *    'actions'
+ *    'title'
+ * @param $fuzzy
+ *  A boolean that if set to TRUE broadens the search to include partial matches
+ *  on all parameters
+ * @param $singular
+ *  A boolean that if set to TRUE ensures that only one result is returned.  The
+ *   return value is a single SID (scalar, not in an array).
+ * @return
+ *  An array of SIDs that match the characteristics specified
+ *  FALSE on bad input or no results
+ */
+function scald_search($query = array(), $fuzzy = FALSE, $singular = FALSE) {
+  // Argument validation
+  if (empty($query) || !is_array($query)) {
+    return FALSE;
+  }
+
+  $scald_config = variable_get('scald_config', 0);
+  $scald_providers = variable_get('scald_providers', 0);
+
+  if (!$fuzzy && !empty($query['type']) && !is_array($query['type']) && !in_array($query['type'], array_keys($scald_config->types))) {
+    unset($query['type']);
+  }
+
+  if (!empty($query['providers']) && !in_array($query['provider'], $scald_providers)) {
+    unset($query['provider']);
+  }
+
+
+  // Build the query & execute
+  $wheres = array();
+  $data = array();
+  foreach ($query as $field => $value) {
+    switch ($field) {
+      case 'title':
+      case 'type':
+      case 'base_id':
+      case 'provider':
+        $placeholder = $fuzzy ? "'%%%s%%'" : "'%s'";
+        if (is_array($value)) {
+          $condition = db_placeholders($value, 'text');
+          $wheres[] = $field . " IN($condition)";
+          $data = array_merge($data, $value);
+        }
+        else {
+          if ($fuzzy) {
+            $wheres[] = $field ." LIKE '%%%s%%'";
+          }
+          else {
+            $wheres[] = $field ." = '%s'";
+          }
+          $data[] = $value;
+        }
+        break; // end 'title/type/base_id/provider'
+
+      case 'publisher':
+        $wheres[] = $field . " = %d";
+        $data[] = $value;
+        break; // end 'publisher'
+
+      case 'actions':
+        break; // end 'actions'
+
+      default:
+        continue;
+    }
+  }
+
+  // @@@TODO: Use a pager_query() call here?
+
+  $search_results = db_query(
+    "
+      SELECT
+        sid
+      FROM
+        {scald_atoms}
+      WHERE "
+      . implode(' AND ', $wheres)
+      . ($singular ? " LIMIT 1" : '')
+    , $data
+  );
+
+  // Compose and return results
+  if (!$search_results) {
+    return FALSE;
+  }
+
+  if ($singular) {
+    return db_result($search_results);
+  }
+
+  $sids = array();
+  while ($sid_raw = db_fetch_array($search_results)) {
+    $sids[] = $sid_raw['sid'];
+  }
+
+  return $sids;
+} // end scald_search()
+
+
+
+
+
+
+/*******************************************************************************
+ * SCALD AUTHORS
+ ******************************************************************************/
+
+/**
+ * Get an Author ID from Scald Core.
+ * This will first check if an author matching the $data passed as an argument
+ * exists, and return it if it does. If it doesn't, then it will try to create
+ * a new author from this data.
+ *
+ * @param $data
+ *  A keyed array with the following possible keys:
+ *   'name', the full name; no first/last/etc. distinction. (required)
+ *   'uid', A Drupal User ID. (optional)
+ *   'url', A URL by which to find out more about the Author. (optional)
+ *    NOTE: If this element is omitted for an array which has 'uid' set, the
+ *     path 'user/<uid>' is assumed and supplied.  Set 'url' to an empty string
+ *     to avoid this behavior.
+ * @return
+ *  The Author ID upon success.
+ *  FALSE upon failure
+ */
+function scald_author_get_id($data = array()) {
+  // Validate arguments
+  if (empty($data) || empty($data['name'])) {
+    return FALSE;
+  }
+
+  // Build SQL conditions
+  $sets = array();
+  $sql_data = array();
+  foreach ($data as $field => $value) {
+    switch ($field) {
+      case 'name':
+        $sets[] = 'name = \'%s\'';
+        $sql_data[] = $value;
+        break; // end 'name'
+
+      case 'uid':
+        $sets[] = 'uid = %d';
+        $sql_data[] = $value;
+        if (!isset($data['url'])) {
+          $sets[] = 'url = \'' . url('user') . '/%d\'';
+          $sql_data[] = $value;
+        }
+        break; // end 'uid'
+
+      case 'url':
+        $sets[] = 'url = \'%s\'';
+        $sql_data[] = $value;
+        break; // end 'url'
+
+      default:
+        continue;
+    }
+  }
+
+  // Look for an existing author in the database.
+  $aid = db_result(db_query(
+    "
+      SELECT aid FROM
+        {scald_authors}
+      WHERE "
+        . implode(' AND ', $sets),
+    $sql_data
+  ));
+  if ($aid) {
+    return $aid;
+  }
+
+  // If no author matched those criteria, then, try to insert a new one.
+  if (!db_query(
+    "
+      INSERT INTO
+        {scald_authors}
+      SET "
+        . implode(', ', $sets),
+    $sql_data
+  )) {
+    return FALSE;
+  }
+
+  return db_last_insert_id('scald_authors', 'aid');
+} // end scald_author_get_id()
+
+/**
+ * Register an Author with Scald Core.
+ *
+ * @param $data
+ *  A keyed array with the following possible keys:
+ *   'name', the full name; no first/last/etc. distinction. (required)
+ *   'uid', A Drupal User ID. (optional)
+ *   'url', A URL by which to find out more about the Author. (optional)
+ *    NOTE: If this element is omitted for an array which has 'uid' set, the
+ *     path 'user/<uid>' is assumed and supplied.  Set 'url' to an empty string
+ *     to avoid this behavior.
+ * @return
+ *  The Author ID upon success.
+ *  FALSE upon failure
+ */
+function scald_register_author($data = array()) {
+  // Validate arguments
+  if (empty($data) || empty($data['name'])) {
+    return FALSE;
+  }
+
+  // Build SQL conditions
+  $sets = array();
+  $sql_data = array();
+  foreach ($data as $field => $value) {
+    switch ($field) {
+      case 'name':
+        $sets[] = 'name = \'%s\'';
+        $sql_data[] = $value;
+        break; // end 'name'
+
+      case 'uid':
+        $sets[] = 'uid = %d';
+        $sql_data[] = $value;
+        if (!isset($data['url'])) {
+          $sets[] = 'url = \'' . url('user') . '/%d\'';
+          $sql_data[] = $value;
+        }
+        break; // end 'uid'
+
+      case 'url':
+        $sets[] = 'url = \'%s\'';
+        $sql_data[] = $value;
+        break; // end 'url'
+
+      default:
+        continue;
+    }
+  }
+
+  if (!db_query(
+    "
+      INSERT INTO
+        {scald_authors}
+      SET "
+        . implode(', ', $sets),
+    $sql_data
+  )) {
+    return FALSE;
+  }
+
+  return db_last_insert_id('scald_authors', 'aid');
+} // end scald_register_author()
+
+
+
+/**
+ * Updates an Author's details.
+ *
+ * @param $aid
+ *  The Author ID of the Author whose information is being updated.
+ * @param $data
+ *  A keyed array with the same elements as the $data parameter from
+ *   scald_register_author().  Any elements not present will not be updated.
+ * @return
+ *  A boolean indicating success or failure
+ */
+function scald_update_author($aid, $data = array()) {
+  // Validate arguments
+  if (empty($aid) || !is_numeric($aid) || empty($data)) {
+    return FALSE;
+  }
+
+  $sets = array();
+  $sql_data = array();
+  foreach ($data as $field => $value) {
+    switch ($field) {
+      case 'name':
+        $sets[] = 'name = \'%s\'';
+        $sql_data[] = $value;
+        break; // end 'name'
+
+      case 'uid':
+        $sets[] = 'uid = %d';
+        $sql_data[] = $value;
+        if (!isset($data['url'])) {
+          $sets[] = 'url = \'' . url('user') . '/%d\'';
+          $sql_data[] = $value;
+        }
+        break; // end 'uid'
+
+      case 'url':
+        $sets[] = 'url = \'%s\'';
+        $sql_data[] = $value;
+        break; // end 'url'
+
+      default:
+        continue;
+    }
+  }
+  $sql_data[] = $aid;
+
+  if (!db_query(
+    "
+      UPDATE
+        {scald_authors}
+      SET "
+        . implode(', ', $sets) . "
+      WHERE
+        aid = %d
+    ",
+    $sql_data
+  )) {
+    return FALSE;
+  }
+
+} // end scald_update_author()
+
+
+
+/**
+ * Unregister an Author with Scald Core.
+ *
+ * @param $aid
+ *  The Author ID of the Author to remove.
+ * @return
+ *  Boolean representing the success or failure of the unregistration.
+ */
+function scald_unregister_author($aid = NULL) {
+  if (!is_numeric($aid)) {
+    return FALSE;
+  }
+
+  db_query("DELETE FROM {scald_authors} WHERE aid = %d", $aid);
+  db_query("DELETE FROM {scald_atom_authors} WHERE aid = %d", $aid);
+
+  return TRUE;
+} // end scald_unregister_author()
+
+
+
+/**
+ * Determine the User that corresponds to an Author ID.
+ *
+ * @param $aid
+ *  The Scald Author ID of the Author in question
+ * @param
+ *  The Drupal User ID of the user who is registered as the Author with $aid.
+ *  FALSE upon failure.
+ */
+function scald_aid_to_uid($aid) {
+  return db_result(db_query("SELECT uid FROM {scald_authors} WHERE aid = %d", $aid));
+} // end scald_aid_to_uid()
+
+
+
+/**
+ * Determine the Author ID that corresponds to a User ID.
+ *
+ * @param $uid
+ *  The Drupal User ID of the user in question.  Defaults to the UID of the
+ *   current user.
+ * @return
+ *  The Scald Author ID of the Author record that corresponds to the Drupal
+ *  user in question.  FALSE upon failure.
+ */
+function scald_uid_to_aid($uid = NULL) {
+  if (is_null($uid)) {
+    global $user;
+    $uid = $user->uid;
+  }
+  return db_result(db_query("SELECT aid FROM {scald_authors} WHERE uid = %d", $uid));
+} // end scald_uid_to_aid()
+
+
+
+
+
+
+/*******************************************************************************
+ * SCALD CONVERSION UTILITIES
+ ******************************************************************************/
+
+/**
+ * Process a text string and replace Scald Atom Shorthand (SAS) with rendered
+ *  Scald Atoms.
+ *
+ * Looks for strings along the lines of [scald=SID:context-slug options].
+ *
+ * @see scald_rendered_to_sas
+ *
+ * @param $string
+ *   A text string to be processed.
+ * @param $context
+ *   A Scald Context.  If $override is FALSE, this Context will only be used to
+ *    render the included Scald Atoms if the SAS does not specify a valid Scald
+ *    Context.  Defaults to 'title', which is a Scald Context provided by Scald
+ *    Core and therefore guaranteed to be registered.
+ * @param $override
+ *   A boolean used to determine if the Scald Context specified in the SAS
+ *    should be used or not.
+ * @return
+ *   The same text string, but with
+ */
+function scald_sas_to_rendered($string, $context = NULL, $override = FALSE) {
+  if (empty($context)) {
+    $context = 'title';
+  }
+
+  global $override;
+  $rendered = preg_replace_callback(
+    SCALD_SAS_MATCH_PATTERN,
+    create_function(
+      '$matches',
+      '
+        global $override;
+        return scald_render(
+          $matches[1],
+          (!empty($matches[2]) && !$override ? $matches[2] : \'' . $context . '\'),
+          (!empty($matches[3]) ? $matches[3] : NULL)
+        );
+      '
+    ),
+    $string
+  );
+
+  unset($override);
+  return $rendered;
+} // end scald_sas_to_rendered()
+
+
+
+/**
+ * Determine atoms (expressed as SAS) embedded in a string.
+ *
+ * @param $string
+ *  The string to search for SAS
+ * @return
+ *  An array of SIDs which are included in the string in SAS form.
+ */
+function scald_included($string) {
+  $matches = array();
+  if (!preg_match_all(
+    SCALD_SAS_MATCH_PATTERN,
+    $string,
+    $matches
+  )) {
+    return array();
+  }
+
+  return $matches[1];
+} // end scald_included()
+
+
+
+/**
+ * Process a text string and replace rendered Scald Atoms with Scald Atom
+ *  Shorthand (SAS).
+ *
+ * @see scald_sas_to_rendered
+ *
+ * NOTE: Scald Core only contains an implementation for parsing Scald Atoms
+ *  rendered in XHTML.  Additional implementations can be supplied by
+ *  implementing hook_scald_rendered_to_sas_RENDER_LANGUAGE()
+ *
+ * NOTE: The Scald Core implementation of parsing for XHTML *assumes* that the
+ *  standard Scald classes are attached to the outermost (containing) HTML
+ *  element.  If a Scald Context does not produce output matching this format
+ *  then this function will fail to detect and replace the Scald Atoms rendered
+ *  by that Context.  See docs/scald_overview.txt and
+ *  docs/scald_provider_api.txt for additional details.  Also see the Context
+ *  section in the Scald Administration pages for a tool to detect which Scald
+ *  Contexts will not produce output which can be parsed by this function.
+ *
+ * @param $string
+ *   A text string to be processed.
+ * @param $render_language
+ *   The expected format of $text.  Should correspond to the render_language
+ *    specified by Scald Contexts.  Defaults to XHTML.
+ * @return
+ *  The source string with all rendered Scald Atoms replaced with Scald Atom
+ *   Shorthand (SAS).
+ */
+function scald_rendered_to_sas($string, $render_language = 'XHTML') {
+  // If Scald Core can't handle it, maybe a Scald Provider can.
+  // NOTE: This will probably fail if more than one Scald Provider implements
+  //        support for the same render language.
+  if ($render_language != 'XHTML') {
+    $strings = module_invoke_all('scald_rendered_to_sas_' . $render_language, $string);
+    return $strings[0];
+  }
+
+  return preg_replace_callback(
+    SCALD_RENDERED_MATCH_PATTERN,
+    create_function(
+      '$matches',
+      '
+        return \'[scald=\' . $matches[1] . (!empty($matches[2]) ? \':\' . $matches[2] : \'\') . (!empty($matches[3]) ? \' \' . $matches[3] : \'\') . \']\';
+      '
+    ),
+    $string
+  );
+} // end scald_rendered_to_sas()
+
+
+
+
+
+
+/*******************************************************************************
+ * SCALD ACTIONS & LICENSES
+ ******************************************************************************/
+
+/**
+ * Determine the Scald Actions Bitstring for a given Atom for a given User.
+ *
+ * @param $atom
+ *   A Scald Atom
+ * @param $account
+ *   A Drupal user account
+ *   Defaults to the current $user
+ * @return
+ *   A Scald Actions Bitstring
+ *   FALSE if the Atom is invalid
+ */
+function scald_actions($atom, $account = NULL) {
+  global $user;
+
+  // Argument validation
+  if (is_null($account)) {
+    $account = $user;
+  }
+
+  // Default to Anonymous perms if no action bitstring is set.  Also handle the
+  //  special subcase of the Anonymous user.
+  //
+  // NOTE: This is necessary because $user is *not* the result of a user_load()
+  //  and so defaults must be defined at first use. Testing for the member's
+  //  existance and then modifying the $user object directly (as appropriate)
+  //  ensures that the cost of a query is saved the next time an access check is
+  //  executed for the current user during this session.
+  if (!isset($account->scald_actions)) {
+    // Note that db_result() will conveniently fail to FALSE which will prohibit
+    //  the user from completing *any* Actions.  Since the Admin interface only
+    //  shows Roles which have the "use scald" permission (and therefore the
+    //  {scald_role_actions} table only contains Roles which have that
+    //  permission), checking for said permission is not necessary (thus saving
+    //  a fairly expensive check).
+    $account->scald_actions = db_result(db_query("
+      SELECT
+        actions
+      FROM
+        {scald_role_actions}
+      WHERE
+        rid = %d",
+      DRUPAL_ANONYMOUS_RID
+    ));
+    if ($account->uid == $user->uid) {
+      $user->scald_actions = $account->scald_actions;
+    }
+  }
+
+  // NOTE: Not using scald_is_fetched here because Action validation can (and
+  //  should) be done prior to fetching.  However, it is assumed that this $atom
+  //  is *at least* the result of a scald_is_registered() call.
+  if (!is_object($atom) || !isset($atom->actions)) {
+    return FALSE;
+  }
+
+  // The Account in question belongs to the Scald Publisher of this Atom
+  if ($atom->publisher == $account->uid) {
+    $account->scald_actions = $account->scald_actions | variable_get('scald_actions_publisher', 0);
+  }
+
+  // Check for the "admin bit" being set in *either* the Atom or the User Action
+  //  bitstring and if it is set, OR the two rather than ANDing them.
+  return
+    (
+      $atom->actions & SCALD_ACTIONS_ADMIN_BIT
+      || $account->scald_actions & SCALD_ACTIONS_ADMIN_BIT
+    )
+    ? $atom->actions | $account->scald_actions
+    : $atom->actions & $account->scald_actions;
+} // end scald_actions()
+
+
+
+/**
+ * Determines if a given User can act on a given Atom in a given way.
+ *
+ * @@@TODO: Implement an optional batch mode which takes an array of Scald
+ *          Actions.
+ *
+ * @param $atom
+ *   A Scald Atom
+ * @param $action
+ *   A Scald Action slug
+ * @param $account
+ *   A Drupal user account
+ *   Defaults to the current $user
+ * @return
+ *   TRUE/FALSE
+ */
+function scald_action_permitted($atom, $action = 'fetch', $account = NULL) {
+  $scald_config = variable_get('scald_config', 0);
+  if (empty($scald_config->actions[$action])) {
+    return FALSE;
+  }
+
+  return (bool) (scald_actions($atom, $account) & $scald_config->actions[$action]['mask']);
+} // end scald_action_permitted()
+
+
+
+
+
+
+/*******************************************************************************
+ * SCALD CONTEXTS AND RENDERING
+ ******************************************************************************/
+
+/**
+ * Prepare a Scald Atom for rendering
+ *
+ */
+function scald_prerender(&$atom, $context, $options = NULL) {
+  $scald_config = variable_get('scald_config', 0);
+  $context_config = $scald_config->contexts[$context];
+
+  // Build the portion of the Rendered member which Providers are expected to
+  //  manipulate.
+  $atom->rendered = new stdClass;
+  $atom->rendered->sid = $atom->sid;
+  $atom->rendered->title = $atom->title;
+  $atom->rendered->file_source_url = empty($atom->file_source) ? NULL : url($atom->file_source);
+  $atom->rendered->file_transcoded_url = NULL;
+  $atom->rendered->thumbnail_source_url = url($atom->thumbnail_source);
+  $atom->rendered->description = $atom->description;
+  $atom->rendered->nocache = FALSE;
+
+  // Type & Atom prerenders
+  module_invoke($scald_config->types[$atom->type]['provider'], 'scald_prerender', $atom, $context, $options, 'type');
+  module_invoke($atom->provider, 'scald_prerender', $atom, $context, $options, 'atom');
+
+  // Transcoder Provider prerender -- only if there is a Transcoder specified
+  //  for this Context.
+  //  POPULATES: $atom->rendered->file_transcoded_url
+  if (!empty($context_config['type_format']) && !empty($context_config['type_format'][$atom->type])) {
+    module_invoke($scald_config->transcoders[$context_config['type_format'][$atom->type]['transcoder']]['provider'], 'scald_prerender', $atom, $context, $options, 'transcoder'); 
+  }
+
+  // Context prerender
+  module_invoke($context_config['provider'], 'scald_prerender', $atom, $context, $options, 'context');
+
+  // Populate default rendered members & validate other rendered members.
+  $atom->rendered->title = check_plain($atom->rendered->title); // @@@TODO: Determine if it makes sense to *always* do this or make it dependant on Context render language.
+  $atom->rendered->description = check_markup($atom->rendered->description, FILTER_FORMAT_DEFAULT, FALSE); // @@@TODO: Determine if this is reasonable or if it should be left to Providers
+  $atom->rendered->type = $scald_config->types[$atom->type]['title'];
+
+  // Actions
+  $atom->rendered->actions = array();
+  $current_actions = scald_actions($atom, $user) & ~SCALD_ACTIONS_ADMIN_BIT; // Remove the Admin bit as it is irrelevant for rendering purposes
+  foreach ($scald_config->actions as $slug => $details) {
+    if ($current_actions & $details['mask']) {
+      $atom->rendered->actions[] = array(
+        'title' => $details['title'],
+        'path'  => 'scald/actions/' . $slug . '/' . $atom->sid,
+        'link'  => l($details['title'], 'scald/actions/' . $slug . '/' . $atom->sid),
+      );
+    }
+  }
+
+  // Authors
+  $atom->rendered->authors = array();
+  if (!empty($atom->authors)) {
+    $authors_result = db_query("
+      SELECT
+        aid,
+        name,
+        uid,
+        url
+      FROM
+        {scald_authors}
+      WHERE
+        aid IN (" . implode(', ', $atom->authors) . ")
+    ");
+    $authors_details = array();
+    while ($authors_raw = db_fetch_array($authors_result)) {
+      $authors_details[$authors_raw['aid']] = array(
+        'name' => $authors_raw['name'],
+        'uid'  => $authors_raw['uid'],
+        'url'  => $authors_raw['url'],
+      );
+    }
+    foreach ($atom->authors as $weight => $aid) {
+      $author = $authors_details[$aid];
+      if ($author['url']) {
+        $author['link'] = l($author['name'], $author['url']);
+      }
+      else {
+        $author['link'] = $author['name'];
+      }
+      $atom->rendered->authors[$weight] = $author;
+    }
+  }
+
+  // Relationships
+  $atom->rendered->relationships = array();
+  foreach ($atom->relationships as $direction => $relationships) {
+    $title_accessor = $direction == 'forward' ? 'title' : 'title_reverse'; 
+    foreach ($relationships as $slug => $sids) {
+      foreach ($sids as $sid) {
+        $rel_atom = scald_is_registered($sid);
+        $atom->rendered->relationships[$scald_config->relationships[$slug][$title_accessor]][] = l($rel_atom->title, 'scald/actions/view/' . $sid);
+      }
+    }
+  }
+
+  // User
+  // NOTE: This query is much faster than a user_load() (no JOIN)
+  $name = db_result(db_query("SELECT name FROM {users} WHERE uid = %d", $atom->publisher));
+  $atom->rendered->publisher = array(
+    'uid'  => $atom->publisher,
+    'name' => $name,
+    'path' => 'user/' . $atom->publisher,
+    'link' => l($name, 'user/' . $atom->publisher),
+  );
+ 
+} // end scald_prerender()
+
+
+
+/**
+ * Render a Scald Atom
+ *
+ * "Rendering" takes an Atom and generates output (typically XHTML) based on the
+ *  "Context" which is specified.  The Context is essentially a template.
+ *
+ * NOTE: scald_render() gets called recursively until a viable output is
+ *  generated.  It may return FALSE on a given call, but it will ultimately fall
+ *  back to the 'title' Context which is provided by Scald Core and *always*
+ *  generates *something*.  Even if a 
+ *
+ * @param $sid
+ *   A Scald ID *OR* a Scald Atom.
+ * @param $context
+ *   A valid Scald Context slug (a text string)
+ * @param $options
+ *   An optional text string specifying additional Scald Context-specific
+ *    options that get passed to the Scald Context for rendering (e.g. a
+ *    mechanism for specifying the size of an image).
+ * @param $rebuild
+ *   Set to true to force a rebuild of the rendering.
+ * @return
+ *   The rendered Scald Atom (usually an XHTML string ready for display)
+ *   FALSE if the rendering failed for whatever reason
+ */
+function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
+  // Argument validation
+  if (!is_numeric($sid)) {
+    if (!empty($sid->sid)) {
+      $atom = $sid;
+      $sid  = $atom->sid;
+    }
+    else {
+      return FALSE;
+    }
+  }
+
+  // Load the Atom Object in order to use it for determining the current Actions
+  //  bitstring and for recursive scald_render() calls.
+  $atom_reg = scald_is_registered($sid, $rebuild);
+  if (empty($atom)) {
+    $atom = $atom_reg;
+  }
+
+  // SID doesn't correspond to a registered Atom; drop through to render the
+  //  "Invalid ID" message.
+  if (empty($atom_reg)) {
+    return scald_scald_render($atom_reg, 'invalid-id');
+  }
+
+  // Drop through to no-access rendering if current user can't view.
+  if (!scald_action_permitted($atom, 'view', $user)) {
+    return scald_scald_render($atom, 'no-access');
+  }
+
+  $scald_config = variable_get('scald_config', 0);
+
+  // In the event of an invalid Context, initiate fallbacks.  Immediate return
+  //  avoids caching a different rendering as the specified Context.
+  if (empty($scald_config->contexts[$context])) {
+    return scald_render($atom, _scald_context_fallback($type, $context), $options, $rebuild);
+  }
+
+
+  // Check the cache unless explicitly rebuilding the rendering of the Atom
+  global $user;
+  $cache_id = $sid
+	    . ':' . $context
+	    . ':' . scald_actions($atom, $user)
+	    . (is_null($options) ? '' : ':' . $options);
+  if (!$rebuild && !variable_get('scald_always_rebuild', FALSE)) {
+    $cache = cache_get($cache_id, 'cache_scald');
+    if (!empty($cache)) {
+      return $cache->data;
+    }
+  }
+
+
+  // Either a cache miss or an explicit rebuild.  Pull in the rest of the Atom.
+  if (!scald_is_fetched($atom)) {
+    $atom = scald_fetch($sid);
+  }
+
+  scald_prerender($atom, $context, $options);
+
+  // Context Provider does the final rendering
+  $rendered = module_invoke($scald_config->contexts[$context]['provider'], 'scald_render', $atom, $context, $options);
+
+  // The Context exists but rendering is failing hard for some reason.  Output
+  //  still needs to be ensured, however.  Also note that an empty string is
+  //  valid output.  However, hook_scald_render() should return FALSE upon
+  //  failure and module_invoke() will return NULL if the function does not
+  //  exist.
+  if ($rendered === FALSE || is_null($rendered)) {
+    return scald_render($atom, _scald_context_fallback($atom->type, $context), $options, $rebuild);
+  }
+
+  // For so-called "parsable" Contexts, ensure a standard format for the
+  //  enclosing comments.
+  if ($context_config['parseable']) {
+    $rendered = '<!-- scald=' . $atom->sid . ':' . $context . (!empty($options) ? ' ' . $options : '') . ' -->' . $rendered . '<!-- END scald=' . $atom->sid . ' -->';
+  }
+
+  // Only cache the Atom if Contexts, etc. have not indicated that the rendering
+  //  is not cacheable (e.g. it contains the current user's username).
+  if (!$atom->rendered->nocache) {
+    // Note that cached renderings of an Atom will stick around until
+    //  scald_update_atom() is called on the Atom.  This is usually the
+    //  responsibility of the Atom Provider as it has the best idea when the base
+    //  entity is changing.
+    cache_set($cache_id, $rendered, 'cache_scald', CACHE_PERMANENT);
+  }
+
+  return $rendered;
+} // end scald_render()
+
+
+
+/**
+ * Determine the next Context in the Context fallback order for this Scald
+ *  Scald Unified Type.
+ *
+ * @param $type
+ *   A Scald Unified Type slug
+ * @param $context
+ *   The Scald Context which is being fallen back from.
+ * @return
+ *   The next Scald Context in the fallback order
+ */
+function _scald_context_fallback($type, $context) {
+  $scald_config = variable_get('scald_config', 0);
+  $render_language = !empty($scald_config->contexts[$context]) ? $scald_config->contexts[$context]['render_language'] : 'XHTML';
+  $scald_context_fallbacks = variable_get('scald_context_fallbacks', 0);
+
+  // Generate a flat array of in-order fallback Contexts.  The highest-index
+  //  Context is the most generic and least likely to fail.
+  $fallbacks = array_merge(
+    !empty($scald_context_fallbacks[$render_language][$type]) ? $scald_context_fallbacks[$render_language][$type] : array(),
+    !empty($scald_context_fallbacks[$render_language]['@default']) ? $scald_context_fallbacks[$render_language]['@default'] : array(),
+    $scald_context_fallbacks['@default'],
+    array('title')  // Included to *ENSURE* that recursion terminates
+  );
+
+  // Determine where in the order the current Context falls so that "next" has a
+  //  definitive meaning.
+  $current_index = array_search($context, $fallbacks);
+  if (!$current_index) {
+    $current_index = -1;
+  }
+
+  return $fallbacks[$current_index+1];
+} // end _scald_context_fallback()
+
+
+
+
+
+
+/*******************************************************************************
+ * SCALD HOOK IMPLEMENTATIONS
+ ******************************************************************************/
+
+/**
+ * Implementation of hook_scald_provider().
+ */
+function scald_scald_provider() {
+  return array(
+    'types'    => array(
+      'composite' => array(
+        'title'       => t('Scald Composite'),
+        'description' => t('A Scald Atom which includes other Atoms.'),
+      ),
+      'audio' => array(
+        'title'       => t('Audio'),
+        'description' => t('Audio Content.'),
+      ),
+      'image' => array(
+        'title'       => t('Image'),
+        'description' => t('Graphics and Photos.'),
+      ),
+      'video' => array(
+        'title'       => t('Video'),
+        'description' => t('Moving Pictures!'),
+      ),
+    ),
+    'contexts' => array(
+/**
+ * The "debug" context is hard-coded into Scald Core, but this is what the
+ *  Provider registration array would look like.
+ *
+ *    'debug' => array(
+ *      'title'           => t('Debuging Display'),
+ *      'description'     => t('A useful debugging display of a Scald Atom.'),
+ *      'render_language' => 'XHTML',
+ *      'parseable'       => FALSE,
+ *      'formats'         => array(
+ *        '<all>' => 'passthrough',
+ *      ),
+ *    ),
+ */
+      'no-access' => array(
+        'title'           => t('No Access'),
+        'description'     => t('Built-in Context used when an Atom cannot be viewed by the current User.'),
+        'render_language' => 'XHTML',
+        'parseable'       => TRUE,
+        'formats'         => array(),
+      ),
+      'invalid-id' => array(
+        'title'           => t('Invalid ID'),
+        'description'     => t('Built-in Context used when an Invalid Scald ID is provided to the rendering stack.'),
+        'render_language' => 'XHTML',
+        'parseable'       => TRUE,
+        'formats'         => array(),
+      ),
+      'deleted'   => array(
+        'title'           => t('Deleted'),
+        'description'     => t('Built-in Context used when an Atom is no longer present in the Registry (but once was).'),
+        'render_language' => 'XHTML',
+        'parseable'       => TRUE,
+        'formats'         => array(),
+      ),
+      'title'     => array(
+        'title'           => t('Title'),
+        'description'     => t('Literally *just* the title as plain text, though the language is specified as XHTML for simplicity.'),
+        'render_language' => 'XHTML',
+        'parseable'       => FALSE,
+        'formats'         => array(),
+      ),
+    ),
+/**
+ * The "passthrough" transcoder is hard-coded into Scald Core, but the Provider
+ *  registration array would look something like this.
+ *
+ *  'transcoders'   => array(
+ *    'passthrough' => array(
+ *      'title'       => t('Passthrough'),
+ *      'description' => t('<see scald.admin.inc>'),
+ *      'formats'     => array(
+ *        'type-a' => 'passthrough',
+ *        'type-b' => 'passthrough',
+ *        // All currently-registered Scald Unified Types would be listed
+ *      ),
+ *    ),
+ *  )
+ */
+    'relationships' => array(
+      'includes' => array(
+        'title'         => t('includes'),
+        'title_reverse' => t('is included by'),
+        'description'   => t('The relationship that results when a Scald Atom is included in a Scald Composite'),
+      ),
+    ),
+    'actions' => array(
+/**
+ * The "fetch" action is hard-coded into Scald Core, but this is what the
+ *  Provider registration array would look like.  "Fetch" occupies the lowest
+ *  bit in the Scald Actions bitstring -- exponent 0.  Similarly, the '@admin'
+ *  pseudo-action (it's actually a mode for an Actions bitstring) occupies the
+ *  highest bit in the Scald Actions bitstring but is hardcoded.
+ *
+ *    'fetch' => array(
+ *      'title'       => t('Fetch'),
+ *      'description' => t('<see scald.admin.inc>'),
+ *    ),
+ *    // @admin is *always* the highest bit
+ *    '@admin' => Array(
+ *      'title'       => t('Admin Mode'),
+ *      'description' => t('<see scald.admin.inc>'),
+ *    ),
+ */
+      'edit' => array(
+        'title'       => t('Edit'),
+        'description' => t('Edit the details of a Scald Atom'),
+      ),
+      'view'       => array(
+        'title'       => t('View'),
+        'description' => t('View a Scald Atom on-site'),
+      ),
+      'delete'       => array(
+        'title'       => t('Delete'),
+        'description' => t('Delete (unregister) a Scald Atom'),
+      ),
+    ),
+  );
+} // end scald_scald_provider()
+
+
+
+/**
+ * Implementation of hook_scald_register_atom().
+ */
+function scald_scald_register_atom($atom, $mode) {
+  switch ($mode) {
+    case 'type':
+      // @@@TODO: Have the Type Providers implemented in Scald Core do something useful
+      break;
+
+    case 'transcoder':
+      // Nothing is required at this point because the only Transcoder that
+      //  Scald Core provides is 'passthrough' which does not actually *do*
+      //  any transcoding.
+      break;
+
+    case 'relationship':
+      // Scald Core's Relationship Provider does not need to do anything based
+      //  on the registration of an Atom.
+      break;
+  }
+} // end scald_scald_register_atom()
+
+
+
+/**
+ * Implementation of hook_scald_prerender().
+ *
+ * Scald Core implements this hook for its role as a Scald Atom Provider of
+ *  Atoms of Scald Unified Type 'composite', for its role as a Scald Context
+ *  Provider of Scald Contexts 'debug', 'no-access', 'invalid-id', 'deleted',
+ *  'title', and for its role as a Scald Transcoder Provider of Scald Transcoder
+ *  'passthrough'.
+ *
+ * @param $atom
+ *  The Scald Atom object to prepare for rendering.
+ * @param $mode
+ *  A string indicating which mode the prerender function is being called in (
+ *   'type', 'atom', 'context', or 'transcoder').
+ * @param $context
+ *  The Scald Context slug.  Must be optional since Scald Core implements
+ *   multiple Providers which require hook_scald_prerender().
+ * @param $options
+ *  A string which represents any Context options.  Must be optional since Scald
+ *   Core implements multiple Providers which require hook_scald_prerender().
+ * @return
+ *  None; $atom->rendered should be adjusted as appropriate
+ */
+function scald_scald_prerender(&$atom, $mode, $context = NULL, $options = NULL) {
+  switch ($mode) {
+    case 'type':
+      break; // end 'type'
+
+    case 'context':
+      switch ($context) {
+        case 'debug':
+          break;
+
+        case 'no-access':
+          break;
+
+        case 'invalid-id':
+          break;
+
+        case 'deleted':
+          break;
+
+        case 'title':
+          break;
+      }
+      break; // end 'context'
+
+    case 'transcoder':
+      $atom->rendered->file_transcoded_url = url($atom->file_source);
+      break; // end 'transcoder'
+  }
+} // end scald_scald_prerender()
+
+
+
+/**
+ * Implementation of hook_scald_render().
+ */
+function scald_scald_render($atom, $context, $options = NULL) {
+  switch ($context) {
+    case 'debug':
+      return '<pre class="debug">' . print_r($atom, TRUE) . '</pre>';
+      break;
+
+    case 'no-access':
+      return theme('scald_render_error', $context, t('You do not have access to view this Atom.'));
+      break;
+
+    case 'invalid-id':
+      return theme('scald_render_error', $context, t('Invalid Scald ID.'));
+      break;
+
+    case 'deleted':
+      return theme('scald_render_error', $context, t('Atom deleted!'));
+      break;
+
+    case 'title':
+    default:
+      return $atom->rendered->title;
+      break;
+  }
+} // end scald_scald_render()
+
+
+
+/**
+ * Implementation of hook_scald_action().
+ */
+function scald_scald_action($atom, $action) {
+  switch($action) {
+    case 'fetch':
+      // No specific functionality necessary here
+      break;
+    case 'edit':
+      // @@@TODO: Implement this as a per-atom-provider kind of thing if possible.
+      break;
+    case 'view':
+      // @@@TODO: Implement as a scald_render() call?
+      break;
+    case 'delete':
+      // @@@TODO: Implement a lightweight confirmation interface and then scald_unregister_atom()
+      break;
+  }
+} // end scald_scald_action()
+
+
+
+
+
+
+/*******************************************************************************
+ * DRUPAL HOOK IMPLEMENTATIONS
+ ******************************************************************************/
+
+/**
+ * Implementation of hook_init().
+ *
+ * Ensures that Scald Configuration Object is populated and cached in the db.
+ *  Because the scald_config variable is always being fetched and conditionally
+ *  rebuilt during hook_init, subsequent fetches of the variable can safely
+ *  omit a check for validity.
+ *
+ * NOTE: There are other important configuration variables that get forcibly
+ *  rebuilt in scald_config_rebuild(), but only $scald_config is used to
+ *  determine the need for the rebuild because Scald just won't run at all
+ *  without it.
+ */
+function scald_init() {
+  $scald_config = variable_get('scald_config', 0);
+
+  if (empty($scald_config)) {
+    scald_config_rebuild();
+  }
+} // end scald_init()
+
+
+
+/**
+ * Implementation of hook_perm().
+ *
+ * NOTE: Scald Actions permissions are *not* assigned using the normal Drupal
+ *  permissions interface.  Instead they are managed separately through the
+ *  Scald Admin Interface.  Actions are assigned to Drupal User Roles there.
+ */
+function scald_perm() {
+  return array(
+    'administer scald',		// Grants access to the Scald Admin Interface
+    'debug scald',        // Grants access to the Scald Debugging Console
+    'use scald',          // Grants access to the basic functioning of Scald (registering Atoms, etc.)
+  );
+} // end scald_perm()
+
+
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ *
+ * In order to get a function to fire when modules are enabled or disabled, one
+ *  is forced to alter the System Modules form (what appears on
+ *  /admin/build/modules) and hijack the execution stream that way.
+ *
+ * NOTE: This technique probably will fail if modules are installed in an
+ *  install profile or using drush.  Such installation routines should be sure
+ *  to invoke scald_update_providers() themselves.
+ */
+function scald_form_system_modules_alter(&$form, &$form_state) {
+  $form['#submit'][] = 'scald_update_providers';
+} // end scald_form_system_modules_alter()
+
+
+
+/**
+ * Implementation of hook_menu().
+ */
+function scald_menu() {
+  $items = array();
+
+  $items['scald/debug/%'] = array(
+    'title'            => 'Scald Debugging Console',
+    'page callback'    => 'scald_debug_console',
+    'page arguments'   => array(2),
+    'access callback'  => 'user_access',
+    'access arguments' => array('debug scald'),
+    'file'             => 'scald.debug.inc',
+    'type'             => MENU_NORMAL_ITEM,
+  );
+
+  $items['admin/content/scald'] = array(
+    'title'             => 'Scald',
+    'description'       => 'Manage Scald Atoms, Types, Contexts, and their associated settings.',
+    'page callback'     => 'scald_admin_dashboard',
+    'access callback'   => 'user_access',
+    'access arguments'  => array('administer scald'),
+    'file'              => 'scald.admin.inc',
+    'type'              => MENU_NORMAL_ITEM,
+  );
+  $items['admin/content/scald/dashboard'] = array(
+    'title'   => 'Providers',
+    'weight'  => -99,
+    'type'    => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['admin/content/scald/register/%'] = array(
+    'title'             => 'Re-Registering Scald Provider',
+    'page callback'     => 'scald_admin_provider_reregister',
+    'page arguments'    => array(4),
+    'access callback'   => 'user_access',
+    'access arguments'  => array('administer scald'),
+    'file'              => 'scald.admin.inc',
+    'type'              => MENU_CALLBACK,
+  );
+  $items['admin/content/scald/types'] = array(
+    'title'             => 'Types',
+    'weight'            => -80,
+    'page callback'     => 'scald_admin_types',
+    'access callback'   => 'user_access',
+    'access arguments'  => array('administer scald'),
+    'file'              => 'scald.admin.inc',
+    'type'              => MENU_LOCAL_TASK,
+  );
+  $items['admin/content/scald/atoms'] = array(
+    'title'             => 'Atoms',
+    'weight'            => -60,
+    'page callback'     => 'scald_admin_atoms',
+    'access callback'   => 'user_access',
+    'access arguments'  => array('administer scald'),
+    'file'              => 'scald.admin.inc',
+    'type'              => MENU_LOCAL_TASK,
+  );
+  $items['admin/content/scald/contexts'] = array(
+    'title'             => 'Contexts',
+    'weight'            => -40,
+    'page callback'     => 'scald_admin_contexts',
+    'access callback'   => 'user_access',
+    'access arguments'  => array('administer scald'),
+    'file'              => 'scald.admin.inc',
+    'type'              => MENU_LOCAL_TASK,
+  );
+  $items['admin/content/scald/transcoders'] = array(
+    'title'             => 'Transcoders',
+    'weight'            => -20,
+    'page callback'     => 'scald_admin_transcoders',
+    'access callback'   => 'user_access',
+    'access arguments'  => array('administer scald'),
+    'file'              => 'scald.admin.inc',
+    'type'              => MENU_LOCAL_TASK,
+  );
+  $items['admin/content/scald/relationships'] = array(
+    'title'             => 'Relationships',
+    'weight'            => 0,
+    'page callback'     => 'scald_admin_relationships',
+    'access callback'   => 'user_access',
+    'access arguments'  => array('administer scald'),
+    'file'              => 'scald.admin.inc',
+    'type'              => MENU_LOCAL_TASK,
+  );
+  $items['admin/content/scald/actions'] = array(
+    'title'             => 'Actions',
+    'weight'            => 20,
+    'page callback'     => 'scald_admin_actions',
+    'access callback'   => 'user_access',
+    'access arguments'  => array('administer scald'),
+    'file'              => 'scald.admin.inc',
+    'type'              => MENU_LOCAL_TASK,
+  );
+  $items['admin/content/scald/settings'] = array(
+    'title'             => 'Settings',
+    'weight'            => 20,
+    'page callback'     => 'drupal_get_form',
+    'page arguments'    => array('scald_settings_form'),
+    'access callback'   => 'user_access',
+    'access arguments'  => array('administer scald'),
+    'file'              => 'scald.admin.inc',
+    'type'              => MENU_LOCAL_TASK,
+  );
+
+  // @@@TODO: Implement various Action callback paths (e.g. /scald/actions/action/SID
+
+  // @@@TODO: Implement a bewildering array of admin options
+
+  return $items;
+} // end scald_menu()
+
+
+
+/**
+ * Implementation of hook_theme()
+ */
+function scald_theme($existing, $type, $theme, $path) {
+  return array(
+    'scald_render_error' => array(
+      'arguments' => array('type' => NULL, 'message' => NULL)
+    )
+  );
+}
+
+
+/**
+ * Implementation of hook_filter().
+ */
+function scald_filter($op, $delta = 0, $format = -1, $text = '', $cache_id = 0) {
+  switch ($op) {
+    case 'list':
+      return array(0 => t('Scald Atom Shorthand Filter'));
+      break;
+
+    case 'no cache':
+      // Caching is disabled to ensure that current renderings of Atoms are
+      //  returned.  Invalidating specific {cache_filter} entries is nearly
+      //  impossible due to a hash of the text-to-filter being used as a key.
+      //  Because Scald caches Atom renderings, the performance hit should be
+      //  relatively insignficant.
+      return TRUE;
+      break;
+
+    case 'description':
+      return t('Allows users to include Scald Atom Shorthand (SAS) in a textarea and have the Atoms rendered in a particular Scald Context.  Often combined with WYSIWYG editors and custom textarea parsing to automatically generate the SAS.');
+      break;
+
+    case 'prepare':
+      return $text;
+      break;
+
+    case 'process':
+      $override = variable_get('scald_filter_sas_' . $format . '_override', FALSE);
+      $context = variable_get('scald_filter_sas_' . $format . '_context', FALSE);
+      return scald_sas_to_rendered($text, $context, $override);
+      break;
+
+    case 'settings':
+      $scald_config = variable_get('scald_config', 0);
+      $context_options = array();
+      $contexts_result = db_query("SELECT context, title FROM {scald_contexts} WHERE context IN ('" . implode("', '", array_keys($scald_config->contexts)) . "') ORDER BY title");
+      while ($context_raw = db_fetch_array($contexts_result)) {
+        $context_options[$context_raw['context']] = $context_raw['title'];
+      }
+
+      $form['filter_sas'] = array(
+        '#type'        => 'fieldset',
+        '#title'       => t('Scald Atom Shorthand Filter'),
+        '#collapsible' => TRUE,
+        '#collapsed'   => FALSE,
+      );
+      $form['filter_sas']['scald_filter_sas_' . $format . '_context'] = array(
+        '#type'          => 'select',
+        '#title'         => t('Scald Context'),
+        '#description'   => t('Choose a Scald Context to use for rendering Scald Atoms included in the text using Scald Atom Shorthand.'),
+        '#default_value' => variable_get('scald_filter_sas_' . $format . '_context', 'title'),
+        '#options'       => $context_options,
+      );
+      $form['filter_sas']['scald_filter_sas_' . $format . '_override'] = array(
+        '#type'          => 'checkbox',
+        '#title'         => t('Override specified Context'),
+        '#description'   => t('If checked, the Scald Context specified above will be used even if there is a Context is specified the Scald Atom Shorthand.'),
+        '#default_value' => variable_get('scald_filter_sas_' . $format . '_override', FALSE),
+      );
+      return $form;
+      break;
+
+    default:
+      return $text;
+      break;
+  }
+} // end scald_filter()
+
+
+
+/**
+ * Implementation of hook_filter_tips().
+ */
+function scald_filter_tips($delta, $format, $long = FALSE) {
+  if ($long) {
+    return t('Any instance of Scald Atom Shorthand (SAS) will be replaced with a rendered Scald Atom.  SAS can take any of the following formats: [scald=SID], [scald=SID:context], or [scald=SID:context context-options].  SID is the Scald ID, context is a context-slug, and context-options are additional formatting clues to give to the Context.');
+  }
+  return t('You may include Scald Atom Shorthand such as [scald=12].  NOTE: WYSIWYG or rich-text editors often handle Scald Atom Shorthand automatically and manually including it is not necessary if such an editor is in use.');
+} // end scald_filter_tips()
+
+
+
+/**
+ * Implementation of hook_user().
+ */
+function scald_user($op, &$edit, &$account, $category = NULL) {
+  switch ($op) {
+    case 'delete':
+      $aid = scald_uid_to_aid($account->uid);
+      if ($aid) {
+        scald_unregister_author($aid);
+      }
+      break;
+    case 'load':
+      // See scald_actions() for handling of defaults for scald_actions and an
+      //  explanation of why such handling is not done here.
+      break;
+    case 'insert':
+    case 'update':
+      // All Drupal users need to registered as Scald Authors
+      $aid = scald_uid_to_aid($account->uid);
+      $author_data = array(
+        'name'  => $account->name,
+        'uid'   => $account->uid,
+      );
+      if ($aid) {
+        scald_update_author($aid, $author_data);
+      }
+      else {
+        scald_register_author($author_data);
+      }
+
+      // Fetch action bitstring components by User Role and then combine in
+      //  in preparation for saving to db.
+      $edit['scald_actions'] = 0;
+      $roles = isset($edit['roles']) ? $edit['roles'] : $account->roles;
+      $roles += array(DRUPAL_AUTHENTICATED_RID => DRUPAL_AUTHENTICATED_RID);
+      $actions_results = db_query("
+        SELECT
+          actions
+        FROM
+          {scald_role_actions}
+        WHERE
+          rid IN (" . implode(', ', array_keys($roles)) . ")
+      ");
+      while ($actions_raw = db_fetch_array($actions_results)) {
+        $edit['scald_actions'] = $edit['scald_actions'] | $actions_raw['actions'];
+      }
+      break;
+    case 'view':
+      // @@@TODO: Display Scald Actions abilities to user?  Admin only?
+      break;
+    default:
+      break;
+  }
+} // end scald_user()
+
+/**
+ * Implementation of hook_views_api()
+ */
+
+function scald_views_api() {
+  return array(
+    'api' => 2,
+    'path' => drupal_get_path('module', 'scald') .'/includes/',
+  );
+}
+
+
+function theme_scald_render_error($context, $message){
+	return '<h3>'.$message.'</h3>';
+}

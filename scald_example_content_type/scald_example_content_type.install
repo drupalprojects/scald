@@ -1,0 +1,28 @@
+<?php
+// $Id$
+/**
+ * Provides install / uninstall function.
+ */
+
+/**
+ * Implements hook_install.
+ */
+function scald_example_content_type_install() {
+  module_load_include('inc', 'node', 'content_types');
+  $form_state = array(
+    'values' => array(
+      'name' => 'Example image provider',
+      'type' => 'scald_example_content_type',
+      'description' => 'This example content type allows the creation of Scald Image Atoms via the creation of node with image attached',
+      'body_label' => '',
+    )
+  );
+  drupal_execute('node_type_form', $form_state);
+}
+
+/**
+ * Implements hook_uninstall.
+ */
+function scald_example_content_type_uninstall() {
+  node_type_delete('scald_example_content_type');
+}

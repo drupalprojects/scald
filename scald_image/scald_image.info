@@ -1,0 +1,7 @@
+; $Id$
+name = Scald Image
+description = "Scald Provider: Provides Image Atoms from files attached to Drupal nodes (upload.module) and from CCK fields (filefield.module, imagefield.module).  Provides Transcoders from Imagecache presets (imagecache.module)."
+version = 0.1
+package = Scald
+core = 6.x
+dependencies[] = scald
