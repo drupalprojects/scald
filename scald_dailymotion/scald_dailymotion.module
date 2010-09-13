@@ -133,7 +133,7 @@ function scald_dailymotion_register($video) {
   // to do interesting things when used with ImageCache for example.
   $thumb = drupal_http_request($infos->thumbnail['src']);
   $dir = file_directory_path() . '/dailymotion';
-  if ($thumb->code == 200 && file_check_directory($dir)) {
+  if ($thumb->code == 200 && file_check_directory($dir, FILE_CREATE_DIRECTORY)) {
     $dest = $dir . '/' . $infos->id . '.jpg';
     $file = file_save_data($thumb->data, $dest);
   }
