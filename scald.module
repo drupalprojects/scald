@@ -294,6 +294,7 @@ function _scald_register_provider($provider = '', $definitions = array(), $addit
             return FALSE;
           }
 
+          $success = TRUE;
           foreach ($details['formats'] as $type => $format) {
             $success = $success && db_query(
               "
@@ -311,6 +312,7 @@ function _scald_register_provider($provider = '', $definitions = array(), $addit
           }
           if (!$success) {
             // @@@TODO: Handle a failure here more gracefully.  Just returning false results in a db with only *some* (or none) of the Transcoder's type/format mappings specified but no way to re-register the Scald Transcoder Provider because re-running the registration routine will indicate that the provider is already registered.
+            drupal_set_message('Failed to register some of the transcoder formats', 'error');
             return FALSE;
           }
 	        break; // end 'transcoders'
