@@ -299,6 +299,9 @@ function theme_mee_formatter_default($element) {
       $element['#item']['safe'] = check_markup($element['#item']['value']);
     }
   }
+  // Calling scald_sas_to_rendered here allows us to make the configuration
+  // a bit easier, as the input format doesn't have to be tweaked to include
+  // the SAS filter.
   return scald_sas_to_rendered($element['#item']['safe']);
 }
 
