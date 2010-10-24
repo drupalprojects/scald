@@ -19,11 +19,6 @@ function scald_dnd_library_menu() {
       'access arguments' => array('access scald dnd library'),
       'type' => MENU_CALLBACK
     ),
-    'sdl-library/autocomplete-tags' => array(
-      'page callback' => 'scald_dnd_library_autocomplete_tags',
-      'access arguments' => array('access scald dnd library'),
-      'type' => MENU_CALLBACK
-    ),
   );
 }
 
@@ -67,13 +62,12 @@ function scald_dnd_library_dnd_libraries_info() {
 function scald_dnd_library_library() {
   // Parse querystring
   $search_query_title = ($_GET['filter-title']) ? $_GET['filter-title'] : NULL;
-  $search_query_tags = ($_GET['tags']) ? explode(",", $_GET['tags']) : NULL;
-  
+
   $types = ($_GET['type']) ? $_GET['type'] : array(
-    'audio' => 'audio',
-    'image' => 'image'
+    'image' => 'image',
+    'video' => 'video'
   );
-  
+
   $page = ($_GET['page']) ? $_GET['page'] : 1;
 
   $library = array(
@@ -83,86 +77,11 @@ function scald_dnd_library_library() {
   );
 
   $library_items = array();
-  
-  
-  $config = variable_get('scald_config', array());
-  $providers = array();
-  foreach ($types as $type) {
-    foreach($config->types[$type]['atom_providers'] as $provider) {
-      $providers[] = $provider;
-    }
-  }
-  $provider_placeholders = db_placeholders($providers, 'text');
   $type_placeholders = db_placeholders($types, 'text');
-  
-  // Init empty node id listing which will be filled
-  // if some tags gives some node/resource
-  $nids_found_from_tags = array();
-  
-  // Searching with tags
-  if ($search_query_tags) {
-    foreach ($search_query_tags as $key => $value) {
-      $search_query_tags[$key] = trim($value);
-    }
-    $vids = array();
-    // Finds matching tags vocabularies for content types
-    $result = db_query("SELECT DISTINCT(v.vid) AS vid FROM {vocabulary} v INNER JOIN {vocabulary_node_types} vnt ON v.vid = vnt.vid WHERE v.tags = 1 AND vnt.type IN($provider_placeholders) ORDER BY v.weight", $providers);
-
-    while ($vid = db_result($result)) {
-      $vids[] = $vid;
-    }
-
-    // Try to map user typed tags into term tid from this vocabularies
-    $tags_placeholders = db_placeholders($search_query_tags, 'text');
-    $vids_placeholders = db_placeholders($vids, 'int');
-    // Build arguments for query
-    $arguments = array_merge($search_query_tags, $vids);
-
-    $result = db_query("SELECT t.tid FROM {term_data} t WHERE LOWER(t.name) IN($tags_placeholders) AND t.vid IN($vids_placeholders)", $arguments);
-
-    while ($tid = db_result($result)) {
-      $tids[] = $tid;
-    }
-    if (count($tids) > 0) {
-      // Select nodes belonging to those tids
-      $tids_placeholders = db_placeholders($tids, 'int');
-      $clause = '';
-      
-      foreach ($tids as $index => $tid) {
-       $joins .= " INNER JOIN {term_node} tn". $index ." ON n.vid = tn". $index .".vid";
-       $wheres .= " AND tn". $index .".tid IN ($tid)";
-     }
-
-      // Merges arguments
-      $arguments = $providers;
-
-      $result = pager_query("SELECT DISTINCT(n.nid)
-                          FROM {node} n
-                          $joins
-                          AND n.type IN($provider_placeholders)
-                          $wheres
-                          ORDER BY n.created DESC",
-                          SCALD_DND_LIBRARY_PAGE_SIZE, NULL, NULL,  $arguments);
-
-      while ($nid = db_result($result)) {
-        $nids_found_from_tags[] = $nid;
-      }
-    }
-  } // END - Searching with tags
 
   $args = array($search_query_title) + $types;
   
-  if (count($nids_found_from_tags) > 0 && $search_query_tags) {
-    $nids_placeholders = db_placeholders($nids_found_from_tags, 'int');
-    $args = array_merge($args, $nids_found_from_tags);
-    $result = pager_query("SELECT s.sid FROM {scald_atoms} s LEFT JOIN {content_field_ressource_date_creation} dc ON s.base_id=dc.nid WHERE s.title LIKE '%%%s%%' AND type IN($type_placeholders) AND base_id IN($nids_placeholders) AND actions > 1 ORDER BY dc.field_ressource_date_creation_value DESC", SCALD_DND_LIBRARY_PAGE_SIZE, 0, NULL, $args);
-  }
-  elseif (count($nids_found_from_tags) == 0 && $search_query_tags) {
-    unset($result);
-  }
-  elseif (!$search_query_tags) {
-    $result = pager_query("SELECT s.sid FROM {scald_atoms} s LEFT JOIN {content_field_ressource_date_creation} dc ON s.base_id=dc.nid WHERE s.title LIKE '%%%s%%' AND type IN($type_placeholders) AND actions > 1 ORDER BY dc.field_ressource_date_creation_value DESC", SCALD_DND_LIBRARY_PAGE_SIZE, 0, NULL, $args);
-  }
+  $result = pager_query("SELECT s.sid FROM {scald_atoms} s WHERE s.title LIKE '%%%s%%' AND type IN($type_placeholders) AND actions > 1 ORDER BY s.sid DESC", SCALD_DND_LIBRARY_PAGE_SIZE, 0, NULL, $args);
   // Get back the total number of element that pager_query fetched.
   global $pager_total_items;
   $count = $pager_total_items[0];
@@ -183,7 +102,7 @@ function scald_dnd_library_library() {
     $library['library_previews']['sdl-'. $sid] = scald_render($sid, 'sdl_preview');
     $library_items[$sid] = scald_render($sid, 'sdl_library_item');
   }
-  $library['library'] = 
+  $library['library'] =
     theme('sdl_header', $page, $count, drupal_get_form('scald_dnd_library_form', $types))
     . theme('sdl_library', $page, $library_items)
     . theme('sdl_footer', $page, $count, $pager);
@@ -200,12 +119,6 @@ function scald_dnd_library_form($form_state, $currentTypes) {
     '#type'  => 'textfield',
     '#title' => t('Title'),
     '#default_value' => $_GET['filter-title']
-  );
-  $form['tags'] = array(
-    '#type'  => 'textfield',
-    '#autocomplete_path' => 'sdl-library/autocomplete-tags', 
-    '#title' => t('Tags'),
-    '#default_value' => $_GET['tags']
   );
   $options = array();
   $types = _scald_types();
@@ -226,7 +139,9 @@ function scald_dnd_library_form($form_state, $currentTypes) {
   return $form;
 }
 
-function template_preprocess_sdl_header(&$variables) {}
+/**
+ * Implements hook_preprocess_sdl_library.
+ */
 function template_preprocess_sdl_library(&$variables) {
   if (is_object($variables['view'])) {
     $variables['library_items'] = array();
@@ -239,13 +154,11 @@ function template_preprocess_sdl_library(&$variables) {
   else {
     $variables['library_items'] = $variables['options'];
   }
-#dpm('$variables');
-#dpm($variables, '$variables');
-}
-function template_preprocess_sdl_footer(&$variables) {
-  //$start = $variables['page'] * SCALD_DND_LIBRARY_PAGE_SIZE
 }
 
+/**
+ * Implements hook_scald_provider.
+ */
 function scald_dnd_library_scald_provider() {
   return array(
   'contexts' => array(
@@ -283,6 +196,9 @@ function scald_dnd_library_scald_provider() {
   );
 }
 
+/**
+ * Implements hook_scald_render.
+ */
 function scald_dnd_library_scald_render($atom, $context, $options = array()) {
   if ($atom->rendered->file_transcoded_url) {
     $path = $atom->rendered->file_transcoded_url;
@@ -294,7 +210,7 @@ function scald_dnd_library_scald_render($atom, $context, $options = array()) {
   if ($context == 'sdl_library_item') {
     $path .= (strpos($path, '?') !== FALSE)? '&' : '?';
     $path .= 'dnd_id='. $atom->sid;
-    $attributes += array('class' => 'drop', 'width' => '48', 'draggable' => 'TRUE');
+    $attributes += array('class' => 'drop', 'draggable' => 'TRUE');
   }
   elseif ($context == 'sdl_preview') {
     $path .= (strpos($path, '?') !== FALSE)? '&' : '?';
@@ -335,6 +251,9 @@ function scald_dnd_library_scald_render($atom, $context, $options = array()) {
 ";
 }
 
+/**
+ * Returns HTML for an atom rendered in the "Library Item" context.
+ */
 function theme_sdl_library_item($atom, $image) {
   $informations = $atom->rendered;
   if (is_object($atom->base_entity) && is_numeric($atom->base_entity->nid)) {
@@ -364,6 +283,9 @@ function theme_sdl_library_item($atom, $image) {
   return $return;
 }
 
+/**
+ * Returns HTML for an atom rendered in the "Editor Representation" context.
+ */
 function theme_sdl_editor_item($informations, $image) {
   $data = $informations->player ? $informations->player : $image;
   return "
@@ -373,6 +295,9 @@ function theme_sdl_editor_item($informations, $image) {
   ";
 }
 
+/**
+ * Returns HTML for the legend of an atom, used in the Editor Representation context.
+ */
 function theme_sdl_editor_legend($atom) {
   $informations = $atom->rendered;
   $by = isset($informations->authors[0]['link']) ? $informations->author[0]['link'] : $informations->publisher['link'];
@@ -383,6 +308,9 @@ function theme_sdl_editor_legend($atom) {
   ";
 }
 
+/**
+ * Returns HTML for an atom rendered in the "Preview" context.
+ */
 function theme_sdl_preview_item($atom, $image) {
   $ressource = theme('sdl_editor_item', $atom->rendered, $image);
   $node = node_load($atom->base_id);
@@ -429,36 +357,6 @@ function theme_sdl_preview_item($atom, $image) {
   </dl>
 </div>
   ";
-}
-
-function scald_dnd_library_autocomplete_tags($string = '') {
-  // Vocabularies' IDs are 28, 29 and 30
-  $vids = array(28, 29, 30);
-
-  $vids_placeholders = db_placeholders($vids, 'int');
-
-  $array = drupal_explode_tags($string);
-
-  // Fetch last tag
-  $last_string = trim(array_pop($array));
-  $matches = array();
-  if ($last_string != '') {
-    $args = array_merge($vids, array($last_string));
-    $result = db_query_range("SELECT t.tid, t.name FROM {term_data} t WHERE t.vid IN($vids_placeholders) AND LOWER(t.name) LIKE LOWER('%%%s%%')", $args, 0, 10);
-
-    $prefix = count($array) ? implode(', ', $array) .', ' : '';
-
-    while ($tag = db_fetch_object($result)) {
-      $n = $tag->name;
-      // Commas and quotes in terms are special cases, so encode 'em.
-      if (strpos($tag->name, ',') !== FALSE || strpos($tag->name, '"') !== FALSE) {
-        $n = '"'. str_replace('"', '""', $tag->name) .'"';
-      }
-      $matches[$prefix . $n] = check_plain($tag->name);
-    }
-  }
-
-  drupal_json($matches);
 }
 
 /**
