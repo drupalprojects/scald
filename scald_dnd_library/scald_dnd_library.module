@@ -34,6 +34,9 @@ function scald_dnd_library_perm() {
   return array('access scald dnd library');
 }
 
+/**
+ * Implements hook_theme().
+ */
 function scald_dnd_library_theme() {
   return array(
     'sdl_header' => array('arguments' => array('page' => NULL, 'count' => 0, 'form' => NULL), 'template' => 'sdl-header'),
@@ -44,6 +47,18 @@ function scald_dnd_library_theme() {
     'sdl_editor_legend' => array('arguments' => array('atom' => array())),
     'sdl_preview_item' => array('arguments' => array('atom' => array(), 'image' => NULL))
   );
+}
+
+/**
+ * Implements hook_dnd_libraries_info.
+ */
+function scald_dnd_library_dnd_libraries_info() {
+  $return = array();
+  if (module_exists('views')) {
+    $return['scald/library_dnd'] = t('Scald Library');
+  }
+  $return['sdl-library/library'] = t('Scald Library (Basic)');
+  return $return;
 }
 
 /**

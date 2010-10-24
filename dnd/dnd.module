@@ -149,3 +149,14 @@ function theme_dnd_library_wrapper($settings, $element = NULL) {
   return '<div id="'. $settings['library_id'] .'" class="dnd-library-wrapper"></div>';
 }
 
+/**
+ * Return the list of all the available libraries.
+ * @return array
+ *   An associative array, where the keys are the library paths, and
+ *   the value is an associated label.
+ */
+function dnd_get_libraries() {
+  $libraries = module_invoke_all('dnd_libraries_info');
+  drupal_alter('dnd_libraries_info', $libraries);
+  return $libraries;
+}

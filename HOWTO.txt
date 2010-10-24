@@ -54,12 +54,7 @@ V] Configure a Scald-enabled CCK Field
   1 - Edit a content type, go to Manage fields screen
   2 - Add a new field, of type Multimedia Editorial Element (MEE),
       choosing the only available formatter.
-  3 - In the field settings, use the following settings
-      Rows: 60
-      Number of values: 1 (don't work with multiple fiedls for now,
-      patches welcome :-))
-      Text processing: Filtered text
-      Library Callback URL: scald/library_dnd
-      Scald Editor Context: Editor representation
+  3 - In the field settings, use the default settings except for the
+      Scald Editor Context, that should be set to 'Editor representation'
 
 V] Go to the node form, enjoy

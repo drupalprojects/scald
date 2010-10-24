@@ -63,11 +63,14 @@ function mee_field_settings($op, $field) {
       $options = array(0 => t('Plain text'), 1 => t('Filtered text (user selects input format)'));
 
       $scald_config = variable_get('scald_config', 0);
+      // Retrieve the context lists
       $context_options = array();
       $contexts_result = db_query("SELECT context, title FROM {scald_contexts} WHERE context IN ('" . implode("', '", array_keys($scald_config->contexts)) . "') ORDER BY title");
       while ($context_raw = db_fetch_array($contexts_result)) {
         $context_options[$context_raw['context']] = $context_raw['title'];
       }
+      // And also retrieve the libraries defined by the enabled modules.
+      $libraries = dnd_get_libraries();
 
       $form['mee_processing'] = array(
         '#type' => 'radios',
@@ -78,10 +81,11 @@ function mee_field_settings($op, $field) {
       );
       // @TODO Ask Drupal about available libraries
       $form['mee_dnd_callback_url'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Library callback URL'),
-        '#default_value' => url($field['mee_dnd_callback_url']) ? $field['mee_dnd_callback_url'] : '',
-        '#description' => t('The absolute URL or relative path of a callback URL that provides proper JSON to the drag and drop library.'),
+        '#type' => 'select',
+        '#title' => t('Library'),
+        '#default_value' => url($field['mee_dnd_callback_url']) ? $field['mee_dnd_callback_url'] : 'scald/library_dnd',
+        '#description' => t('The library that will appear next to your rich text editing area.'),
+        '#options' => $libraries
       );
       $form['mee_scald_editor_context'] = array(
         '#type'          => 'select',
@@ -357,8 +361,7 @@ function mee_widget_settings($op, $widget) {
   switch ($op) {
     case 'form':
       $form = array();
-      $rows = (isset($widget['rows']) && is_numeric($widget['rows'])) ? $widget['rows'] : 5;
-      $size = (isset($widget['size']) && is_numeric($widget['size'])) ? $widget['size'] : 60;
+      $rows = (isset($widget['rows']) && is_numeric($widget['rows'])) ? $widget['rows'] : 60;
       $form['rows'] = array(
         '#type' => 'textfield',
         '#title' => t('Rows'),
@@ -366,11 +369,10 @@ function mee_widget_settings($op, $widget) {
         '#element_validate' => array('_mee_widget_settings_row_validate'),
         '#required' => TRUE,
       );
-      $form['size'] = array('#type' => 'hidden', '#value' => $size);
       return $form;
 
     case 'save':
-      return array('rows', 'size');
+      return array('rows');
   }
 }
 
@@ -513,7 +515,7 @@ function mee_textarea_process($element, $edit, $form_state, $form) {
   $element['mee'][$field_key] = array(
     '#type' => 'textarea',
     '#default_value' => isset($element['#value']['mee'][$field_key]) ? $element['#value']['mee'][$field_key] : NULL,
-    '#rows' => !empty($field['widget']['rows']) ? $field['widget']['rows'] : 10,
+    '#rows' => !empty($field['widget']['rows']) ? $field['widget']['rows'] : 60,
     '#weight' => 0,
     // The following values were set by the content module and need
     // to be passed down to the nested element.
