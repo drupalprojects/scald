@@ -5,6 +5,8 @@
  *   Defines a DailyMotion provider for Scald.
  */
 define('DAILYMOTION_RSS', 'http://www.dailymotion.com/rss/');
+define('DAILYMOTION_WEB', 'http://www.dailymotion.com/video/');
+define('DAILYMOTION_OEMBED', 'http://www.dailymotion.com/services/oembed');
 define('NS_MEDIA',              'http://search.yahoo.com/mrss');
 define('NS_DM',                 'http://www.dailymotion.com/dmrss');
 
@@ -212,8 +214,24 @@ function scald_dailymotion_feed($type, $id) {
  *   the object format, see @scald_dailymotion_feed.
  */
 function scald_dailymotion_video($id) {
-  $items = scald_dailymotion_feed('video', $id);
-  return $items[0];
+  $url = DAILYMOTION_OEMBED .'?url=' . urlencode(DAILYMOTION_WEB . $id) . '&format=json';
+  $response = drupal_http_request($url);
+  if ($response->code >= 200 && $response->code < 400) {
+    $data = json_decode($response->data);
+    $item = new stdClass();
+    $item->id = $id;
+    $item->title = $data->title;
+    $item->thumbnail = array(
+      'src' => $data->thumbnail,
+      'width' => $data->thumbnail_width,
+      'height' => $data->thumbnail_height
+    );
+    $item->author = $data->author_name;
+  }
+  else {
+    $item = FALSE;
+  }
+  return $item;
 }
 
 /**
