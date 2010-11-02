@@ -423,6 +423,10 @@ function scald_update_providers($form = NULL, &$form_state = NULL) {
   $to_register = array_diff($current_implementers, $registered_providers);
   foreach ($to_register as $module) {
     _scald_register_provider($module, module_invoke($module, 'scald_provider'));
+    // _scald_register_provider checks the scald_config variable. Thus, we need
+    // to rebuild it to give fresh informations to the next module that will be
+    // registered.
+    scald_config_rebuild();
   }
 
   $to_unregister = array_diff($registered_providers, $current_implementers);
