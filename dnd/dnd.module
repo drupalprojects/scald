@@ -70,7 +70,7 @@ function dnd_elements() {
  *   callback should be smart about attachment and detachment
  */
 function dnd_process_textarea($element, $edit, $form_state, $form) {
-  if ($element['#dnd-enabled']) {
+  if (isset($element['#dnd-enabled']) && $element['#dnd-enabled']) {
 
     $settings = array();
 
@@ -106,6 +106,9 @@ function dnd_process_textarea($element, $edit, $form_state, $form) {
     ), 'setting');
 
     // Generate 
+    if (!isset($element['#prefix'])) {
+      $element['#prefix'] = '';
+    }
     $element['#prefix'] .= '<div class="dnd-library-wrapper" id="'. $settings['library_id'] .'"></div><div class="dnd-fields-wrapper">';
     $element['#suffix'] = '</div>';
     if (module_exists('mee')) {

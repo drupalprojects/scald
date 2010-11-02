@@ -467,16 +467,19 @@ function mee_textarea_process($element, $edit, $form_state, $form) {
     // Restore/Generate the associated ressources in a proper order
     $query = "SELECT * FROM {mee_ressources} WHERE content_nid=%d AND field='%s' ORDER BY weight ASC";
     $result = db_query($query, $form['nid']['#value'], $element['#field_name']);
-    while ($item = db_fetch_object($result)) {  
+    while ($item = db_fetch_object($result)) {
       $element['#value']['mee']['ressource_manager'][$item->atom_sid] = (array)$item;
     }
     $element['#value']['mee']['ressource_manager'][0] = array('weight' => 0);
   }
-  
+
   foreach($element['#value']['mee']['ressource_manager'] as $sid => $item) {
-    $atom = scald_fetch($sid);  
+    $atom = scald_fetch($sid);
+    if (!is_object($atom)) {
+      continue;
+    }
     $title = $atom->title;
-      
+
     $element['mee']['ressource_manager'][$sid] = array(
       'title' => array(
         '#type'  => 'markup',
@@ -494,7 +497,7 @@ function mee_textarea_process($element, $edit, $form_state, $form) {
       '#weight' => $item['weight']
     );
   }
-  
+
   // And now we add the separator
   $element['mee']['ressource_manager'][0] = array(
     'title' => array(
@@ -512,7 +515,7 @@ function mee_textarea_process($element, $edit, $form_state, $form) {
     ),
     '#weight' => $element['#value']['mee']['ressource_manager'][0]['weight']
   );
-  if ($element['#value'][$field_key]) {
+  if (isset($element['#value'][$field_key])) {
     $element['#value']['mee'][$field_key] = $element['#value'][$field_key];
   }
   $element['mee'][$field_key] = array(
@@ -550,7 +553,7 @@ function mee_textarea_process($element, $edit, $form_state, $form) {
     '#type' => 'value',
     '#value' => implode('][', array_merge($element['#parents'], array($field_key))),
   );
-  $short = $element['#value']['short'] ? $element['#value']['short'] : $element['#value']['mee']['short'];
+  $short = isset($element['#value']['short']) ? $element['#value']['short'] : $element['#value']['mee']['short'];
   $element['mee']['short'] = array(
     '#type'  => 'textarea',
     '#title' => t('Short content'),
@@ -578,7 +581,7 @@ function theme_mee_textarea($element) {
   return $element['#children'];
 }
 
-function theme_mee_ressource_manager(&$form) {
+function theme_mee_ressource_manager($form) {
   static $count = 0;
   $id = 'mee-ressource-manager-'. $count;
   drupal_add_tabledrag($id, 'order', 'sibling', 'mee-rm-weight');

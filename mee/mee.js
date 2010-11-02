@@ -13,6 +13,9 @@ Drupal.behaviors.mee = function(context) {
 Drupal.mee = {
   attach: function(e, data) {
     var t = setInterval(function() {
+      if (!tinyMCE) {
+        return;
+      }
       var tiny_instance = tinyMCE.getInstanceById(data.field);
       if (tiny_instance) {
         clearInterval(t);

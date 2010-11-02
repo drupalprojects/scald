@@ -928,14 +928,14 @@ function scald_register_atom($values) {
 
   // The Type Provider can implement some other defaults at this point, but
   //  the Atom Provider may override them.
-  module_invoke($scald_config->types[$atom->type]['provider'], 'scald_register_atom', $atom, $values, 'type');
+  scald_invoke($scald_config->types[$atom->type]['provider'], 'scald_register_atom', $atom, $values, 'type');
 
   // Hand the new Atom off to the Atom Provider to do additional processing and
   //  population
   // NOTE: Providers explicitly have access to change the Atom's basic members
   //  to allow for hypothetical "dispatch Providers" which would determine the
   //  appropriate Provider and/or characteristics of an Atom upon registration.
-  module_invoke($atom->provider, 'scald_register_atom', $atom, $values, 'atom');
+  scald_invoke($atom->provider, 'scald_register_atom', $atom, $values, 'atom');
 
 
   // Another round of member validation is necessary due to the potential for
@@ -1019,7 +1019,7 @@ function scald_register_atom($values) {
 
   // Relationships
   foreach ($scald_config->relationships as $relationship) {
-    module_invoke($relationship['provider'], 'scald_register_atom', $atom, $values, 'relationship');
+    scald_invoke($relationship['provider'], 'scald_register_atom', $atom, $values, 'relationship');
   }
 
   // Only worry about the "forward" Relationships.  "reverse" Relationships are
@@ -1048,9 +1048,11 @@ function scald_register_atom($values) {
   //  responsible for transcoding this Atom (based on the currently-configured
   //  Context and Transcoder settings).
   foreach ($scald_config->contexts as $context => $details) {
-    $transcoder = $details['type_format'][$atom->type]['transcoder'];
-    $values['@context'] = $context;
-    module_invoke($scald_config->transcoders[$transcoder]['provider'], 'scald_register_atom', $atom, $values, 'transcoder');
+    if (isset($details['type_format'][$atom->type])) {
+      $transcoder = $details['type_format'][$atom->type]['transcoder'];
+      $values['@ccontext'] = $context;
+      scald_invoke($scald_config->transcoders[$transcoder]['provider'], 'scald_register_atom', $atom, $values, 'transcoder');
+    }
   }
 
 
@@ -1134,16 +1136,16 @@ function scald_update_atom($atom, $values = NULL) {
 
 
   // Run the Provider Hooks
-  module_invoke($scald_config->types[$atom->type]['provider'], 'scald_update_atom', $atom, $values, 'type');
-  module_invoke($atom->provider, 'scald_update_atom', $atom, $values, 'atom');
+  scald_invoke($scald_config->types[$atom->type]['provider'], 'scald_update_atom', $atom, $values, 'type');
+  scald_invoke($atom->provider, 'scald_update_atom', $atom, $values, 'atom');
 
   foreach ($scald_config->relationships as $relationship) {
-    module_invoke($relationship['provider'], 'scald_update_atom', $atom, $values, 'relationship');
+    scald_invoke($relationship['provider'], 'scald_update_atom', $atom, $values, 'relationship');
   }
 
   foreach ($scald_config->contexts as $context => $details) {
     $transcoder = $details['type_format'][$atom->type]['transcoder'];
-    module_invoke($scald_config->transcoders[$transcoder]['provider'], 'scald_update_atom', $atom, $values, 'transcoder');
+    scald_invoke($scald_config->transcoders[$transcoder]['provider'], 'scald_update_atom', $atom, $values, 'transcoder');
   }
 
 
@@ -1358,9 +1360,9 @@ function scald_fetch($sid, $rebuild = FALSE) {
 
 
   // Let the Atom Type Provider handle any defaults
-  $scald_config = variable_get($scald_config, 0);
+  $scald_config = variable_get('scald_config', 0);
 
-  module_invoke($scald_config->types[$atom->type]['provider'], 'scald_fetch', $atom, 'type');
+  scald_invoke($scald_config->types[$atom->type]['provider'], 'scald_fetch', $atom, 'type');
 
   $atom->authors = array();
   $authors_result = db_query("
@@ -1404,7 +1406,7 @@ function scald_fetch($sid, $rebuild = FALSE) {
 
   $atom->base_entity = NULL;
 
-  module_invoke($atom->provider, 'scald_fetch', $atom, 'atom');
+  scald_invoke($atom->provider, 'scald_fetch', $atom, 'atom');
 
   // If the Providers tried to mess with "protected" Atom object members, fail!
   if ($sid != $atom->sid) {
@@ -2483,7 +2485,7 @@ function scald_scald_provider() {
 /**
  * Implementation of hook_scald_register_atom().
  */
-function scald_scald_register_atom($atom, $mode) {
+function scald_scald_register_atom($atom, $values, $mode) {
   switch ($mode) {
     case 'type':
       // @@@TODO: Have the Type Providers implemented in Scald Core do something useful
@@ -2940,12 +2942,26 @@ function scald_user($op, &$edit, &$account, $category = NULL) {
 /**
  * Implementation of hook_views_api()
  */
-
 function scald_views_api() {
   return array(
     'api' => 2,
     'path' => drupal_get_path('module', 'scald') .'/includes/',
   );
+}
+
+/**
+ * Invokes a function, with a byref parameter.
+ */
+function scald_invoke($module, $hook, &$atom) {
+  $args = func_get_args();
+  $module = array_shift($args);
+  $hook = array_shift($args);
+  $atom = array_shift($args);
+  array_unshift($args, &$atom);
+  $function = $module . '_' . $hook;
+  if (function_exists($function)) {
+    return call_user_func_array($function, $args);
+  }
 }
 
 

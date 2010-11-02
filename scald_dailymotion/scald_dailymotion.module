@@ -25,7 +25,7 @@ function scald_dailymotion_scald_provider() {
 /**
  * Implements hook_scald_fetch.
  */
-function scald_dailymotion_scald_fetch(&$atom) {
+function scald_dailymotion_scald_fetch(&$atom, $type) {
   $file = file_directory_path() . '/dailymotion/'. $atom->base_id .'.jpg';
   if (file_exists($file)) {
     $atom->thumbnail_source = $file;
@@ -177,7 +177,8 @@ function scald_dailymotion_feed($type, $id) {
   $xml = drupal_http_request($url);
   $items = array();
   if ($xml->code != 404 && !empty($xml->data)) {
-    $dom = DOMDocument::loadXML($xml->data);
+    $dom = new DOMDocument();
+    $dom->loadXML($xml->data);
     if ($dom) {
       foreach($dom->getElementsByTagName('item') as $item) {
         $info = new stdClass();
@@ -222,7 +223,7 @@ function scald_dailymotion_video($id) {
     $item->id = $id;
     $item->title = $data->title;
     $item->thumbnail = array(
-      'src' => $data->thumbnail,
+      'src' => $data->thumbnail_url,
       'width' => $data->thumbnail_width,
       'height' => $data->thumbnail_height
     );

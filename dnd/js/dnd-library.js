@@ -87,7 +87,7 @@ Drupal.behaviors.dndLibrary = function(context) {
     // Initialize the library
     var wrapper = $this.get(0);
     wrapper.library_url = Drupal.settings.basePath + settings.url;
-    $.getJSON(Drupal.settings.basePath + settings.url, function(data) {
+    $.getJSON(Drupal.settings.basePath + '?q=' + settings.url, function(data) {
       Drupal.behaviors.dndLibrary.renderLibrary.call(wrapper, data, $editor);
     });
 
