@@ -2243,7 +2243,7 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
   }
 
   // Drop through to no-access rendering if current user can't view.
-  if (!scald_action_permitted($atom, 'view', $user)) {
+  if (!scald_action_permitted($atom, 'view')) {
     return scald_scald_render($atom, 'no-access');
   }
 
