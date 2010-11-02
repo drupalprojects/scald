@@ -638,15 +638,24 @@ function scald_enable() {
   scald_update_providers();
 
   // Register all existing Users as Scald Authors
-  batch_set(array(
-    'title'             => t('Registering all Users as potential Scald Authors'),
-    'operations'        => array(
-      array('scald_enable_batch', array()),
-    ),
-    'progress_message'  => '',  // No message because the batch function provides its own
-    'file'              => drupal_get_path('module', 'scald') . '/scald.install',
-  ));
-  batch_process('admin/build/modules');
+  // Determine wether we can run it straight, or need to switch to batch processing,
+  // depending on the number of users account that need to be registered.
+  $count = db_result(db_query("SELECT COUNT(uid) FROM {users} WHERE uid > 0"));
+  if ($count < SCALD_ENABLE_BATCH_LIMIT) {
+    $context = array();
+    scald_enable_batch($context);
+  }
+  else {
+    batch_set(array(
+      'title'             => t('Registering all Users as potential Scald Authors'),
+      'operations'        => array(
+        array('scald_enable_batch', array()),
+      ),
+      'progress_message'  => '',  // No message because the batch function provides its own
+      'file'              => drupal_get_path('module', 'scald') . '/scald.install',
+    ));
+    batch_process('admin/build/modules');
+  }
 }
 
 
