@@ -151,7 +151,7 @@ function template_preprocess_sdl_library(&$variables) {
       $variables['library_items'][$sid] = scald_render($sid, 'sdl_library_item');
     }
   }
-  else {
+  elseif (empty($variables['library_items']) && isset($variables['options'])) {
     $variables['library_items'] = $variables['options'];
   }
 }
