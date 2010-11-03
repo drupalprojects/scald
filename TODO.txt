@@ -14,8 +14,6 @@
 
 @@@TODO: Implement basic file and fielfield (and <type>field) -based Atom Provider modules
 
-@@@TODO: Build an imagecache.module Transcoder that turns every imagecahce profile into a Transcoder
-
 @@@TODO: Determine what hook_scald_action() should actually do from Atom Providers.  Should it add elements to a form & a submit function?  Should it provide a URL that gets forwarded to?  Should it take specific parameters and just execute the changes (probably not; less flexible, though more tightly defines what an "Action" really is, though some actions like 'edit' might be broader).
 
 @@@TODO: Complete docs/scald_provider_api.txt
@@ -93,8 +91,6 @@
             ),
             '@default' => array('context12', 'context32')
           );
-
-@@@TODO: Views compatibility
 
 @@@TODO: Provide Relationship-related functionality including accessing functionality and possibly the ability for a Relationship Provider to join the already-crowded rendering stack?
 
