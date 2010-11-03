@@ -2103,18 +2103,18 @@ function scald_prerender(&$atom, $context, $options = NULL) {
   $atom->rendered->nocache = FALSE;
 
   // Type & Atom prerenders
-  module_invoke($scald_config->types[$atom->type]['provider'], 'scald_prerender', $atom, $context, $options, 'type');
-  module_invoke($atom->provider, 'scald_prerender', $atom, $context, $options, 'atom');
+  scald_invoke($scald_config->types[$atom->type]['provider'], 'scald_prerender', $atom, $context, $options, 'type');
+  scald_invoke($atom->provider, 'scald_prerender', $atom, $context, $options, 'atom');
 
   // Transcoder Provider prerender -- only if there is a Transcoder specified
   //  for this Context.
   //  POPULATES: $atom->rendered->file_transcoded_url
   if (!empty($context_config['type_format']) && !empty($context_config['type_format'][$atom->type])) {
-    module_invoke($scald_config->transcoders[$context_config['type_format'][$atom->type]['transcoder']]['provider'], 'scald_prerender', $atom, $context, $options, 'transcoder'); 
+    scald_invoke($scald_config->transcoders[$context_config['type_format'][$atom->type]['transcoder']]['provider'], 'scald_prerender', $atom, $context, $options, 'transcoder'); 
   }
 
   // Context prerender
-  module_invoke($context_config['provider'], 'scald_prerender', $atom, $context, $options, 'context');
+  scald_invoke($context_config['provider'], 'scald_prerender', $atom, $context, $options, 'context');
 
   // Populate default rendered members & validate other rendered members.
   $atom->rendered->title = check_plain($atom->rendered->title); // @@@TODO: Determine if it makes sense to *always* do this or make it dependant on Context render language.
@@ -2123,7 +2123,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
 
   // Actions
   $atom->rendered->actions = array();
-  $current_actions = scald_actions($atom, $user) & ~SCALD_ACTIONS_ADMIN_BIT; // Remove the Admin bit as it is irrelevant for rendering purposes
+  $current_actions = scald_actions($atom) & ~SCALD_ACTIONS_ADMIN_BIT; // Remove the Admin bit as it is irrelevant for rendering purposes
   foreach ($scald_config->actions as $slug => $details) {
     if ($current_actions & $details['mask']) {
       $atom->rendered->actions[] = array(
@@ -2259,10 +2259,9 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
 
 
   // Check the cache unless explicitly rebuilding the rendering of the Atom
-  global $user;
   $cache_id = $sid
 	    . ':' . $context
-	    . ':' . scald_actions($atom, $user)
+	    . ':' . scald_actions($atom)
 	    . (is_null($options) ? '' : ':' . $options);
   if (!$rebuild && !variable_get('scald_always_rebuild', FALSE)) {
     $cache = cache_get($cache_id, 'cache_scald');
@@ -2293,7 +2292,7 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
 
   // For so-called "parsable" Contexts, ensure a standard format for the
   //  enclosing comments.
-  if ($context_config['parseable']) {
+  if ($scald_config->contexts[$context]['parseable']) {
     $rendered = '<!-- scald=' . $atom->sid . ':' . $context . (!empty($options) ? ' ' . $options : '') . ' -->' . $rendered . '<!-- END scald=' . $atom->sid . ' -->';
   }
 
