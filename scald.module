@@ -2098,7 +2098,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
   $atom->rendered->title = $atom->title;
   $atom->rendered->file_source_url = empty($atom->file_source) ? NULL : url($atom->file_source);
   $atom->rendered->file_transcoded_url = NULL;
-  $atom->rendered->thumbnail_source_url = url($atom->thumbnail_source);
+  $atom->rendered->thumbnail_source_url = file_create_url($atom->thumbnail_source);
   $atom->rendered->description = $atom->description;
   $atom->rendered->nocache = FALSE;
 
