@@ -1,7 +1,5 @@
 ==== v0.9 / initial dev release ====
 
-@@@TODO: In admin section, when a transcoder is assigned to a Scald Context, the Scald Transcoder should be given the opportunity to handle all of the Atoms which it is now responsible for transcoding into a given format.  Providing a mechanism for handing it all the SIDs is probably adequate; the Scald Transcoder should then be responsible for *intelligently* transcoding them all (i.e. not trying to loop through all million Atoms & transcode them before the request execution limit is reached).
-
 @@@TODO: When an admin selects a new nodetype for use as base entities for Atoms, scald_composites.module should register all the new Atoms.  Probably batch-processed.  This is explicitly the responsibility of the Atom Provider (e.g. a YouTube Provider would need to do the same upon receiving username/passwords or an RSS feed or what have you).
 
 @@@TODO: Determine if it's worth the overhead of adding in the "Author" Actions pseudo-role.  It would be potentially expensive to load up the list of authors of an Atom if it wasn't already loaded.  Maybe make it a conditional situation so that if it *is* loaded, check it, if not, don't?  Since the Actions bitstring is used as part of the Cache ID in the render stack, it would introduce a guaranteed additional db query to the render stack because the Atom is rarely pre-loaded.  If not, determine how to handle the situation where an Author is a User on the site and indicated.  Theoretically, they should therefore have some control over the Atom.

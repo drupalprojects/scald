@@ -419,14 +419,34 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
     }
   }
 
-  $scald_config_old = variable_get('scald_config', 0);
+  // The transcoders associated to the contexts might have change. In this case,
+  // all the output that we keep in the cache is invalid, which means that we'll
+  // need to regenerate it.
+  $config_old = variable_get('scald_config', 0);
+  $old = $config_old->contexts;
   scald_config_rebuild('contexts');
-  $scald_config = variable_get('scald_config', 0);
+  $config_new = variable_get('scald_config', 0);
+  $new = $config_new->contexts;
+  $changed = FALSE;
+  foreach ($new as $name => $context) {
+    // If the "Make parseable" checkbox was ticked, the atoms needs to be
+    // re-rendered.
+    if ($new[$name]['parseable'] != $old[$name]['parseable']) {
+      $changed = TRUE;
+    }
+    // Find out if there's a change in the transcoders, which would imply that
+    // the atom needs to be rerendered too.
+    foreach($new[$name]['type_format'] as $type => $format) {
+      if ($new[$name]['type_format'][$type]['transcoder'] != $old[$name]['type_format'][$type]['transcoder']) {
+        $changed = TRUE;
+      }
+    }
+  }
+  // If a change was found, clear the cache.
+  if ($changed) {
+    cache_clear_all('*', 'cache_scald', TRUE);
+  }
 
-  $changed = array();
-//  foreach ($scald_config->contexts as $context => $details) {
-//    $changed = array_diff_assoc($scald_config_old->contexts[$context]['type_format']
-  // @@@TODO: Use Batch API to alert all the Transcoders which *just* got assigned that there are new Atoms which they are responsible for Transcoding to a new format
 } // end scald_admin_contexts_form_submit()
 
 
