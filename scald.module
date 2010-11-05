@@ -2162,7 +2162,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
         $author['link'] = l($author['name'], $author['url']);
       }
       else {
-        $author['link'] = $author['name'];
+        $author['link'] = check_plain($author['name']);
       }
       $atom->rendered->authors[$weight] = $author;
     }

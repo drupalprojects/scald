@@ -300,10 +300,11 @@ function theme_sdl_editor_item($informations, $image) {
  */
 function theme_sdl_editor_legend($atom) {
   $informations = $atom->rendered;
-  $by = isset($informations->authors[0]['link']) ? $informations->author[0]['link'] : $informations->publisher['link'];
+  $by = isset($informations->authors[0]['link']) ? $informations->authors[0]['link'] : $informations->publisher['link'];
+  $by = t('by %name', array('%name' => $by));
   return "
   <div class='meta'>
-    {$informations->title}, par {$by}
+    {$informations->title}, {$by}
   </div>
   ";
 }
@@ -312,48 +313,23 @@ function theme_sdl_editor_legend($atom) {
  * Returns HTML for an atom rendered in the "Preview" context.
  */
 function theme_sdl_preview_item($atom, $image) {
-  $ressource = theme('sdl_editor_item', $atom->rendered, $image);
-  $node = node_load($atom->base_id);
-  if (is_numeric($node->license->limite)) {
-    $node->license->limite .= ' jours';
-  }
-  $tags = array();
-  if (is_array($node->tags)) {
-    foreach($node->tags as $voc) {
-      foreach($voc as $term) {
-        $tags[] = $term->name;
-      }
-    }
-  }
-  if (count($tags)) {
-    $tags = implode(', ', $tags);
-  }
-  else {
-    $tags = t('None');
-  }
-  if ($node->license->depublication) {
-    $date = format_date(strtotime($node->license->depublication));
-    $depublication = "
-      <dt>Utilisable jusqu'à</dt>
-      <dd>{$date}</dd>
-    ";
-  }
-  else {
-    $depublication = '';
-  }
+  $resource_label = t('Resource');
+  $informations_label = t('Informations');
+  $resource = theme('sdl_editor_item', $atom->rendered, $image);
+  $title_label = t('Title');
+  $title_value = $atom->rendered->title;
+  $author_label = t('Author');
+  $author_name = $atom->rendered->authors[0]['link'];
   return "
 <div class='sdl-preview-item'>
-  <h3>Ressource</h3>
-    $ressource
-  <h3>Informations</h3>
+  <h3>$resource_label</h3>
+    $resource
+  <h3>$informations_label</h3>
   <dl>
-    <dt>Copyright</dt>
-    <dd>{$node->license->copyright}</dt>
-    <dt>Utilisable pendant</dt>
-    <dd>{$node->license->limite}</dd>
-    <dt>Tags</dt>
-    <dd>{$tags}</dd>
-    $depublication
+    <dt>$title_label</dt>
+    <dd>$title_value</dd>
+    <dt>$author_label</dt>
+    <dd>$author_name</dt>
   </dl>
 </div>
   ";
