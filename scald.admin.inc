@@ -21,12 +21,12 @@ require_once('scald.constants.inc');
 function scald_admin_dashboard() {
   $scald_providers = variable_get('scald_providers', array());
 
-  $content = '
+  $content = t('
     <h3>Scald Providers</h3>
 
     <p>The following Scald Providers are registered with Scald Core.  To force a Provider to renew its registration (this is useful if a Provider conditionally provides something such as a Transcoder based on whether or not a module is availble and you have just enabled new modules) click the <em>re-register</em> link next to the Provider\'s name.</p>
     <ul>
-  ';
+  ');
 
   foreach ($scald_providers as $provider) {
     $content .= '<li>' . $provider . '.module [' . l('re-register', 'admin/content/scald/register/' . $provider) . ']</li>';
@@ -66,12 +66,12 @@ function scald_admin_provider_reregister($provider) {
 function scald_admin_types() {
   $scald_config = variable_get('scald_config', 0);
 
-  $content = '
+  $content = t('
     <h3>Scald Unified Types</h3>
     <br>
     <p>Scald Unified Types are a way of dealing with various different media *formats* in a uniform manner.  For instance, from the average user\'s perspective, a JPEG and a PNG are pretty much the same thing.  Both could be classified as the Scald Unified Type "Image".</p>
     <p>When users interact with Atoms, they will often see the title of the Type of Atom.  That title can be customized below.  Be sure to specify the title in the singular, not plural, form.</p>
-  ';
+  ');
 
   return $content . drupal_get_form('scald_admin_types_form');
 } // end scald_admin_types()
@@ -207,14 +207,14 @@ function scald_admin_types_form_submit($form, &$form_state) {
  * The Scald Admin page for Scald Atoms.
  */
 function scald_admin_atoms() {
-  $content = '
+  $content = t('
     <h3>Scald Atoms</h3>
 
     <h4>Currently, there are ' . db_result(db_query("SELECT COUNT(*) FROM {scald_atoms}")) . ' Atoms registered with Scald Core.</h4>
 
-    <p>Once Views integration is complete, there will be a handy paginated table with filters which will allow the Admin to perform various actions on the Atoms.
+    <p>Enable the Views module to get an handy paginated table with filters which will allow you to browse your atoms</p>
 
-  ';
+  ');
 
   // @@@TODO: Turn this into a nice little table which gives totals by type and by provider as well as giving the base_description by provider.
   $scald_config = variable_get('scald_config', 0);
@@ -261,12 +261,12 @@ function scald_admin_atoms() {
 function scald_admin_contexts() {
   $scald_config = variable_get('scald_config', 0);
 
-  $content = '
+  $content = t('
     <h3>Scald Rendering Contexts</h3>
     <br>
     <p>Scald Rendering Contexts are something like themes for Scald Atoms.  Any Atom can be rendered in any Context and the Context determines what that rendering looks like and what language it is in.</p>
     <p>If a Context is "parseable", that means that its output is wrapped in HTML comments (currently this feature only works reliably for Contexts which have a render language of XHTML) which make it possible for Scald Core to uniquely identify the Atom based on the rendering.  For instance, if a WYSIWYG editor is being used in some text areas and Scald Atoms should be included in the WYSIWYG preview of the text, a Context can be chosen and specified as parseable.  That ensures that when the textarea is submitted, Scald Core will be able to determine which Atoms are present in the textarea, convert the rendered versions to Scald Atom Shorthand and ensure proper parsing by the Scald Atom Shorthand Input Filter.</p>
-  ';
+  ');
 
 
   return $content . drupal_get_form('scald_admin_contexts_form');
@@ -438,7 +438,7 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
  *  changes can be made from this page.
  */
 function scald_admin_transcoders() {
-  $content = '
+  $content = t('
     <h3>Scald Transcoders</h3>
     <br>
     <p>Scald Transcoders take the files associated with Atoms of a particular Type and transcode them into a file format which is appropriate for output.  Any configuration for the Transcoders should be completed on the settings page for the Providing module.</p>
@@ -450,7 +450,7 @@ function scald_admin_transcoders() {
           <li>Provided by <code>scald.module</code></li>
         </ul>
       </li>
-  ';
+  ');
 
   $transcoders_results = db_query("
     SELECT
@@ -480,12 +480,12 @@ function scald_admin_transcoders() {
  * The Scald Admin page for Scald Atom Relationships
  */
 function scald_admin_relationships() {
-  $content = '
+  $content = t('
     <h3>Scald Atom Relationships</h3>
 
     <p>Scald Atom Relationships define a way in which two Atoms can be related.  What is done with this information is dependant on the nature of the relationship.</p>
     <ol>
-  ';
+  ');
 
   $relationships_results = db_query("
     SELECT
@@ -515,13 +515,13 @@ function scald_admin_relationships() {
  * The Scald Admin page for Scald Actions
  */
 function scald_admin_actions() {
-  $content_first = '
+  $content_first = t('
     <h3>Scald Actions</h3>
 
     <p>Scald Actions are akin to Drupal Permissions.  Each is something which can be done <em>to</em> or <em>with</em> an Atom.  They are assigned to Drupal user roles.  Only roles which have the "use scald" permission can have Actions assigned to them.</p>
-  ';
+  ');
 
-  $content = '
+  $content = t('
     <ol>
       <li>
         <strong>Admin Mode</strong>
@@ -537,7 +537,7 @@ function scald_admin_actions() {
           <li>Provided by <code>scald.module</code></li>
         </ul>
       </li>
-  ';
+  ');
 
   $actions_results = db_query("
     SELECT
