@@ -79,7 +79,6 @@ function mee_field_settings($op, $field) {
         '#options' => $options,
         '#description' => t('Filtered text, with a WYSIWYG editor defined on one or more input formats, is strongly recommended.'),
       );
-      // @TODO Ask Drupal about available libraries
       $form['mee_dnd_callback_url'] = array(
         '#type' => 'select',
         '#title' => t('Library'),
