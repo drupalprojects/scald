@@ -89,17 +89,7 @@ function scald_dnd_library_library() {
 
   // Run search & build array
   while($sid = db_result($result)) {
-    $atom = scald_fetch($sid);
-    scald_prerender($atom, 'sdl_editor_representation');
-    $library['editor_representations'][$sid] = array(
-      'body'  => scald_render($atom, 'sdl_editor_representation'),
-      'title' => $atom->title,
-      'meta'  => array(
-        'action' => $atom->base_entity->license->action_fin,
-        'legend' => theme('sdl_editor_legend', $atom)
-      )
-    );
-    $library['library_previews']['sdl-'. $sid] = scald_render($sid, 'sdl_preview');
+    scald_dnd_library_add_item($library, $sid);
     $library_items[$sid] = scald_render($sid, 'sdl_library_item');
   }
   $library['library'] =
@@ -111,6 +101,24 @@ function scald_dnd_library_library() {
   // &page=X
   // Assemble array
   return drupal_json($library);
+}
+
+/**
+ * Adds an item in the library array.
+ */
+function scald_dnd_library_add_item(&$library, $sid) {
+  $atom = scald_fetch($sid);
+  $library['atoms'][$sid] = array(
+    'meta' => array(
+      'title' => $atom->title,
+      'type' => $atom->type,
+      'legend' => theme('sdl_editor_legend', $atom),
+      'action' => $atom->base_entity->license->action_fin
+    ),
+    'editor' => scald_render($atom, 'sdl_editor_representation'),
+    'preview' => scald_render($atom, 'sdl_preview'),
+    'library' => scald_render($atom, 'sdl_library_item')
+  );
 }
 
 function scald_dnd_library_form($form_state, $currentTypes) {
@@ -278,7 +286,7 @@ function theme_sdl_library_item($atom, $image) {
     <div class='author'>{$informations->authors[0]['link']}</div>
     <div class='links'>{$links}</div>
   </div>
-  <br class='clear' />
+  <span class='clear' />
   ";
   return $return;
 }

@@ -8,6 +8,23 @@
  */
 
 /**
+ * Initialize our namespace.
+ */
+Drupal.dnd = {};
+Drupal.dnd.Atoms = {};
+Drupal.dnd.btSettings = {
+  'trigger': ['click'],
+  'width': 480,
+  'spikeLength': 7,
+  'spikeGirth': 9,
+  'corner-radius' : 3,
+  'strokeWidth': 1,
+  'fill': '#ffd',
+  'strokeStyle': '#555',
+  'closeWhenOthersOpen': true
+};
+
+/**
  *  Extend jQuery a bit
  *  
  *  We add a selector to look for "empty" elements (empty elements in TinyMCE
@@ -30,68 +47,46 @@
  * behavior attachment.
  */
 Drupal.behaviors.dndLibrary = function(context) {
-  if (!Drupal.settings.dndEnabledLibraries) {
+  if (!Drupal.settings.dndDropAreas) {
     return;
   }
-  $('.dnd-library-wrapper', context).each(function() {
-    var $this = $(this);
 
-    // This is a bad hack to lop off '-dnd-library' from the id to get the editor name
-    var $editor = $('#' + this.id.slice(0, -12)); 
-
-    // Set up some initial settings for BeautyTips
-    var settings = Drupal.settings.dndEnabledLibraries[$editor.get(0).id] = $.extend({
-      'btSettings' : {
-        'trigger': ['click'],
-        'width': 480,
-        'spikeLength': 7,
-        'spikeGirth': 9,
-        'corner-radius' : 3,
-        'strokeWidth': 1,
-        'fill': '#ffd',
-        'strokeStyle': '#555',
-        'closeWhenOthersOpen': true
-      },
-      'libraryHoverIntentSettings' : {
-        'interval': 500,
-        'timeout' : 0,
-        'over': function() {
-          var $this = $(this);
-          this.btOn();
-          // Remove the preview once dragging of any image has commenced
-          $('img', $this).bind('drag', function(e) {
-            $this.btOff();
-          });
-          $('img', $this).bind('click', function(e) {
-            $this.btOff();
-          });
-        }, 
-        'out': function() { this.btOff(); }
-      }
-    }, Drupal.settings.dndEnabledLibraries[$editor.get(0).id]);
-
-    // Bind Drag and Drop plugin invocation to events emanating from Wysiwyg
-    $editor.bind('wysiwygAttach', Drupal.behaviors.dndLibrary.attach_library);
-    $editor.bind('wysiwygDetach', Drupal.behaviors.dndLibrary.detach_library);
-
-    // Set up empty objects to keep track of things
-    Drupal.settings.dndEditorRepresentations = {};
-    Drupal.settings.dndLibraryPreviews = {};
-    
-    // Clean up the url if needed (this happen in case drupal_add_js is called
-    // multiple time for the page)
-    if (settings.url instanceof Object) {
-      settings.url = settings.url[0];
+  // Start to setup autohiding library
+  $(".dnd-library-wrapper").hover(
+    function() {
+      $(this)
+        .stop(true)
+        .animate({'right': 0});
+    },
+    function() {
+      $(this)
+        .stop(true)
+        .animate({'right': -180});
     }
+  ).css('right', -180);
 
-    // Initialize the library
-    var wrapper = $this.get(0);
-    wrapper.library_url = Drupal.settings.basePath + settings.url;
-    $.getJSON(Drupal.settings.basePath + '?q=' + settings.url, function(data) {
+  // Bind our functions to WYSIWYG attach / detach events
+  for (editor in Drupal.settings.dndDropAreas) {
+    if (Drupal.settings.dndDropAreas[editor]) {
+      var $editor = $('#' + editor, context);
+
+      // Bind Drag and Drop plugin invocation to events emanating from Wysiwyg
+      $editor.bind('wysiwygAttach', Drupal.behaviors.dndLibrary.attach_library);
+      $editor.bind('wysiwygDetach', Drupal.behaviors.dndLibrary.detach_library);
+    }
+  }
+
+  if ($("#node-form:not(.dnd-processed)").length) {
+    $("#node-form")
+      .addClass('dnd-processed')
+      .append('<div class="dnd-library-wrapper"></div>');
+    var wrapper = $('#node-form .dnd-library-wrapper'), url = Drupal.settings.dnd.url;
+    $editor = $("<a />");
+    wrapper.library_url = Drupal.settings.basePath + '?q=' + url;
+    $.getJSON(Drupal.settings.basePath + '?q=' + url, function(data) {
       Drupal.behaviors.dndLibrary.renderLibrary.call(wrapper, data, $editor);
     });
-
-  });
+  }
 }
 
 Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
@@ -99,31 +94,25 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
 
   $this.html(data.library);
 
-  var settings = Drupal.settings.dndEnabledLibraries[editor.get(0).id];
+  var settings = Drupal.settings.dndDropAreas[editor.get(0).id];
   var params = Drupal.wysiwyg.instances[editor.get(0).id];
 
   editor.trigger('wysiwygDetach', params);
   editor.trigger('wysiwygAttach', params);
 
-  for (editor_id in data.editor_representations) {
-    Drupal.settings.dndEditorRepresentations[editor_id] = data.editor_representations[editor_id];
+  for (atom_id in data.atoms) {
+    // Store the atom data in our object
+    Drupal.dnd.Atoms[atom_id] = data.atoms[atom_id];
+    // And add a nice preview behavior thanks to BeautyTips
+    $("#sdl-" + atom_id).bt(Drupal.dnd.Atoms[atom_id].preview, Drupal.dnd.btSettings);
   }
-  for (preview_id in data.library_previews) {
-    Drupal.settings.dndLibraryPreviews[preview_id] = data.library_previews[preview_id];
-  }
-
-  // Add preview behavior to editor items (thanks, BeautyTips!)
-  $('.editor-item', $this).each(function () {
-    $(this).bt(Drupal.settings.dndLibraryPreviews[this.id], settings.btSettings);
-    //$(this).hoverIntent(settings.libraryHoverIntentSettings);
-  });
 
   // Preload images in editor representations
   var cached = $.data($(editor), 'dnd_preload') || {};
-  for (editor_id in Drupal.settings.dndEditorRepresentations) {
+  for (editor_id in Drupal.dnd.Atoms) {
     if (!cached[editor_id]) {
-      $representation = $(Drupal.settings.dndEditorRepresentations[editor_id].body);
-      if ($representation.is('img') && $representation.get(0).src) { 
+      $representation = $(Drupal.dnd.Atoms[editor_id].editor);
+      if ($representation.is('img') && $representation.get(0).src) {
         $representation.attr('src', $representation.get(0).src);
       } else {
         $('img', $representation).each(function() {
@@ -134,6 +123,29 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
   }
   $.data($(editor), 'dnd_preload', cached);
 
+  // Set up drag & drop data
+  $('.editor-item .drop').each(function(i) {
+    $(this)
+      .bind('dragstart', function(e) {
+        var dt = e.originalEvent.dataTransfer, id = e.target.id, $this = $(this);
+        var $img;
+        if ($this.is('img')) {
+          $img = $this;
+        }
+        else {
+          $this.find('img');
+        }
+        var id = $.url.setUrl($img.attr('src')).param('dnd_id');
+        dt.dropEffect = 'copy';
+        dt.setData('Text', id);
+        dt.setData('text/html', "<img src='" + $img.attr('src') + "' class='drop' />");
+        return true;
+      })
+      .bind('dragend', function(e) {
+        return true;
+      });
+  });
+  // Makes pager links refresh the library instead of opening it in the browser window
   $('.pager a', $this).click(function() {
     // At page switching, close all opened BeautyTips.
     $('.editor-item.bt-active').btOff();
@@ -143,8 +155,11 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
     });
     return false;
   });
-  $('.view-filters input[type=submit]', $this).click(function() {
+
+  // Turns Views exposed filters' submit button into an ajaxSubmit trigger
+  $('.view-filters input[type=submit]', $this).click(function(e) {
     var submit = $(this);
+    settings = {'url': 'scald/library_dnd'};
     $('.view-filters form', $this).ajaxSubmit({
       'url' : Drupal.settings.basePath + settings.url,
       'dataType' : 'json',
@@ -154,16 +169,20 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
         Drupal.behaviors.dndLibrary.renderLibrary.call(target, data, $(editor));
       }
     });
+    e.preventDefault();
     return false;
   });
-  $('.view-filters input[type=reset]', $this).click(function() {
+
+  // Makes Views exposed filters' reset button submit the form via ajaxSubmit,
+  // without data, to get all the default values back.
+  $('.view-filters input[type=reset]', $this).click(function(e) {
     var reset = $(this);
     $('.view-filters form', $this).ajaxSubmit({
       'url' : Drupal.settings.basePath + settings.url,
       'dataType' : 'json',
       'success' : function(data) {
         var target = reset.parents('div.dnd-library-wrapper').get(0);
-        target.library_url = Drupal.settings.dndEnabledLibraries[editor[0].id].url;
+        target.library_url = Drupal.settings.dndDropAreas[editor[0].id].url;
         Drupal.behaviors.dndLibrary.renderLibrary.call(target, data, $(editor));
       },
       'beforeSubmit': function (data, form, options) {
@@ -172,14 +191,17 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
         data.splice(0, data.length);
       }
     });
+    e.preventDefault();
     return false;
   });
+
+  // Attach all the behaviors to our new HTML fragment
   Drupal.attachBehaviors($this);
 }
 
 // Dynamically compose a callback based on the editor name
 Drupal.behaviors.dndLibrary.attach_library = function(e, data) {
-  var settings = $.extend({idSelector: Drupal.behaviors.dndLibrary.idSelector}, Drupal.settings.dndEnabledLibraries[data.field]);
+  var settings = $.extend({idSelector: Drupal.behaviors.dndLibrary.idSelector}, Drupal.settings.dndDropAreas[data.field]);
   var editor_fn = 'attach_' + data.editor;
   if ($.isFunction(window.Drupal.behaviors.dndLibrary[editor_fn])) {
     window.Drupal.behaviors.dndLibrary[editor_fn](data, settings); 
@@ -199,10 +221,10 @@ Drupal.behaviors.dndLibrary.attach_none = function(data, settings) {
       // Update element count
       Drupal.behaviors.dndLibrary.countElements.call(target, representation_id);
 
-      var rep = Drupal.settings.dndEditorRepresentations[representation_id];
-      var snippet = '<div class="dnd-drop-wrapper">' + rep.body + '</div>';
-      if (rep.meta.legend) {
-        snippet += rep.meta.legend;
+      var atom = Drupal.dnd.Atoms[representation_id];
+      var snippet = '<div class="dnd-drop-wrapper">' + atom.editor + '</div>';
+      if (atom.meta.legend) {
+        snippet += atom.meta.legend;
       }
       $target.replaceSelection(snippet, true);
     }
@@ -216,7 +238,7 @@ Drupal.behaviors.dndLibrary.attach_tinymce = function(data, settings) {
 
   // If the Tiny instance exists, attach directly, otherwise wait until Tiny
   // has registered a new instance.
-  if (tiny_instance) { 
+  if (tiny_instance) {
     Drupal.behaviors.dndLibrary._attach_tinymce(data, settings, tiny_instance);
   } else {
     var t = setInterval(function() {
@@ -230,7 +252,7 @@ Drupal.behaviors.dndLibrary.attach_tinymce = function(data, settings) {
   }
 }
 
-Drupal.behaviors.dndLibrary.idSelector = function(element) { 
+Drupal.behaviors.dndLibrary.idSelector = function(element) {
   if ($(element).is('img')) {
     return $.url.setUrl(element.src).param('dnd_id');
   }
@@ -250,16 +272,16 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
         $(target).bind('dnd_delete', function(e, data) {
           Drupal.behaviors.dndLibrary.countElements(target, $(data.node).attr('dnd_id'), true); 
         });
-        $('head', $(this).contents()).append('<style type="text/css">img.drop { display: none; } div.dnd-drop-wrapper {background: #efe; border: 1px #090 solid;}</style>');
+        $('head', $(this).contents()).append('<style type="text/css">img.drop {width: 0; height: 0;} div.dnd-drop-wrapper {background: #efe; border: 1px #090 solid;}</style>');
         $('body', $(this).contents()).addClass($('body').attr('class'));
         return this;
       });
     },
     processIframeDrop: function(drop, id_selector) {
       var representation_id = id_selector.call(this, drop);
-      if (!Drupal.settings.dndEditorRepresentations[representation_id]) return;
-      var representation = Drupal.settings.dndEditorRepresentations[representation_id].body;
-      var legend = Drupal.settings.dndEditorRepresentations[representation_id].meta.legend;
+      if (!Drupal.dnd.Atoms[representation_id]) return;
+      var representation = Drupal.dnd.Atoms[representation_id].editor;
+      var legend = Drupal.dnd.Atoms[representation_id].meta.legend;
       var target = this, $target = $(target), $drop = $(drop), block;
 
       // Update element count
@@ -272,6 +294,7 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
           block = this;
           return false;
         }
+        return true;
       });
 
       // Remove dropped item
@@ -332,7 +355,7 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
         var after = dom.create('p', {}, '<span id="__caret">_</span>');
         dom.insertAfter(after, 'dnd-inserted');
       }
- 
+
       // Force selection to reset the caret
       var c = dom.get('__caret');
       if (c) {
@@ -356,7 +379,7 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
 
 // Keep a counter of times a representation ID has been used
 Drupal.behaviors.dndLibrary.countElements = function(target, representation_id, decrement) {
-  var counter = $(target).data('dnd_representation_counter');      
+  var counter = $(target).data('dnd_representation_counter');
   if (!counter) {
     counter = {}
     counter[representation_id] = 1;
@@ -372,12 +395,11 @@ Drupal.behaviors.dndLibrary.countElements = function(target, representation_id, 
 /**
  * Refresh the library.
  */
-Drupal.dnd = {}
 Drupal.dnd.refreshLibraries = function() {
-	var settings = Drupal.settings.dndEnabledLibraries;
-	for (editor_id in settings) {
-		var elem = $("#" + settings[editor_id].library_id).get(0);
-		var $editor = $("#" + editor_id);
+  var settings = Drupal.settings.dndDropAreas;
+  for (editor_id in settings) {
+    var elem = $("#" + settings[editor_id].library_id).get(0);
+    var $editor = $("#" + editor_id);
     $.getJSON(elem.library_url, function (data) {
       Drupal.behaviors.dndLibrary.renderLibrary.call(elem, data, $editor);
     });

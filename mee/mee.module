@@ -79,13 +79,6 @@ function mee_field_settings($op, $field) {
         '#options' => $options,
         '#description' => t('Filtered text, with a WYSIWYG editor defined on one or more input formats, is strongly recommended.'),
       );
-      $form['mee_dnd_callback_url'] = array(
-        '#type' => 'select',
-        '#title' => t('Library'),
-        '#default_value' => url($field['mee_dnd_callback_url']) ? $field['mee_dnd_callback_url'] : 'scald/library_dnd',
-        '#description' => t('The library that will appear next to your rich text editing area.'),
-        '#options' => $libraries
-      );
       $form['mee_scald_editor_context'] = array(
         '#type'          => 'select',
         '#title'         => t('Scald Editor Context'),
@@ -96,12 +89,11 @@ function mee_field_settings($op, $field) {
       return $form;
 
     case 'save':
-      return array('mee_processing', 'mee_dnd_callback_url', 'mee_scald_editor_context');
+      return array('mee_processing', 'mee_scald_editor_context');
 
     case 'database columns':
       $columns['value'] = array('type' => 'text', 'size' => 'big', 'not null' => FALSE, 'sortable' => TRUE);
       $columns['short'] = array('type' => 'text', 'size' => 'big', 'not null' => FALSE, 'sortable' => TRUE);
-      $columns['dnd_callback_url'] = array('type' => 'text', 'size' => 'small', 'not null' => FALSE);
       if (!empty($field['mee_processing'])) {
         $columns['format'] = array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE);
       }
@@ -534,7 +526,6 @@ function mee_textarea_process($element, $edit, $form_state, $form) {
     '#dnd-enabled' => TRUE,
     '#dnd-settings' => array(
       'drop_selector' => '#'. $element['#id'] .' .drop',
-      'url' => $field['mee_dnd_callback_url'],
     ),
   );
 

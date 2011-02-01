@@ -10,7 +10,8 @@ function dnd_menu() {
   $items = array();
   $items['admin/settings/dnd'] = array(
     'title' => 'Drag and Drop Library',
-    'page callback' => 'dnd_admin',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('dnd_admin_form'),
     'description' => 'Configure drag-and-drop enabled textareas.',
     'access arguments' => array('administer dnd'),
     'file' => 'dnd.admin.inc',
@@ -71,21 +72,39 @@ function dnd_elements() {
  */
 function dnd_process_textarea($element, $edit, $form_state, $form) {
   if (isset($element['#dnd-enabled']) && $element['#dnd-enabled']) {
+    dnd_add_library();
 
-    $settings = array();
+    $settings = array(
+      'library_id' => $element['#id'] . DND_ID_SUFFIX,
+      'url' => dnd_get_library(),
+    );
 
     // We take a string or an object or an array
-    if (is_string($element['#dnd-settings'])) {
-      // @TODO load settings
-    } 
-    else if (is_object($element['#dnd-settings'])) {
-      $settings = (array) $element['#dnd-settings'];
+    if (is_object($element['#dnd-settings'])) {
+      $settings = (array) $element['#dnd-settings'] + $settings;
     }
     else if (is_array($element['#dnd-settings'])) {
-      $settings = $element['#dnd-settings'];
+      $settings = $element['#dnd-settings'] + $settings;
     }
 
-    $settings = array('library_id' => $element['#id'] . DND_ID_SUFFIX) + $settings;
+    drupal_add_js(array(
+      'dndDropAreas' => array($element['#id'] => $settings),
+    ), 'setting');
+
+
+  }
+
+  return $element;
+}
+
+/**
+ * Adds all the JS libraries for the library to the page.
+ */
+function dnd_add_library() {
+  static $included = FALSE;
+
+  if (!$included) {
+    $included = TRUE;
 
     // BeautyTips
     drupal_add_js(drupal_get_path('module', 'dnd') .'/js/bt/other_libs/excanvas_0002/excanvas-compressed.js');
@@ -101,22 +120,12 @@ function dnd_process_textarea($element, $edit, $form_state, $form) {
     drupal_add_js(drupal_get_path('module', 'dnd') .'/js/jquery.draganddrop.js');
     drupal_add_js(drupal_get_path('module', 'dnd') .'/js/dnd-library.js');
 
-    drupal_add_js(array(
-      'dndEnabledLibraries' => array($element['#id'] => $settings),
-    ), 'setting');
+    // Contains the library theming
+    drupal_add_css(drupal_get_path('module', 'dnd') .'/css/dnd-library.css');
 
-    // Generate 
-    if (!isset($element['#prefix'])) {
-      $element['#prefix'] = '';
-    }
-    $element['#prefix'] .= '<div class="dnd-library-wrapper" id="'. $settings['library_id'] .'"></div><div class="dnd-fields-wrapper">';
-    $element['#suffix'] = '</div>';
-    if (module_exists('mee')) {
-      drupal_add_css(drupal_get_path('module', 'mee') .'/css/mee.css');
-    }
-
+    // Settings for the library url
+    drupal_add_js(array('dnd' => array('url' => dnd_get_library())), 'setting');
   }
-  return $element;
 }
 
 /**
@@ -159,7 +168,25 @@ function theme_dnd_library_wrapper($settings, $element = NULL) {
  *   the value is an associated label.
  */
 function dnd_get_libraries() {
-  $libraries = module_invoke_all('dnd_libraries_info');
-  drupal_alter('dnd_libraries_info', $libraries);
+  static $libraries = NULL;
+  if (is_null($libraries)) {
+    $libraries = module_invoke_all('dnd_libraries_info');
+    drupal_alter('dnd_libraries_info', $libraries);
+  }
   return $libraries;
+}
+
+/**
+ * Return the default library.
+ */
+function dnd_get_library() {
+  $libraries = dnd_get_libraries();
+  $default = variable_get('dnd_callback_url', '');
+  if (isset($libraries[$default])) {
+    $library = $default;
+  }
+  else {
+    $library = key(reset($libraries));
+  }
+  return $library;
 }

@@ -104,17 +104,7 @@ class scald_plugin_display_library extends views_plugin_display_page {
     }
     foreach ($this->view->result as $result) {
       $sid = $result->sid;
-      $atom = scald_fetch($sid);
-      scald_prerender($atom, 'sdl_editor_representation');
-      $library['editor_representations'][$sid] = array(
-        'body'  => scald_render($atom, 'sdl_editor_representation'),
-        'title' => $atom->title,
-        'meta'  => array(
-          'action' => $atom->base_entity->license->action_fin,
-          'legend' => theme('sdl_editor_legend', $atom)
-        )
-      );
-      $library['library_previews']['sdl-'. $sid] = scald_render($sid, 'sdl_preview');
+      scald_dnd_library_add_item($library, $sid);
     }
     drupal_json($library);
   }

@@ -2,13 +2,9 @@
 
 @@@TODO: When an admin selects a new nodetype for use as base entities for Atoms, scald_composites.module should register all the new Atoms.  Probably batch-processed.  This is explicitly the responsibility of the Atom Provider (e.g. a YouTube Provider would need to do the same upon receiving username/passwords or an RSS feed or what have you).
 
-@@@TODO: Determine if it's worth the overhead of adding in the "Author" Actions pseudo-role.  It would be potentially expensive to load up the list of authors of an Atom if it wasn't already loaded.  Maybe make it a conditional situation so that if it *is* loaded, check it, if not, don't?  Since the Actions bitstring is used as part of the Cache ID in the render stack, it would introduce a guaranteed additional db query to the render stack because the Atom is rarely pre-loaded.  If not, determine how to handle the situation where an Author is a User on the site and indicated.  Theoretically, they should therefore have some control over the Atom.
-
 @@@TODO: The Composite Atom Provider provides composite Atoms from Drupal node bodies of nodetypes which are configured to be Composites.  Scald admin should provide an interface for specifying which nodetypes to use as the basis for composite Atoms.  Scald admin should also insert a way to specify a nodetype as a 'Composite' as part of the nodetype configuration interface.  In both places, the admin should be able to choose an "editor representation" which is used to prepare the body field for editing.  Scald should then also process the body of that nodetype upon submission and change the 'editor representation' of the Atoms into SAS.  When the node is prepared for editing, it Scald should render the Atoms in the 'editor representation' context.  Output rendering should be handled by the SAS Filter (basically *all* the SAS filter does is look for SAS & render it to Atoms based on the context, an overriden context, or the default context.).  The Admin is responsible for specifying the SAS filter for the body as appropriate.  Nodetypes are to be stored in variable_set('scald_composite_nodetypes');
 
 @@@TODO: Add an admin interface to allow Admins to select the "editor context" for Scald Composites.  Store in variable_set('scald_composite_editor_contexts') which is an array keyed with nodetypes.  Note that *only* Contexts which are parseable should be listed.
-
-@@@TODO: Implement a custom CCK fieldtype in scald_composites.module
 
 @@@TODO: Implement basic file and fielfield (and <type>field) -based Atom Provider modules
 
@@ -31,10 +27,6 @@
 @@@TODO: Add code to the Provider Registration stack to let a Relationship Provider have a chance to look over existing Atoms and calculate Relationships
 
 
-
-
-
-
 ==== v1.0 / initial general release ====
 
 @@@TODO: Figure out IF it makes sense to cache SAS filter results and then if so, when to invalidate Filter Cache.  The filter cache is keyed on the MD5 of the text string and so determining when to invalidate it is probably unrealisticly expensive.  *sigh*.  An update to an Atom should probably invalidate any filtering caches which include that Atom, however determining this probably requires a lookup of all Composites which include the Atom, a back-reference to the Drupal node which Provides the Composite and then a careful parsing of {cache_filter} to remove *only* those cache entries which correspond to the Composite.
@@ -47,20 +39,11 @@
 
 @@@TODO: Determine if it is possible to move the cache check earlier in scald_render() to avoid incurring more than one db query if *at all* possible.
 
-@@@TODO: Views integration
-
-@@@TODO: Determine if using Views as primary mechanism for generating searches makes sense (AKA "can you easily override the Views-generated queries?") or if scald_search() should continue to exist.
-
 @@@TODO: Write tests for Scald Core!!
 
 @@@TODO: Build out interface for manipulating Actions into Licenses
 
 @@@TODO: Determine if there should be accessor functions for things like generating an options array for all the Contexts (as used in hook_filter, for instance).
-
-
-
-
-
 
 ==== v1.1 / D6 release ====
 
