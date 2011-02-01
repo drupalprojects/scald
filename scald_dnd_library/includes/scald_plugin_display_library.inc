@@ -100,7 +100,7 @@ class scald_plugin_display_library extends views_plugin_display_page {
     $library['library'] = $messages . $view;
     if ($summary) {
       $summary = theme('item_list', $summary);
-      $library['library'] = str_replace('</fieldset>', '</fieldset>'. $summary, $library['library']);
+      $library['library'] = preg_replace('#</fieldset>#', '</fieldset>'. $summary, $library['library'], 1);
     }
     foreach ($this->view->result as $result) {
       $sid = $result->sid;

@@ -193,6 +193,48 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
     return false;
   });
 
+  // Deals with Views Saved Searches "Save" button
+  $('#views-savedsearches-save-search-form input[type=submit]', $this).click(function() {
+    var submit = $(this);
+    url = submit.parents('div.dnd-library-wrapper').get(0).library_url;
+    $('#views-savedsearches-save-search-form', $this).ajaxSubmit({
+      'url' : url,
+      'dataType' : 'json',
+      'success' : function(data) {
+        var target = submit.parents('div.dnd-library-wrapper').get(0);
+        target.library_url = this.url;
+        Drupal.behaviors.dndLibrary.renderLibrary.call(target, data, $(editor));
+      }
+    });
+    return false;
+  });
+
+  // Deals with Views Saved Searches "Delete" button
+  $('#views-savedsearches-delete-search-form input[type=submit]', $this).click(function() {
+    var submit = $(this);
+    $('#views-savedsearches-delete-search-form', $this).ajaxSubmit({
+      'url' : Drupal.settings.basePath + settings.url,
+      'dataType' : 'json',
+      'success' : function(data) {
+        var target = submit.parents('div.dnd-library-wrapper').get(0);
+        target.library_url = this.url;
+        Drupal.behaviors.dndLibrary.renderLibrary.call(target, data, $(editor));
+      }
+    });
+    return false;
+  });
+
+  // Deals with Views Saved Searches search links
+  $('#views-savedsearches-delete-search-form label a', $this).click(function() {
+    // At page switching, close all opened BeautyTips.
+    $('.editor-item.bt-active').btOff();
+    $this.get(0).library_url = this.href;
+    $.getJSON(this.href, function(data) {
+      Drupal.behaviors.dndLibrary.renderLibrary.call($this.get(0), data, $(editor));
+    });
+    return false;
+  });
+
   // Attach all the behaviors to our new HTML fragment
   Drupal.attachBehaviors($this);
 }
@@ -290,6 +332,7 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
         var $this = $(this);
         if ($this.css('display') == 'block') {
           block = this;
+          $block = $(block);
           return false;
         }
         return true;
@@ -298,25 +341,34 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
       // Remove dropped item
       $drop.remove();
 
+      // If the containing block is now empty after the removal of the dropped
+      // item, remove it and switch the containing block to its parent. The
+      // goal is to get rid of the <p> that are sometimes inserted around our
+      // dropped <img />
+      if (block.textContent == '') {
+        $tmp = $block.parent();
+        $block.remove();
+        $block = $tmp;
+        block = $block[0];
+      }
+
       // Create an element to insert
-      var insert = dom.create('div', {'class' : 'dnd-drop-wrapper', 'id' : 'dnd-inserted'}, representation);
+      var snippet = '<div class="dnd-drop-wrapper" id="dnd-inserted">' + representation + '</div>';
+      if (legend) {
+        snippet += legend;
+      }
 
       // The no-parent case
       if ($(block).is('body')) {
-        // Never seem to be hit ?
-        s.setNode(insert);
+        $(block).append(snippet);
       }
       else {
         var old_id = block.id;
         block.id = 'target-block';
         $block = $('#target-block', $target.contents());
 
-        // @TODO is finding the parent broken in safari??
-        var snip = '<div class="dnd-drop-wrapper" id="dnd-inserted">' + representation + '</div>';
-        if (legend) {
-          snip += legend;
-        }
-        $block.after(snip);
+        // Add our content after the block
+        $block.after(snippet);
 
         // The active target block should be empty
         if ($('#target-block:dnd_empty', $target.contents()).length > 0) {
@@ -326,7 +378,7 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
         } else {
           $block.removeAttr('id');
         }
-      } 
+      }
 
       var $inserted = $('#dnd-inserted', $target.contents());
       var inserted = $inserted.get(0);
