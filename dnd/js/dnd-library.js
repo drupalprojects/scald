@@ -176,11 +176,11 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
   $('.view-filters input[type=reset]', $this).click(function(e) {
     var reset = $(this);
     $('.view-filters form', $this).ajaxSubmit({
-      'url' : Drupal.settings.basePath + settings.url,
+      'url' : Drupal.settings.basePath + Drupal.settings.dnd.url,
       'dataType' : 'json',
       'success' : function(data) {
         var target = reset.parents('div.dnd-library-wrapper').get(0);
-        target.library_url = Drupal.settings.dndDropAreas[editor[0].id].url;
+        target.library_url = Drupal.settings.dnd.url;
         Drupal.behaviors.dndLibrary.renderLibrary.call(target, data, $(editor));
       },
       'beforeSubmit': function (data, form, options) {
