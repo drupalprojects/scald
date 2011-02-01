@@ -9,7 +9,7 @@ class scald_plugin_style_library extends views_plugin_style {
   function option_definition() {
     $options = parent::option_definition();
 
-    $options['default'] = array('default' => 'created');
+    $options['default'] = array('default' => 'sid');
     $options['override'] = array('default' => TRUE);
     $options['order'] = array('default' => 'desc');
 
@@ -19,9 +19,9 @@ class scald_plugin_style_library extends views_plugin_style {
   function build_sort() {
     return FALSE;
   }
-  
+
   function build_sort_post() {
-    $this->options['default'] = 'created';
+    $this->options['default'] = 'sid';
     $this->options['order'] = 'desc';
     if (!isset($_GET['order'])) {
       // check for a 'default' clicksort. If there isn't one, exit gracefully.
@@ -29,7 +29,7 @@ class scald_plugin_style_library extends views_plugin_style {
         return;
       }
       $sort = $this->options['default'];
-      $this->order = !empty($this->options['order']) ? $this->options['order'] : 'asc';
+      $this->order = !empty($this->options['order']) ? $this->options['order'] : 'desc';
     }
     else {
       $sort = $_GET['order'];
