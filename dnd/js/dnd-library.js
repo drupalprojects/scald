@@ -67,13 +67,11 @@ Drupal.behaviors.dndLibrary = function(context) {
 
   // Bind our functions to WYSIWYG attach / detach events
   for (editor in Drupal.settings.dndDropAreas) {
-    if (Drupal.settings.dndDropAreas[editor]) {
-      var $editor = $('#' + editor, context);
+    var $editor = $('#' + editor, context);
 
-      // Bind Drag and Drop plugin invocation to events emanating from Wysiwyg
-      $editor.bind('wysiwygAttach', Drupal.behaviors.dndLibrary.attach_library);
-      $editor.bind('wysiwygDetach', Drupal.behaviors.dndLibrary.detach_library);
-    }
+    // Bind Drag and Drop plugin invocation to events emanating from Wysiwyg
+    $editor.bind('wysiwygAttach', Drupal.behaviors.dndLibrary.attach_library);
+    $editor.bind('wysiwygDetach', Drupal.behaviors.dndLibrary.detach_library);
   }
 
   if ($("#node-form:not(.dnd-processed)").length) {
