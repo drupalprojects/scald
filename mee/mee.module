@@ -294,7 +294,8 @@ function theme_mee_formatter_default($element) {
       }
     }
     if ($altered) {
-      $element['#item']['safe'] = check_markup($element['#item']['value']);
+      $format = $element['#item']['format'];
+      $element['#item']['safe'] = check_markup($element['#item']['value'], $format, FALSE);
     }
   }
   // Calling scald_sas_to_rendered here allows us to make the configuration
