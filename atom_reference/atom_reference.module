@@ -212,17 +212,11 @@ function atom_reference_textfield_process($element, $edit, $form_state, $form) {
   drupal_add_css(drupal_get_path('module', 'atom_reference') . '/atom_reference.css');
   $default = isset($element['#value']['sid']) ? $element['#value']['sid'] : '';
   if ($default) {
-    $element['markup'] = array(
-      '#type' => 'markup',
-      '#value' => '<div class="atom_reference_drop_zone">' . scald_render($default, 'sdl_editor_representation') .'</div>',
-    );
+    $prefix = '<div class="atom_reference_drop_zone">' . scald_render($default, 'sdl_editor_representation') .'</div>';
   }
   else {
     $placeholder = t('Drop a resource here');
-    $element['markup'] = array(
-      '#type' => 'markup',
-      '#value' => '<div class="atom_reference_drop_zone"><em>' . $placeholder . '</em></div>',
-    );
+    $prefix = '<div class="atom_reference_drop_zone"><em>' . $placeholder . '</em></div>';
   }
 
   $help = format_plural(
@@ -242,6 +236,7 @@ function atom_reference_textfield_process($element, $edit, $form_state, $form) {
     '#delta' => $element['#delta'],
     '#columns' => $element['#columns'],
     '#attributes' => array('atom:types' => implode(',', $element['#types'])),
+    '#field_prefix' => $prefix
   );
   return $element;
 }

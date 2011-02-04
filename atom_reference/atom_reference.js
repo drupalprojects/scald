@@ -11,7 +11,7 @@ Drupal.behaviors.atom_reference = function(context) {
       .click(function() {
         $(this)
           .hide()
-          .parent()
+          .parents('div.form-item')
           .find('input:text')
           .val('')
           .end()
@@ -21,7 +21,7 @@ Drupal.behaviors.atom_reference = function(context) {
       });
     // If the element doesn't have a value yet, hide the Delete button
     // by default
-    if (!$this.parent().find('input:text').val()) {
+    if (!$this.parents('div.form-item').find('input:text').val()) {
       $reset.css('display', 'none');
     }
     $this
@@ -36,7 +36,7 @@ Drupal.behaviors.atom_reference = function(context) {
           $this
             .empty()
             .append(Drupal.dnd.Atoms[dt].editor)
-            .parent()
+            .parents('div.form-item')
             .find('input:text')
             .val(dt)
             .end()
@@ -49,7 +49,7 @@ Drupal.behaviors.atom_reference = function(context) {
         }
         e.preventDefault();
       })
-      .parent()
+      .parents('div.form-item')
       .find('input')
       .css('display', 'none')
       .end()
@@ -63,7 +63,7 @@ if (!Drupal.atom_reference) {
     var retVal = {'continue': true, 'found': true};
     if (Drupal.dnd.Atoms[ressource_id]) {
       var type = Drupal.dnd.Atoms[ressource_id].meta.type;
-      var accept = $(field).parent().find('input:text').attr('atom:types').split(',');
+      var accept = $(field).parents('div.form-item').find('input:text').attr('atom:types').split(',');
       if (accept.indexOf(type) == -1) {
         retVal.continue = false;
       }
