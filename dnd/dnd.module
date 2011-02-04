@@ -186,7 +186,8 @@ function dnd_get_library() {
     $library = $default;
   }
   else {
-    $library = key(reset($libraries));
+    reset($libraries);
+    $library = key($libraries);
   }
   return $library;
 }
