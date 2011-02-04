@@ -52,6 +52,15 @@ function mee_update_6002() {
 }
 
 /**
+ * Add a copyright field.
+ */
+function mee_update_6003() {
+  $ret = array();
+  $ret[] = update_sql("ALTER TABLE {mee_ressources} ADD copyright TEXT");
+  return $ret;
+}
+
+/**
  * Implementation of hook_schema().
  */
 	function mee_schema() {  
@@ -62,6 +71,7 @@ function mee_update_6002() {
 	      'field' => array('type' => 'varchar', 'length' => 31, 'not null' => TRUE, 'default' => ''),
 	      'weight' => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
 	      'required' => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
+        'copyright' => array('type' => 'text'),
 	    ),
 	    'primary key' => array('content_nid', 'atom_sid', 'field'),
 	  );

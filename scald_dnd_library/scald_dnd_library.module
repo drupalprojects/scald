@@ -312,7 +312,7 @@ function theme_sdl_editor_legend($atom) {
   $by = t('by %name', array('%name' => $by));
   return "
   <div class='meta'>
-    {$informations->title}, {$by}
+    <!--copyright={$sid}-->{$informations->title}, {$by}<!--END copyright={$sid}-->
   </div>
   ";
 }

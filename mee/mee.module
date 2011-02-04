@@ -7,6 +7,7 @@
  * WYSIWYG API. 
  */
 
+define('MEE_RENDERED_COPYRIGHT_PATTERN',    '/<!--\s*copyright=(\d+)\s*-->(.*)<!--\s*END copyright=\1\s*-->/sU');
 /**
  * Implementation of hook_theme().
  */
@@ -132,6 +133,9 @@ function mee_field($op, &$node, $field, &$items, $teaser, $page) {
         $scald_included = scald_included($sas);
         $sids = array_unique($scald_included);
 
+        // Parse copyright informations
+        $copyrights = mee_extract_copyrights($item['value']);
+
         if (variable_get('mee_register_composites', FALSE)) {
           $temp_atom                = new stdClass;
           $temp_atom->type          = 'composite';
@@ -154,8 +158,8 @@ function mee_field($op, &$node, $field, &$items, $teaser, $page) {
           $ressource = $item['ressource_manager'][$sid];
           $weight = $ressource['weight'] - $separator;
           $required = $ressource['required'];
-          $query = "INSERT into {mee_ressources} (content_nid, atom_sid, field, weight, required) VALUES (%d, %d, '%s', %d, %d)";
-          db_query($query, $node->nid, $sid, $field['field_name'], $weight, $required);
+          $query = "INSERT into {mee_ressources} (content_nid, atom_sid, field, weight, required, copyright) VALUES (%d, %d, '%s', %d, %d, '%s')";
+          db_query($query, $node->nid, $sid, $field['field_name'], $weight, $required, $copyrights[$sid]);
         }
       }
       break; // end 'insert'
@@ -166,6 +170,9 @@ function mee_field($op, &$node, $field, &$items, $teaser, $page) {
         $sas = scald_rendered_to_sas($item['value']);
         $scald_included = scald_included($sas);
         $sids = array_unique($scald_included);
+
+        // Parse copyright informations
+        $copyrights = mee_extract_copyrights($item['value']);
 
         // Update ressources weight
         // In fact, we'll delete all the associations and recreate afterwards
@@ -182,8 +189,8 @@ function mee_field($op, &$node, $field, &$items, $teaser, $page) {
           $required = $ressource['required'];
           $weight = $ressource['weight'] - $separator;
           // insert in the table
-          $query = "INSERT into {mee_ressources} (content_nid, atom_sid, field, weight, required) VALUES (%d, %d, '%s', %d, %d)";
-          db_query($query, $node->nid, $sid, $field['field_name'], $weight, $required);
+          $query = "INSERT into {mee_ressources} (content_nid, atom_sid, field, weight, required, copyright) VALUES (%d, %d, '%s', %d, %d, '%s')";
+          db_query($query, $node->nid, $sid, $field['field_name'], $weight, $required, $copyrights[$sid]);
         }
 
         // @@@TODO: Handle failure of fetch
@@ -677,3 +684,15 @@ function mee_scald_prerender(&$atom, $mode) {
 
 } // end mee_scald_prerender()
 
+/**
+ * Extract all copyright informations from a string.
+ */
+function mee_extract_copyrights($string) {
+  $copyrights = array();
+  if(preg_match_all(MEE_RENDERED_COPYRIGHT_PATTERN, $string, $matches)) {
+    foreach ($matches[1] as $key => $sid) {
+      $copyrights[$sid] = $matches[2][$key];
+    }
+  }
+  return $copyrights;
+}
