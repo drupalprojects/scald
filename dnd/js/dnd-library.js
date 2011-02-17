@@ -157,7 +157,7 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
   // Turns Views exposed filters' submit button into an ajaxSubmit trigger
   $('.view-filters input[type=submit]', $this).click(function(e) {
     var submit = $(this);
-    settings = {'url': 'scald/library_dnd'};
+    settings = Drupal.settings.dnd;
     $('.view-filters form', $this).ajaxSubmit({
       'url' : Drupal.settings.basePath + settings.url,
       'dataType' : 'json',
