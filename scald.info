@@ -1,4 +1,3 @@
-; $Id$
 name = Scald Core
 description = "Scald is Content, Attribution, Licensing, Distribution.  This is the core of the framework."
 version = 0.7

@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  *   Provides admin form for DailyMotion's Scald Provider.

@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  *   Provides a Views filter handler allowing to restrict the results to

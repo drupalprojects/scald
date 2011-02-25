@@ -1,5 +1,4 @@
 /**
- * $Id$
  *
  * A plugin to handle forcing a selection to an outer container with a given
  * class.

@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  *   Provides a field containing the representation of an atom, in a choosen

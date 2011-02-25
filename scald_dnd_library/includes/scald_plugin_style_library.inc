@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  *   Provides the library style plugin. Ideally, this shouldn't be needed,

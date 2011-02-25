@@ -1,4 +1,3 @@
-; $Id$
 name = Scald Images
 description = "Scald Atom Provider: provides Video Atoms from files attached to Drupal Nodes."
 version = 0.1

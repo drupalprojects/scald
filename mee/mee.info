@@ -1,4 +1,3 @@
-; $Id$
 name = Multimedia Editorial Element
 package = CCK
 description = A configurable CCK content type that provides a textarea and drag and drop media library.

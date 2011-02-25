@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  *   Contains form handlers for the DailyMotion search form.

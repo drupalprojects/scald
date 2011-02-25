@@ -1,4 +1,3 @@
-; $Id$
 name = Scald DnD Library
 description = "Bridge between Scald and DnD"
 version = 0.1

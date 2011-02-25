@@ -1,4 +1,3 @@
-; $Id$
 name = DnD Library Tests
 package = User interface
 description = Defines some menu callbacks and form alterations which test the drag and drop plugin.

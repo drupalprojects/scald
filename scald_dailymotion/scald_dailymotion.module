@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  *   Defines a DailyMotion provider for Scald.
