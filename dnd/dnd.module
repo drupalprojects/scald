@@ -129,6 +129,28 @@ function dnd_add_library() {
 }
 
 /**
+ * Tells DnD that the library shouldn't be displayed on this page.
+ *
+ * This function should be called whenever the library shouldn't be
+ * displayed.
+ *
+ * @param boolean $set
+ *   If FALSE, no change to the suppression status will be done, allowing
+ *   other functions to query the suppression state. Defaults to TRUE.
+ *
+ * @return boolean
+ *   TRUE if the library output has been suppressed, FALSE otherwise.
+ */
+function dnd_suppress_library($set = TRUE) {
+  static $suppress = FALSE;
+  if ($set && !$suppress) {
+    $suppress = TRUE;
+    drupal_add_js(array('dnd' => array('suppress' => 1)), 'setting');
+  }
+  return $suppress;
+}
+
+/**
  * Implementation of hook_wywiwyg_plugin().
  */
 function dnd_wysiwyg_plugin($editor, $version=0) {

@@ -47,7 +47,7 @@ Drupal.dnd.btSettings = {
  * behavior attachment.
  */
 Drupal.behaviors.dndLibrary = function(context) {
-  if (!Drupal.settings.dndDropAreas) {
+  if (!Drupal.settings.dndDropAreas || Drupal.settings.dnd.suppress) {
     return;
   }
 
