@@ -51,7 +51,7 @@ function atom_reference_field_settings($op, $field) {
       $db_info = content_database_info($field);
       $table_alias = content_views_tablename($field);
 
-      // Relationship: add a relationship for related node.
+      // Relationship: add a relationship for related atom.
       $data[$table_alias][$field['field_name'] .'_sid']['relationship'] = array(
         'base' => 'scald_atoms',
         'field' => $db_info['columns']['sid']['column'],
@@ -70,8 +70,8 @@ function atom_reference_field_settings($op, $field) {
 function atom_reference_field($op, &$node, $field, &$items, $teaser, $page) {
   switch ($op) {
     case 'validate':
-      // Ensure that the types of the referenced atoms match the one that
-      // were defined in the field configuration.
+      // Ensure that the types of the referenced atoms match the one of those
+      // that were defined in the field configuration.
       $types = $field['referencable_types'];
       foreach ($items as $item) {
         if (!$item['sid']) {
@@ -83,6 +83,8 @@ function atom_reference_field($op, &$node, $field, &$items, $teaser, $page) {
         }
       }
     case 'sanitize':
+      // Get some safe values about the references atoms, checking that
+      // they still exist and are fetchable.
       $sids = array();
       foreach ($items as $delta => $item) {
         if (is_array($item)) {
