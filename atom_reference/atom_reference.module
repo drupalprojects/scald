@@ -45,6 +45,22 @@ function atom_reference_field_settings($op, $field) {
         'sid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE, 'index' => TRUE)
       );
       return $columns;
+
+    case 'views data':
+      $data = content_views_field_views_data($field);
+      $db_info = content_database_info($field);
+      $table_alias = content_views_tablename($field);
+
+      // Relationship: add a relationship for related node.
+      $data[$table_alias][$field['field_name'] .'_sid']['relationship'] = array(
+        'base' => 'scald_atoms',
+        'field' => $db_info['columns']['sid']['column'],
+        'handler' => 'content_handler_relationship',
+        'label' => t($field['widget']['label']),
+        'content_field_name' => $field['field_name'],
+      );
+
+      return $data;
   }
 }
 
