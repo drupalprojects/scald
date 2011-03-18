@@ -124,7 +124,7 @@ function dnd_add_library() {
     drupal_add_css(drupal_get_path('module', 'dnd') .'/css/dnd-library.css');
 
     // Settings for the library url
-    drupal_add_js(array('dnd' => array('url' => dnd_get_library())), 'setting');
+    drupal_add_js(array('dnd' => array('url' => url(dnd_get_library()))), 'setting');
   }
 }
 

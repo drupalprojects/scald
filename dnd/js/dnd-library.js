@@ -78,10 +78,10 @@ Drupal.behaviors.dndLibrary = function(context) {
     $("#node-form")
       .addClass('dnd-processed')
       .append('<div class="dnd-library-wrapper"></div>');
-    var wrapper = $('#node-form .dnd-library-wrapper'), url = Drupal.settings.dnd.url;
+    var wrapper = $('#node-form .dnd-library-wrapper');
     $editor = $("<a />");
-    wrapper.library_url = Drupal.settings.basePath + '?q=' + url;
-    $.getJSON(Drupal.settings.basePath + '?q=' + url, function(data) {
+    wrapper.library_url = Drupal.settings.dnd.url;
+    $.getJSON(wrapper.library_url, function(data) {
       Drupal.behaviors.dndLibrary.renderLibrary.call(wrapper, data, $editor);
     });
   }
@@ -159,7 +159,7 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
     var submit = $(this);
     settings = Drupal.settings.dnd;
     $('.view-filters form', $this).ajaxSubmit({
-      'url' : Drupal.settings.basePath + settings.url,
+      'url' : settings.url,
       'dataType' : 'json',
       'success' : function(data) {
         var target = submit.parents('div.dnd-library-wrapper').get(0);
@@ -176,7 +176,7 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
   $('.view-filters input[type=reset]', $this).click(function(e) {
     var reset = $(this);
     $('.view-filters form', $this).ajaxSubmit({
-      'url' : Drupal.settings.basePath + Drupal.settings.dnd.url,
+      'url' : Drupal.settings.dnd.url,
       'dataType' : 'json',
       'success' : function(data) {
         var target = reset.parents('div.dnd-library-wrapper').get(0);
@@ -213,7 +213,7 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
   $('#views-savedsearches-delete-search-form input[type=submit]', $this).click(function() {
     var submit = $(this);
     $('#views-savedsearches-delete-search-form', $this).ajaxSubmit({
-      'url' : Drupal.settings.basePath + settings.url,
+      'url' : settings.url,
       'dataType' : 'json',
       'success' : function(data) {
         var target = submit.parents('div.dnd-library-wrapper').get(0);
