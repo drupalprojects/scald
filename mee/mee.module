@@ -501,7 +501,7 @@ function mee_textarea_process($element, $edit, $form_state, $form) {
   $element['mee']['ressource_manager'][0] = array(
     'title' => array(
       '#type'  => 'markup',
-      '#value' => t('< Primaire / Secondaire >'),
+      '#value' => t('< Primary / Secondary >'),
     ),
     'required' => array(
       '#type'  => 'markup',
