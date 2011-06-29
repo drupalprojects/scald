@@ -2948,6 +2948,13 @@ function scald_views_api() {
 }
 
 /**
+ * Implementation of hook_flush_caches()
+ */
+function scald_flush_caches() {
+  return array('cache_scald');
+}
+
+/**
  * Invokes a function, with a byref parameter.
  */
 function scald_invoke($module, $hook, &$atom) {
