@@ -208,6 +208,8 @@ function atom_reference_widget(&$form, &$form_state, $field, $items, $delta = 0)
  * for this widget.
  */
 function atom_reference_textfield_process($element, $edit, $form_state, $form) {
+  dnd_add_library();
+
   drupal_add_js(drupal_get_path('module', 'atom_reference') . '/atom_reference.js');
   drupal_add_css(drupal_get_path('module', 'atom_reference') . '/atom_reference.css');
   $default = isset($element['#value']['sid']) ? $element['#value']['sid'] : '';
