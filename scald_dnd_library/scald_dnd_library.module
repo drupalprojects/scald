@@ -251,11 +251,8 @@ function scald_dnd_library_scald_render($atom, $context, $options = array()) {
     default:
       $render = theme('sdl_editor_item', $atom->rendered, $image);
   }
-  return "
-<!-- scald={$atom->sid}:{$context} -->
-  {$render}
-<!-- END scald={$atom->sid} -->
-";
+
+  return $render;
 }
 
 /**
