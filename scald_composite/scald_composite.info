@@ -1,6 +1,5 @@
 name = Scald Composite
 description = "Scald Provider: Provides Composite Atoms from Drupal Node bodies and from a defined CCK field (cck.module)."
-version = 0.1
 package = Scald
 core = 6.x
 dependencies[] = scald
