@@ -32,7 +32,7 @@ Drupal.behaviors.atom_reference = function(context) {
         var dt = e.originalEvent.dataTransfer.getData('Text');
         var ret = Drupal.atom_reference.droppable(dt, this);
         var $this = $(this);
-        if (ret.found && ret.continue) {
+        if (ret.found && ret.keepgoing) {
           $this
             .empty()
             .append(Drupal.dnd.Atoms[dt].editor)
@@ -60,12 +60,12 @@ Drupal.behaviors.atom_reference = function(context) {
 if (!Drupal.atom_reference) {
   Drupal.atom_reference = {};
   Drupal.atom_reference.droppable = function(ressource_id, field) {
-    var retVal = {'continue': true, 'found': true};
+    var retVal = {'keepgoing': true, 'found': true};
     if (Drupal.dnd.Atoms[ressource_id]) {
       var type = Drupal.dnd.Atoms[ressource_id].meta.type;
       var accept = $(field).parents('div.form-item').find('input:text').attr('atom:types').split(',');
       if (accept.indexOf(type) == -1) {
-        retVal.continue = false;
+        retVal.keepgoing = false;
       }
       retVal.type = type;
     }
