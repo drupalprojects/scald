@@ -263,13 +263,17 @@ function theme_sdl_library_item($atom, $image) {
   if (is_object($atom->base_entity) && is_numeric($atom->base_entity->nid)) {
     $view = l(t('View'), 'node/'. $atom->base_entity->nid, array('attributes' => array('target' => '_blank')));
     $edit = l(t('Edit'), 'node/'. $atom->base_entity->nid .'/edit', array('attributes' => array('target' => '_blank')));
-    $links = "$view / $edit";
+    $links = "<div class='links'>$view / $edit</div>";
+  }
+  else {
+    $links = '';
+
   }
   $return =  "
   <div class='image'>
     {$image}
   </div>";
-  if ($informations->player) {
+  if (!empty($informations->player)) {
     $return .= "
   <div class='player'>
     {$informations->player}
@@ -280,7 +284,7 @@ function theme_sdl_library_item($atom, $image) {
     <div class='title'>{$informations->title}</div>
     <div class='date'>{$informations->type}</div>
     <div class='author'>{$informations->authors[0]['link']}</div>
-    <div class='links'>{$links}</div>
+    {$links}
   </div>
   <span class='clear' />
   ";
