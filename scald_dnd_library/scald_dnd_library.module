@@ -346,7 +346,7 @@ function scald_dnd_library_form_alter(&$form, $form_state, $form_id) {
   if ($form_id == 'views_exposed_form') {
     // Check if the style plugin is scald_library.
     $view = $form['#parameters'][1]['view'];
-    if ($view->display[$view->current_display]->display_options['style_plugin'] == 'scald_library') {
+    if ($view->display_handler->get_option('style_plugin') == 'scald_library') {
       // Put the filters in a fieldset... Hackish.
       $filter = t('Filter');
       drupal_add_js('misc/collapse.js');
