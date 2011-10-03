@@ -1235,15 +1235,29 @@ function scald_update_atom($atom, $values = NULL) {
  *
  * @param $sid
  *  The Scald ID of the Atom being unregistered *OR* the Atom object.
+ * @return boolean
+ *  TRUE is the atom was successfully unregistered, FALSE otherwise
  */
 function scald_unregister_atom($sid) {
   if (is_object($sid)) {
     $sid = $sid->sid;
   }
 
+  // If we couldn't get back to the atom id  at this point, we won't be able to
+  // unregister the atom, so let's just abort.
+  if (!is_numeric($sid)) {
+    return FALSE;
+  }
+
   // Force a rebuild to ensure that the most-current instance is being used as
   //  when informing Providers of the impending destruction.
   $atom = scald_fetch($sid, TRUE);
+
+  // If we couldn't fetch the object, abort early too, the atom has already been
+  // unregistered.
+  if (!is_object($atom)) {
+    return FALSE;
+  }
 
   $scald_config = variable_get('scald_config', 0);
 
