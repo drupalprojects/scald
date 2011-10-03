@@ -1870,17 +1870,17 @@ function scald_sas_to_rendered($string, $context = NULL, $override = FALSE) {
     $context = 'title';
   }
 
-  global $scald_override;
-  $scald_override = $override;
+  global $_scald_override;
+  $_scald_override = $override;
   $rendered = preg_replace_callback(
     SCALD_SAS_MATCH_PATTERN,
     create_function(
       '$matches',
       '
-        global $scald_override;
+        global $_scald_override;
         return scald_render(
           $matches[1],
-          (!empty($matches[2]) && !$scald_override ? $matches[2] : \'' . $context . '\'),
+          (!empty($matches[2]) && !$_scald_override ? $matches[2] : \'' . $context . '\'),
           (!empty($matches[3]) ? $matches[3] : NULL)
         );
       '
@@ -1888,7 +1888,7 @@ function scald_sas_to_rendered($string, $context = NULL, $override = FALSE) {
     $string
   );
 
-  unset($scald_override);
+  unset($_scald_override);
   return $rendered;
 } // end scald_sas_to_rendered()
 
