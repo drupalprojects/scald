@@ -1271,8 +1271,9 @@ function scald_unregister_atom($sid) {
     module_invoke($relationship['provider'], 'scald_unregister_atom', $atom, 'relationship');
   }
   foreach ($scald_config->contexts as $context => $details) {
-    $transcoder = $details['type_format'][$atom->type]['transcoder'];
-    module_invoke($scald_config->transcoders[$transcoder]['provider'], 'scald_unregister_atom', $atom, 'transcoder');
+    if (isset($details['type_format'][$atom->type]) && $transcoder = $details['type_format'][$atom->type]['transcoder']) {
+      module_invoke($scald_config->transcoders[$transcoder]['provider'], 'scald_unregister_atom', $atom, 'transcoder');
+    }
   }
 
   // Clear the memory cache
