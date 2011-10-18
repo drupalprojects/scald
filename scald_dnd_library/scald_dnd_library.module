@@ -295,7 +295,7 @@ function theme_sdl_library_item($atom, $image) {
  * Returns HTML for an atom rendered in the "Editor Representation" context.
  */
 function theme_sdl_editor_item($informations, $image) {
-  $data = $informations->player ? $informations->player : $image;
+  $data = !empty($informations->player) ? $informations->player : $image;
   return "
   <div class='image'>
     {$data}
