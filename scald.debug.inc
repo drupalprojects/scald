@@ -20,8 +20,6 @@ require_once('scald.constants.inc');
  *  XHTML for the Console page
  */
 function scald_debug_console($sid) {
-  $scald_config = variable_get('scald_config', 0);
-  dpm($scald_config);
   return scald_render($sid, 'debug', NULL, TRUE);
 }
 

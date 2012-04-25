@@ -1,0 +1,14 @@
+<?php
+/**
+ * @file
+ *   Bla
+ */
+
+function scald_quickstart_install() {
+  db_insert('scald_types')
+    ->fields(array('type', 'provider', 'title', 'description'))
+    ->values(array('audio', 'scald', 'Audio', 'Ressource audio'))
+    ->values(array('image', 'scald', 'Image', 'Ressource image'))
+    ->execute();
+  scald_types(TRUE);
+}

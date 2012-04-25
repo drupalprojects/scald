@@ -18,131 +18,94 @@ require_once('scald.constants.inc');
  *  The Dashboard rendered in XHTML.
  */
 function scald_admin_dashboard() {
-  $scald_providers = variable_get('scald_providers', array());
+  $types = scald_types();
 
   $content = t('
     <h3>Scald Providers</h3>
 
     <p>The following Scald Providers are registered with Scald Core.  To force a Provider to renew its registration (this is useful if a Provider conditionally provides something such as a Transcoder based on whether or not a module is availble and you have just enabled new modules) click the <em>re-register</em> link next to the Provider\'s name.</p>
-    <ul>
   ');
 
-  foreach ($scald_providers as $provider) {
-    $content .= '<li>' . $provider . '.module [' . l('re-register', 'admin/content/scald/register/' . $provider) . ']</li>';
+  $list = array('type' => 'ul', 'items' => array());
+  $table = array(
+    'header' =>  array(
+      t('Name'),
+      array(
+        'data' => t('Actions'),
+        'colspan' => 4
+      )
+    ),
+    'rows' => array(),
+  );
+
+  foreach ($types as $type) {
+    $table['rows'][] = array(
+      $type->title,
+      l(t('edit'), 'admin/structure/scald/' . $type->type),
+      l(t('manage fields'), 'admin/structure/scald/' . $type->type . '/fields'),
+      l(t('manage display'), 'admin/structure/scald/' . $type->type . '/display'),
+      l(t('contexts'), 'admin/structure/scald/' . $type->type . '/contexts'),
+    );
   }
 
-  $content .= '</ul>';
+  $content .= theme('table', $table);
 
   return $content;
 } // end scald_admin_dashboard()
 
 
-
-/**
- * Forces a Scald Provider to re-register with Scald Core, potentially
- *  previously-unknown Provisions.
- *
- * @return
- *  None.  Forwards to Admin Dashboard.
- */
-function scald_admin_provider_reregister($provider) {
-  if (_scald_register_provider($provider, module_invoke($provider, 'scald_provider'), TRUE)) {
-    drupal_set_message(t('Successfuly re-registered Scald Provider %provider', array('%provider' => $provider . '.module')));
-  }
-  else {
-    drupal_set_message(t('Re-registering Scald Provider %provider failed.', array('%provider' => $provider . '.module')), 'error');
-  }
-
-  scald_config_rebuild();
-  drupal_goto('admin/content/scald');
-} // end scald_admin_provider_reregister()
-
-
-
-/**
- * The Scald Admin page for Scald Unified Types.
- */
-function scald_admin_types() {
-  $scald_config = variable_get('scald_config', 0);
-
-  $content = t('
-    <h3>Scald Unified Types</h3>
-    <br>
-    <p>Scald Unified Types are a way of dealing with various different media *formats* in a uniform manner.  For instance, from the average user\'s perspective, a JPEG and a PNG are pretty much the same thing.  Both could be classified as the Scald Unified Type "Image".</p>
-    <p>When users interact with Atoms, they will often see the title of the Type of Atom.  That title can be customized below.  Be sure to specify the title in the singular, not plural, form.</p>
-  ');
-
-  return $content . drupal_get_form('scald_admin_types_form');
-} // end scald_admin_types()
-
-
-
 /**
  * Form for admin settings for Scald Types
  */
-function scald_admin_types_form() {
+function scald_admin_type_form($form, $form_state, $type) {
   $form = array();
+  $type_name = $type->type;
+  $type_raw = (array)$type;
+  $form['type_' . $type_name . '_title'] = array(
+    '#type'           => 'textfield',
+    '#title'          => t('Title'),
+    '#default_value'  => $type_raw['title'],
+    '#size'           => 40,
+    '#maxlength'      => 255,
+    '#required'       => TRUE,
+  );
 
-  $types_results = db_query("
-    SELECT
-      *
-    FROM
-      {scald_types}
-  ");
-  while ($type_raw = db_fetch_array($types_results)) {
-    $form[$type_raw['type']] = array(
-      '#type'         => 'fieldset',
-      '#title'        => $type_raw['title'],
-      '#description'  => $type_raw['description'] . '<br>' . t('Provided by <code>@module.module</code>', array('@module' => $type_raw['provider'])),
-      '#collapsible'  => TRUE,
-      '#collapsed'    => TRUE,
-    );
-    $form[$type_raw['type']]['type_' . $type_raw['type'] . '_title'] = array(
-      '#type'           => 'textfield',
-      '#title'          => t('Title'),
-      '#default_value'  => $type_raw['title'],
-      '#size'           => 40,
-      '#maxlength'      => 255,
-      '#required'       => TRUE,
-    );
-    $scald_config = variable_get('scald_config', 0);
-    $scald_atom_defaults = variable_get('scald_atom_defaults', 0);
-    $form[$type_raw['type']]['defaults'] = array(
-      '#type'         => 'fieldset',
-      '#title'        => t('Defaults'),
-      '#description'  => t('Every Atom must have certain data associated with it.  If an Atom Provider fails to supply that data, these defaults are used.  If nothing is specified here, Scald Core will supply generic defaults.'),
-      '#collapsible'  => FALSE,
-    );
-    $form[$type_raw['type']]['defaults']['type_' . $type_raw['type'] . '_thumb'] = array(
-      '#type'           => 'textfield',
-      '#title'          => t('Default Thumbnail Image'),
-      '#description'    => t('Specify a path relative to the Drupal install directory.  This image file will be automatically resized and transcoded as appropriate when generating the actual thumbnail image.'),
-      '#default_value'  => $scald_atom_defaults->thumbnail_source[$type_raw['type']],
-      '#size'           => 40,
-      '#maxlength'      => 255,
-      '#required'       => TRUE,
-    );
-    $form[$type_raw['type']]['defaults']['type_' . $type_raw['type'] . '_descr'] = array(
-      '#type'           => 'textfield',
-      '#title'          => t('Default Description'),
-      '#description'    => t('Empty strings are permitted.'),
-      '#default_value'  => $scald_atom_defaults->description[$type_raw['type']],
-      '#size'           => 40,
-      '#maxlength'      => 255,
-      '#required'       => TRUE,
-    );
-    // @@@TODO: Make this into a *useful* UI!
-    $form[$type_raw['type']]['defaults']['type_' . $type_raw['type'] . '_actin'] = array(
-      '#type'           => 'textfield',
-      '#title'          => t('Default Actions bitstring'),
-      '#description'    => t('Should be an integer.  Note that the numbering on the Actions Admin page does not correspond to bit order.'),
-      '#default_value'  => $scald_atom_defaults->actions[$type_raw['type']],
-      '#size'           => 10,
-      '#maxlength'      => 24,
-      '#required'       => TRUE,
-    );
-  }
-
+  $scald_atom_defaults = variable_get('scald_atom_defaults', NULL);
+  $form['defaults'] = array(
+    '#type'         => 'fieldset',
+    '#title'        => t('Defaults'),
+    '#description'  => t('Every Atom must have certain data associated with it.  If an Atom Provider fails to supply that data, these defaults are used.  If nothing is specified here, Scald Core will supply generic defaults.'),
+    '#collapsible'  => FALSE,
+  );
+  $form['defaults']['type_' . $type_name. '_thumb'] = array(
+    '#type'           => 'textfield',
+    '#title'          => t('Default Thumbnail Image'),
+    '#description'    => t('Specify a path relative to the Drupal install directory.  This image file will be automatically resized and transcoded as appropriate when generating the actual thumbnail image.'),
+    '#default_value'  => $scald_atom_defaults->thumbnail_source[$type_name],
+    '#size'           => 40,
+    '#maxlength'      => 255,
+    '#required'       => TRUE,
+  );
+  $form['defaults']['type_' . $type_name . '_descr'] = array(
+    '#type'           => 'textfield',
+    '#title'          => t('Default Description'),
+    '#description'    => t('Empty strings are permitted.'),
+    '#default_value'  => $scald_atom_defaults->description[$type_name],
+    '#size'           => 40,
+    '#maxlength'      => 255,
+    '#required'       => TRUE,
+  );
+  // @@@TODO: Make this into a *useful* UI!
+  $form['defaults']['type_' . $type_name . '_actin'] = array(
+    '#type'           => 'textfield',
+    '#title'          => t('Default Actions bitstring'),
+    '#description'    => t('Should be an integer.  Note that the numbering on the Actions Admin page does not correspond to bit order.'),
+    '#default_value'  => $scald_atom_defaults->actions[$type_name],
+    '#size'           => 10,
+    '#maxlength'      => 24,
+    '#required'       => TRUE,
+  );
+  
   $form['submit'] = array(
     '#type'   => 'submit',
     '#value'  => t('Save'),
@@ -159,26 +122,21 @@ function scald_admin_types_form() {
  * Updated values are written directly back to the database and then the Scald
  *  Configuration Object is rebuilt from the db.
  */
-function scald_admin_types_form_submit($form, &$form_state) {
-  $scald_atom_defaults = variable_get('scald_atom_defaults', 0);
+function scald_admin_type_form_submit($form, &$form_state) {
+  $scald_atom_defaults = variable_get('scald_atom_defaults', NULL);
+  if (empty($scald_atom_defaults)) {
+    $scald_atom_defaults = new stdClass();
+  }
 
   foreach ($form_state['values'] as $key => $value) {
     if (substr($key, 0, 5) == 'type_') {
       $type = substr($key, 5, -6);
       switch (substr($key, -6)) {
         case '_title':
-          db_query(
-            "
-              UPDATE
-                {scald_types}
-              SET
-                title = '%s'
-              WHERE
-                type = '%s'
-            ",
-            $value,
-            $type
-          );
+          db_update('scald_types')
+            ->fields(array('title' => $value))
+            ->condition('type', $type)
+            ->execute();
           break; // end '_title'
 
         case '_thumb':
@@ -197,7 +155,7 @@ function scald_admin_types_form_submit($form, &$form_state) {
   }
 
   variable_set('scald_atom_defaults', $scald_atom_defaults);
-  scald_config_rebuild('types');
+  scald_types(TRUE);
 } // end scald_admin_types_form_submit()
 
 
@@ -257,10 +215,8 @@ function scald_admin_atoms() {
 /**
  * The Scald Admin page for Scald Contexts.
  */
-function scald_admin_contexts() {
-  $scald_config = variable_get('scald_config', 0);
-
-  $content = t('
+function scald_admin_contexts($type) {
+  $output[] = t('
     <h3>Scald Rendering Contexts</h3>
     <br>
     <p>Scald Rendering Contexts are something like themes for Scald Atoms.  Any Atom can be rendered in any Context and the Context determines what that rendering looks like and what language it is in.</p>
@@ -268,7 +224,9 @@ function scald_admin_contexts() {
   ');
 
 
-  return $content . drupal_get_form('scald_admin_contexts_form');
+  $output[] = drupal_get_form('scald_admin_contexts_form', $type);
+
+  return $output;
 } // end scald_admin_contexts()
 
 
@@ -276,77 +234,39 @@ function scald_admin_contexts() {
 /**
  * Form for admin settings for Scald Contexts.
  */
-function scald_admin_contexts_form() {
+function scald_admin_contexts_form($form, $form_state, $type) {
   $form = array();
 
-  $scald_config = variable_get('scald_config', 0);
+  $contexts = scald_contexts();
+  $transcoders = scald_transcoders();
+  $transcoder_options = array();
+  foreach ($transcoders as $tname => $transcoder) {
+    $transcoder_options[$tname] = $transcoder['title'];
 
- // Build the Context editing form per-context
-  $contexts_results = db_query("
-    SELECT
-      c.*
-    FROM
-      {scald_contexts} c
-    ORDER BY
-      c.title
-  ");
-  while ($context_raw = db_fetch_array($contexts_results)) {
-    $context = $context_raw['context'];
-    $form[$context] = array(
+  }
+
+  foreach ($contexts as $name => $context) {
+    $form[$name] = array(
       '#type'         => 'fieldset',
-      '#title'        => $context_raw['title'],
-      '#description'  => $context_raw['description'] . '<br>' . t('Provided by <code>@module.module</code>.', array('@module' => $context_raw['provider'])),
+      '#title'        => $context['title'],
+      '#description'  => $context['description'] . '<br>' . t('Provided by <code>@module.module</code>.', array('@module' => $context['provider'])),
       '#collapsible'  => TRUE,
       '#collapsed'    => TRUE,
     );
-    $form[$context][$context . '_pars'] = array(
+    $form[$name][$name . '_parse'] = array(
       '#type'           => 'checkbox',
       '#title'          => t('Make parseable.'),
-      '#default_value'  => (bool) $context_raw['parseable'],
+      '#default_value'  => (bool) $context['parseable'],
+      '#disabled'       => TRUE,
     );
 
-    // Build the Transcoder editing form per-type
-    $form[$context]['transcoders'] = array(
-      '#type'         => 'fieldset',
-      '#title'        => t('Transcoders for %context by Atom Type', array('%context' => $context)),
-      '#collapsible'  => FALSE,
+    $form[$name][$name . '_trans'] = array(
+      '#type'            => 'select',
+      '#title'           => t('Transcoder'),
+      '#options'         => $transcoder_options,
+      '#default_  value' => 'bla'
     );
-    foreach ($scald_config->types as $type => $details) {
-      // Build the array of Transcoder options
-      $transcoders = array();
-      $transcoders['@none'] = t('None');
-      $transcoders['passthrough@passthrough'] = t('Passthrough');
-      $transcoder_results = db_query("
-        SELECT
-          t.transcoder AS transcoder,
-          t.title AS title,
-          tf.file_format AS file_format
-        FROM
-          {scald_transcoders} t
-        LEFT JOIN
-          {scald_transcoder_formats} tf
-            ON tf.transcoder = t.transcoder
-        WHERE
-          tf.file_format IN (SELECT file_format FROM {scald_context_type_formats} WHERE context='%s')
-      ", $context);
-      while ($transcoder_raw = db_fetch_array($transcoder_results)) {
-        $transcoders[$transcoder_raw['transcoder'] . '@' . $transcoder_raw['file_format']] = $transcoder_raw['title'];
-      }
 
-      $form[$context]['transcoders'][$context . '@' . $type . '_type'] = array(
-        '#type'           => 'select',
-        '#title'          => $scald_config->types[$type]['title'],
-        '#default_value'  => (
-          (
-            !empty($scald_config->contexts[$context]['type_format'])
-            && !empty($scald_config->contexts[$context]['type_format'][$type])
-          )
-          ? $scald_config->contexts[$context]['type_format'][$type]['transcoder'] . '@' . $scald_config->contexts[$context]['type_format'][$type]['file_format'] 
-          : '@none'
-        ),
-        '#options'        => $transcoders,
-      );
-    }
   }
 
   $form['submit'] = array(
@@ -366,85 +286,39 @@ function scald_admin_contexts_form() {
  *  Configuration Object is rebuilt from the db.
  */
 function scald_admin_contexts_form_submit($form, &$form_state) {
+  $typename = $form_state['build_info']['args'][0]->type;
   foreach ($form_state['values'] as $key => $value) {
-    switch (substr($key, -5)) {
-      // Parseability
-      case '_pars':
-        db_query(
-          "
-            UPDATE
-              {scald_contexts}
-            SET
-              parseable = %d
-            WHERE
-              context = '%s'
-          ",
-          $value,
-          substr($key, 0, -5)
-        );
-        break; // end '_pars'
-
+    switch (substr($key, -6)) {
       // Transcoders
-      case '_type':
-        list($context, $type) = split('@', substr($key, 0, -5));
-        list($transcoder, $file_format) = split('@', $value);
+      case '_trans':
+        $context = substr($key, 0, -6);
+        $transcoder = $value;
         if ($value == '@none') {
-          db_query("DELETE FROM {scald_context_type_transcoder} WHERE context = '%s' AND type = '%s'", $context, $type);
+          db_delete('scald_context_type_transcoder')
+            ->condition('context', $context)
+            ->condition('type', $typename)
+            ->execute();
         }
         else {
-          db_query(
-            "
-              INSERT INTO
-                {scald_context_type_transcoder}
-              SET
-                context     = '%s',
-                type        = '%s',
-                file_format = '%s',
-                transcoder  = '%s'
-              ON DUPLICATE KEY
-                UPDATE
-                  file_format  = '%s',
-                  transcoder   = '%s'
-            ",
-            $context,
-            $type,
-            $file_format,
-            $transcoder,
-            $file_format,
-            $transcoder
-          );
+          db_merge('scald_context_type_transcoder')
+            ->fields(array(
+              'file_format' => 'jpg',
+            ))
+            ->updateFields(array('transcoder' => $transcoder))
+            ->key(array(
+              'context' => $context,
+              'type' => $typename
+            ))
+            ->execute();
         }
-        break; // end '_type'
+        break; // end '_trans'
     }
   }
 
   // The transcoders associated to the contexts might have change. In this case,
   // all the output that we keep in the cache is invalid, which means that we'll
   // need to regenerate it.
-  $config_old = variable_get('scald_config', 0);
-  $old = $config_old->contexts;
-  scald_config_rebuild('contexts');
-  $config_new = variable_get('scald_config', 0);
-  $new = $config_new->contexts;
-  $changed = FALSE;
-  foreach ($new as $name => $context) {
-    // If the "Make parseable" checkbox was ticked, the atoms needs to be
-    // re-rendered.
-    if ($new[$name]['parseable'] != $old[$name]['parseable']) {
-      $changed = TRUE;
-    }
-    // Find out if there's a change in the transcoders, which would imply that
-    // the atom needs to be rerendered too.
-    foreach($new[$name]['type_format'] as $type => $format) {
-      if ($new[$name]['type_format'][$type]['transcoder'] != $old[$name]['type_format'][$type]['transcoder']) {
-        $changed = TRUE;
-      }
-    }
-  }
-  // If a change was found, clear the cache.
-  if ($changed) {
-    cache_clear_all('*', 'cache_scald', TRUE);
-  }
+  cache_clear_all('*', 'cache_scald', TRUE);
 
 } // end scald_admin_contexts_form_submit()
 
@@ -492,42 +366,6 @@ function scald_admin_transcoders() {
 
   return $content;
 } // end scald_admin_transcoders()
-
-
-
-/**
- * The Scald Admin page for Scald Atom Relationships
- */
-function scald_admin_relationships() {
-  $content = t('
-    <h3>Scald Atom Relationships</h3>
-
-    <p>Scald Atom Relationships define a way in which two Atoms can be related.  What is done with this information is dependant on the nature of the relationship.</p>
-    <ol>
-  ');
-
-  $relationships_results = db_query("
-    SELECT
-      *
-    FROM
-      {scald_relationships}
-  ");
-  while ($relationship_raw = db_fetch_array($relationships_results)) {
-    $content .= '
-      <li>
-        <strong>A ' . $relationship_raw['title'] . ' B / B ' . $relationship_raw['title_reverse'] . ' A</strong>
-        <ul>
-          <li><em>' . $relationship_raw['description'] . '</em></li>
-          <li>Provided by <code>' . $relationship_raw['provider'] . '.module</code></li>
-        </ul>
-      </li>
-    ';
-  }
-  $content .= '</ol>';
-
-  return $content;
-} // end scald_admin_relationships()
-
 
 
 /**
