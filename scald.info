@@ -1,4 +1,4 @@
 name = Scald Core
 description = "Scald is Content, Attribution, Licensing, Distribution.  This is the core of the framework."
 package = Scald
-core = 6.x
+core = 7.x
