@@ -7,11 +7,21 @@
 
 function scald_atom_add_form($form, $form_state, $type) {
   $form = array();
-  $atom = entity_create('scald_atom', $type->type);
+  $atom = new stdClass();
+  $atom->type = $type->type;
 
   $form['title'] = array(
     '#type' => 'textfield',
     '#title' => t('Title')
+  );
+
+  $form['actions'] = array(
+    '#type' => 'actions',
+  );
+
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save')
   );
 
   field_attach_form('scald_atom', $atom, $form, $form_state);
