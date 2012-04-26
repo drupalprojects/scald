@@ -237,7 +237,6 @@ function scald_register_atom($values) {
       case 'actions':
       case 'title':
       case 'authors':
-      case 'relationships':
         $atom->$key = $value;
         unset($values[$key]);
         break;
@@ -411,7 +410,6 @@ function scald_update_atom($atom, $values = NULL) {
         case 'actions':
         case 'title':
         case 'authors':
-        case 'relationships':
           $atom->$key = $value;
           unset($values[$key]);
           break;
@@ -427,14 +425,6 @@ function scald_update_atom($atom, $values = NULL) {
           break;
       }
     }
-  }
-
-  // Handle a common error in the $values array.
-  if (is_array($atom->relationships) && !isset($atom->relationships['forward'])) {
-    $atom->relationships = array(
-      'forward' => $atom->relationships,
-      'reverse' => array(),
-    );
   }
 
   $types = scald_types();
