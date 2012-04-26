@@ -279,14 +279,14 @@ function scald_register_atom($values) {
 
   // The Type Provider can implement some other defaults at this point, but
   //  the Atom Provider may override them.
-  scald_invoke($types[$atom->type]['provider'], 'scald_register_atom', $atom, $values, 'type');
+  module_invoke($types[$atom->type]['provider'], 'scald_register_atom', $atom, $values, 'type');
 
   // Hand the new Atom off to the Atom Provider to do additional processing and
   //  population
   // NOTE: Providers explicitly have access to change the Atom's basic members
   //  to allow for hypothetical "dispatch Providers" which would determine the
   //  appropriate Provider and/or characteristics of an Atom upon registration.
-  scald_invoke($atom->provider, 'scald_register_atom', $atom, $values, 'atom');
+  module_invoke($atom->provider, 'scald_register_atom', $atom, $values, 'atom');
 
 
   // Another round of member validation is necessary due to the potential for
@@ -356,7 +356,7 @@ function scald_register_atom($values) {
     if (isset($details['type_format'][$atom->type])) {
       $transcoder = $details['type_format'][$atom->type]['transcoder'];
       $values['@ccontext'] = $context;
-      scald_invoke($transcoders[$transcoder]['provider'], 'scald_register_atom', $atom, $values, 'transcoder');
+      module_invoke($transcoders[$transcoder]['provider'], 'scald_register_atom', $atom, $values, 'transcoder');
     }
   }
 
@@ -441,12 +441,12 @@ function scald_update_atom($atom, $values = NULL) {
   $transcoders = scald_transcoders();
 
   // Run the Provider Hooks
-  scald_invoke($types[$atom->type]['provider'], 'scald_update_atom', $atom, $values, 'type');
-  scald_invoke($atom->provider, 'scald_update_atom', $atom, $values, 'atom');
+  module_invoke($types[$atom->type]['provider'], 'scald_update_atom', $atom, $values, 'type');
+  module_invoke($atom->provider, 'scald_update_atom', $atom, $values, 'atom');
 
   foreach (scald_contexts() as $context => $details) {
     $transcoder = $details['type_format'][$atom->type]['transcoder'];
-    scald_invoke($transcoders[$transcoder]['provider'], 'scald_update_atom', $atom, $values, 'transcoder');
+    module_invoke($transcoders[$transcoder]['provider'], 'scald_update_atom', $atom, $values, 'transcoder');
   }
 
 
@@ -640,7 +640,7 @@ function scald_fetch($sid, $rebuild = FALSE) {
   // Let the Atom Type Provider handle any defaults
   $types = scald_types();
 
-  scald_invoke($types[$atom->type]['provider'], 'scald_fetch', $atom, 'type');
+  module_invoke($types[$atom->type]['provider'], 'scald_fetch', $atom, 'type');
 
   $atom->authors = db_select('scald_atom_authors', 'saa')
     ->fields('saa', array('weight', 'aid'))
@@ -651,7 +651,7 @@ function scald_fetch($sid, $rebuild = FALSE) {
 
   $atom->base_entity = NULL;
 
-  scald_invoke($atom->provider, 'scald_fetch', $atom, 'atom');
+  module_invoke($atom->provider, 'scald_fetch', $atom, 'atom');
 
   // If the Providers tried to mess with "protected" Atom object members, fail!
   if ($sid != $atom->sid) {
@@ -1352,18 +1352,18 @@ function scald_prerender(&$atom, $context, $options = NULL) {
   $atom->rendered->nocache = FALSE;
 
   // Type & Atom prerenders
-  scald_invoke($types[$atom->type]['provider'], 'scald_prerender', $atom, $context, $options, 'type');
-  scald_invoke($atom->provider, 'scald_prerender', $atom, $context, $options, 'atom');
+  module_invoke($types[$atom->type]['provider'], 'scald_prerender', $atom, $context, $options, 'type');
+  module_invoke($atom->provider, 'scald_prerender', $atom, $context, $options, 'atom');
 
   // Transcoder Provider prerender -- only if there is a Transcoder specified
   //  for this Context.
   //  POPULATES: $atom->rendered->file_transcoded_url
   if (!empty($context_config['type_format']) && !empty($context_config['type_format'][$atom->type])) {
-    scald_invoke($transcoders[$context_config['type_format'][$atom->type]['transcoder']]['provider'], 'scald_prerender', $atom, $context, $options, 'transcoder'); 
+    module_invoke($transcoders[$context_config['type_format'][$atom->type]['transcoder']]['provider'], 'scald_prerender', $atom, $context, $options, 'transcoder'); 
   }
 
   // Context prerender
-  scald_invoke($context_config['provider'], 'scald_prerender', $atom, $context, $options, 'context');
+  module_invoke($context_config['provider'], 'scald_prerender', $atom, $context, $options, 'context');
 
   // Populate default rendered members & validate other rendered members.
   $atom->rendered->title = check_plain($atom->rendered->title); // @@@TODO: Determine if it makes sense to *always* do this or make it dependant on Context render language.
@@ -2110,22 +2110,6 @@ function scald_views_api() {
 function scald_flush_caches() {
   return array('cache_scald');
 }
-
-/**
- * Invokes a function, with a byref parameter.
- */
-function scald_invoke($module, $hook, &$atom) {
-  $args = func_get_args();
-  $module = array_shift($args);
-  $hook = array_shift($args);
-  $atom = array_shift($args);
-  array_unshift($args, &$atom);
-  $function = $module . '_' . $hook;
-  if (function_exists($function)) {
-    return call_user_func_array($function, $args);
-  }
-}
-
 
 function theme_scald_render_error($context, $message){
 	return '<h3>'.$message.'</h3>';
