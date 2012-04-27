@@ -9,7 +9,7 @@ class scald_plugin_display_library extends views_plugin_display_page {
    */
   function execute() {
     // Hide the links that Views would normally display, as they confuse
-    // DnD. 
+    // DnD.
     $library = array();
     // Execute the view to get all the filter that applies.
     $this->view->execute();

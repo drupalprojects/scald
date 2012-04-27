@@ -26,7 +26,7 @@ Drupal.dnd.btSettings = {
 
 /**
  *  Extend jQuery a bit
- *  
+ *
  *  We add a selector to look for "empty" elements (empty elements in TinyMCE
  *  often have non-breaking spaces and <br /> tags).  An exception is required
  *  to make this work in IE.
@@ -42,7 +42,7 @@ Drupal.dnd.btSettings = {
   });
 }) (jQuery);
 
-/** 
+/**
  * Initialize and load drag and drop library and pass off rendering and
  * behavior attachment.
  */
@@ -244,7 +244,7 @@ Drupal.behaviors.dndLibrary.attach_library = function(e, data) {
   var settings = $.extend({idSelector: Drupal.behaviors.dndLibrary.idSelector}, Drupal.settings.dndDropAreas[data.field]);
   var editor_fn = 'attach_' + data.editor;
   if ($.isFunction(window.Drupal.behaviors.dndLibrary[editor_fn])) {
-    window.Drupal.behaviors.dndLibrary[editor_fn](data, settings); 
+    window.Drupal.behaviors.dndLibrary[editor_fn](data, settings);
   }
 }
 
@@ -310,7 +310,7 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
         var target = this
         // Decrement counter on delete
         $(target).bind('dnd_delete', function(e, data) {
-          Drupal.behaviors.dndLibrary.countElements(target, $(data.node).attr('dnd_id'), true); 
+          Drupal.behaviors.dndLibrary.countElements(target, $(data.node).attr('dnd_id'), true);
         });
         $('head', $(this).contents()).append('<style type="text/css">img.drop {width: 0; height: 0;} div.dnd-drop-wrapper {background: #efe; border: 1px #090 solid;}</style>');
         $('body', $(this).contents()).addClass($('body').attr('class'));
