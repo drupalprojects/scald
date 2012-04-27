@@ -46,7 +46,7 @@ function dnd_test_theme() {
       'template'  => 'dnd-editor-item',
     ),
     'dnd_library_item' => array(
-      'arguments' => array('i' => NULL), 
+      'arguments' => array('i' => NULL),
       'template'  => 'dnd-library-item',
     ),
     'dnd_library_preview' => array(
@@ -77,7 +77,7 @@ function dnd_test_dnd_library($element = NULL) {
  * Create contrived output
  */
 function dnd_test_generate_library($page = 1, $limit = 8) {
-  $start = ($page * $limit) - ($limit); 
+  $start = ($page * $limit) - ($limit);
   $end   = $page * $limit;
 
   $library = theme('dnd_library_header', $page);

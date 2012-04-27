@@ -40,7 +40,7 @@
 .dnd-library-wrapper .views-exposed-form .form-item {
   width: auto;
 }
-.dnd-library-wrapper .view-filters, 
+.dnd-library-wrapper .view-filters,
 .dnd-library-wrapper .view-filters input,
 .dnd-library-wrapper .view-filters select
 .dnd-library-wrapper .view-filters textarea {
@@ -179,7 +179,7 @@
   font-weight: bold;
   margin-bottom: 0.5em;
 }
-.dnd-editor-preview .media-preview { 
+.dnd-editor-preview .media-preview {
   float: left;
   width: 125px;
 }

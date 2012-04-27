@@ -2,7 +2,7 @@
 
 /**
  * @defgroup scald Scald is Content, Attribution, Licensing, & Distribution
- * 
+ *
  */
 
 /**
@@ -116,7 +116,7 @@ function scald_scald_contexts_alter(&$contexts) {
  * Get the available Scald Actions
  *
  * This function returns a structured array which specifies all the currently
- *  provided Scald Actions.  The actions are in an array with one or more 
+ *  provided Scald Actions.  The actions are in an array with one or more
  *  elements in the format:
  *  array(
  *    'action-slug' => array(
@@ -584,7 +584,7 @@ function scald_is_registered($sid, $rebuild = FALSE) {
   }
 
   $scald_atoms[$sid] = $atom;
-  
+
   return $scald_atoms[$sid];
 } // end scald_is_registered()
 
@@ -1349,7 +1349,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
   //  for this Context.
   //  POPULATES: $atom->rendered->file_transcoded_url
   if (!empty($context_config['type_format']) && !empty($context_config['type_format'][$atom->type])) {
-    module_invoke($transcoders[$context_config['type_format'][$atom->type]['transcoder']]['provider'], 'scald_prerender', $atom, $context, $options, 'transcoder'); 
+    module_invoke($transcoders[$context_config['type_format'][$atom->type]['transcoder']]['provider'], 'scald_prerender', $atom, $context, $options, 'transcoder');
   }
 
   // Context prerender
@@ -1407,7 +1407,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
     'path' => 'user/' . $atom->publisher,
     'link' => l($name, 'user/' . $atom->publisher),
   );
- 
+
 } // end scald_prerender()
 
 
@@ -1421,7 +1421,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
  * NOTE: scald_render() gets called recursively until a viable output is
  *  generated.  It may return FALSE on a given call, but it will ultimately fall
  *  back to the 'title' Context which is provided by Scald Core and *always*
- *  generates *something*.  Even if a 
+ *  generates *something*.  Even if a
  *
  * @param $sid
  *   A Scald ID *OR* a Scald Atom.
