@@ -1,7 +1,7 @@
 <div class="footer">
   <div class="pager">
     <ul>
-      <?php 
+      <?php
       for ($i=0; $i < ceil($count / SCALD_DND_LIBRARY_PAGE_SIZE); $i++) {
         $args = (array)$_GET;
         unset($args['q']);

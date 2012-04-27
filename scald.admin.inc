@@ -341,7 +341,7 @@ function scald_admin_contexts_form() {
             !empty($scald_config->contexts[$context]['type_format'])
             && !empty($scald_config->contexts[$context]['type_format'][$type])
           )
-          ? $scald_config->contexts[$context]['type_format'][$type]['transcoder'] . '@' . $scald_config->contexts[$context]['type_format'][$type]['file_format'] 
+          ? $scald_config->contexts[$context]['type_format'][$type]['transcoder'] . '@' . $scald_config->contexts[$context]['type_format'][$type]['file_format']
           : '@none'
         ),
         '#options'        => $transcoders,
@@ -792,7 +792,7 @@ function scald_admin_actions_batch($roles, &$context) {
     $context['sandbox']['progress']++;
     $context['sandbox']['last_uid'] = $users_raw['uid'];
   }
-  
+
   $context['message'] = t('Updated @current of @total users.', array('@current' => $context['sandbox']['progress'], '@total' => $context['sandbox']['total']));
   $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['total'];
 } // end scald_admin_actions_batch()

@@ -94,7 +94,7 @@ function scald_schema() {
       'i_base_id'               => array(array('base_id', 64)),
     ),
   );
-  
+
   $schema['scald_atom_providers'] = array(
     'description' => t('Mapping between Providers of Atoms and the Types they provide.'),
     'fields'      => array(
@@ -616,7 +616,7 @@ function scald_uninstall() {
   variable_del('scald_atom_defaults');
   variable_del('scald_context_fallbacks');
   variable_del('scald_actions_publisher');
-  
+
   // @@@TODO: Delete all Filter-based variables
 
   // @@@TODO: Clean up blocks, variables, caches, etc.

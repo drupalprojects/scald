@@ -8,7 +8,7 @@
       <?php print $description; ?>
     </div>
     <div class="attribution">
-      <span class="author"><?php print $author; ?></span> | 
+      <span class="author"><?php print $author; ?></span> |
       <span class="date"><?php print $date; ?></span>
     </div>
   </div>

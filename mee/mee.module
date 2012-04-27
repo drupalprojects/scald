@@ -2,9 +2,9 @@
 // $Id;
 /**
  * @file
- * Defines a special textarea, with drag and drop media driven by Scald and 
- * dnd.module when rich text editing is enabled on the textarea via the 
- * WYSIWYG API. 
+ * Defines a special textarea, with drag and drop media driven by Scald and
+ * dnd.module when rich text editing is enabled on the textarea via the
+ * WYSIWYG API.
  */
 
 define('MEE_RENDERED_COPYRIGHT_PATTERN',    '/<!--\s*copyright=(\d+)\s*-->(.*)<!--\s*END copyright=\1\s*-->/sU');
@@ -145,10 +145,10 @@ function mee_field($op, &$node, $field, &$items, $teaser, $page) {
           $temp_atom->title         = $node->title . ' - ' . $field['widget']['label'] . ' (#' . $delta . ')';
           $temp_atom->authors       = array(scald_uid_to_aid($node->uid));
           $temp_atom->relationships = empty($scald_included) ? array() : array('includes' => $scald_included);
-          
+
           scald_register_atom($temp_atom);
         }
-        
+
         // Ressource manager associations
         if (empty($item['ressource_manager'])) {
           _mee_load_ressources($node, $field, $item);
@@ -210,7 +210,7 @@ function mee_field($op, &$node, $field, &$items, $teaser, $page) {
       foreach ($items as $delta => $item) {
         scald_unregister_atom(scald_search(array('base_id' => $node->nid . ':' . $delta), FALSE, TRUE));
       }
-      
+
       // Delete all ressources associations for this field
       $query = "DELETE FROM {mee_ressources} WHERE content_nid = %d AND field = '%s'";
       db_query($query, $node->nid, $field['field_name']);
@@ -269,11 +269,11 @@ function mee_field_formatter_info() {
   //    'field types' => 'mee',
   //  );
   //}
-  return $formatters; 
+  return $formatters;
 }
 
 function theme_mee_formatter_default($element) {
-  // What's stored is exactly what the user entered, and not the SAS 
+  // What's stored is exactly what the user entered, and not the SAS
   // representation. In general, that's that we want to output, *but*
   // we should also check that the atom is still available... And replace
   // it if it isn't.
@@ -607,8 +607,8 @@ function theme_mee_ressource_manager($form) {
 
 function _mee_load_ressources($node, $field, &$item) {
     $results = db_query("
-      SELECT atom_sid, weight 
-      FROM {mee_ressources} 
+      SELECT atom_sid, weight
+      FROM {mee_ressources}
       WHERE content_nid=%d AND field='%s'",
       array(
         ':nid'   => $node->nid,

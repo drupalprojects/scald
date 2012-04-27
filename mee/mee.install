@@ -8,7 +8,7 @@
  function mee_install() {
    drupal_load('module', 'content');
    content_notify('install', 'mee');
-   drupal_install_schema('mee');  
+   drupal_install_schema('mee');
  }
 
 /**
@@ -17,7 +17,7 @@
  function mee_uninstall() {
    drupal_load('module', 'content');
    content_notify('uninstall', 'mee');
-   drupal_uninstall_schema('mee');  
+   drupal_uninstall_schema('mee');
  }
 
 /**
@@ -63,7 +63,7 @@ function mee_update_6003() {
 /**
  * Implementation of hook_schema().
  */
-	function mee_schema() {  
+	function mee_schema() {
 	  $schema['mee_ressources'] = array(
 	    'fields' => array(
 	      'content_nid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
@@ -75,6 +75,6 @@ function mee_update_6003() {
 	    ),
 	    'primary key' => array('content_nid', 'atom_sid', 'field'),
 	  );
-	
+
 	  return $schema;
 	}

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Scald DnD Library 
+ * Scald DnD Library
  */
 
 // CONSTANTS
@@ -79,7 +79,7 @@ function scald_dnd_library_library() {
   $type_placeholders = db_placeholders($types, 'text');
 
   $args = array($search_query_title) + $types;
-  
+
   $result = pager_query("SELECT s.sid FROM {scald_atoms} s WHERE s.title LIKE '%%%s%%' AND type IN($type_placeholders) AND actions > 1 ORDER BY s.sid DESC", SCALD_DND_LIBRARY_PAGE_SIZE, 0, NULL, $args);
   // Get back the total number of element that pager_query fetched.
   global $pager_total_items;

@@ -187,11 +187,11 @@ function hook_scald_provider() {
  *  additional action.
  *
  * @param $atom
- *  
+ *
  * @param &$values
- *  
+ *
  * @param $mode
- *  
+ *
  * @return void
  *  Nothing.  $atom and $values are modified directly.
  */
@@ -210,7 +210,7 @@ function hook_scald_register_atom(&$atom, &$values, $mode) {
     case 'atom':
       $atom->title = // Some sort of a complicated lookup based on $atom->base_id or something
       break; // end 'atom'
-    
+
     case 'transcoder':
       $scald_config = variable_get('scald_config', 0);
       // Use the special $values key '@context' (set by Scald Core for each call

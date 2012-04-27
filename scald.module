@@ -2,7 +2,7 @@
 
 /**
  * @defgroup scald Scald is Content, Attribution, Licensing, & Distribution
- * 
+ *
  */
 
 /**
@@ -388,7 +388,7 @@ function _scald_register_provider($provider = '', $definitions = array(), $addit
 function _scald_unregister_provider($provider) {
   // @@@TODO: Figure out what needs to happen at this point!
   //           Clearly any configuration options which reference the provider should be reset, though determining that will be difficult.  Depending on what the Provider provides (e.g. Atoms), actual data might need to be removed.  If it's an Atom Provider, batch-remove all Atoms.  The Provider module is responsible for handling any Transcoder-related cache-deletion, etc.  If it's any other kind of Provider, dropping all the data from the db should probably be adaquate.
-  // @@@TODO: *DON'T* call scald_config_rebuild() here; this is a private function and scald_config_rebuild() should be called by the calling stack.  
+  // @@@TODO: *DON'T* call scald_config_rebuild() here; this is a private function and scald_config_rebuild() should be called by the calling stack.
 } // end _scald_unregister_provider()
 
 
@@ -397,7 +397,7 @@ function _scald_unregister_provider($provider) {
  * Determine if Scald Providers have been enabled or disabled and update the
  *  Scald Registries as necessary.
  *
- * This function generates a list of all Drupal Modules which implement the 
+ * This function generates a list of all Drupal Modules which implement the
  *  scald_provider() hook.  That list is compared against Scald Core's list of
  *  registered Providers and the Provider (un)registration functions are called
  *  in order to bring the two into sync.  Necessarily, the Scald Configuration
@@ -434,7 +434,7 @@ function scald_update_providers($form = NULL, &$form_state = NULL) {
   }
 
   // @@@TODO: Make the list dependent on successful registration.  Need a more sophistocated return value in _scald_register_provider() to accomplish this.
-  variable_set('scald_providers', $current_implementers); 
+  variable_set('scald_providers', $current_implementers);
   scald_config_rebuild();
 } // end scald_update_providers()
 
@@ -471,7 +471,7 @@ function scald_config_rebuild($sections = NULL) {
   if (empty($sections)) {
     $sections = $available_sections;
   }
-  else if (!is_array($sections)) { 
+  else if (!is_array($sections)) {
     $sections = array($sections);
   }
 
@@ -675,7 +675,7 @@ function _scald_contexts() {
  * Get the available Scald Actions
  *
  * This function returns a structured array which specifies all the currently
- *  provided Scald Actions.  The actions are in an array with one or more 
+ *  provided Scald Actions.  The actions are in an array with one or more
  *  elements in the format:
  *  array(
  *    'action-slug' => array(
@@ -1221,7 +1221,7 @@ function scald_update_atom($atom, $values = NULL) {
     }
   }
 
- 
+
   // Clear the render cache
   cache_clear_all($atom->sid . ':', 'cache_scald', TRUE);
   // Clear the memory caches
@@ -1330,7 +1330,7 @@ function scald_is_registered($sid, $rebuild = FALSE) {
   }
 
   $scald_atoms[$sid] = $atom;
-  
+
   return $scald_atoms[$sid];
 } // end scald_is_registered()
 
@@ -2125,7 +2125,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
   //  for this Context.
   //  POPULATES: $atom->rendered->file_transcoded_url
   if (!empty($context_config['type_format']) && !empty($context_config['type_format'][$atom->type])) {
-    scald_invoke($scald_config->transcoders[$context_config['type_format'][$atom->type]['transcoder']]['provider'], 'scald_prerender', $atom, $context, $options, 'transcoder'); 
+    scald_invoke($scald_config->transcoders[$context_config['type_format'][$atom->type]['transcoder']]['provider'], 'scald_prerender', $atom, $context, $options, 'transcoder');
   }
 
   // Context prerender
@@ -2186,7 +2186,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
   // Relationships
   $atom->rendered->relationships = array();
   foreach ($atom->relationships as $direction => $relationships) {
-    $title_accessor = $direction == 'forward' ? 'title' : 'title_reverse'; 
+    $title_accessor = $direction == 'forward' ? 'title' : 'title_reverse';
     foreach ($relationships as $slug => $sids) {
       foreach ($sids as $sid) {
         $rel_atom = scald_is_registered($sid);
@@ -2204,7 +2204,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
     'path' => 'user/' . $atom->publisher,
     'link' => l($name, 'user/' . $atom->publisher),
   );
- 
+
 } // end scald_prerender()
 
 
@@ -2218,7 +2218,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
  * NOTE: scald_render() gets called recursively until a viable output is
  *  generated.  It may return FALSE on a given call, but it will ultimately fall
  *  back to the 'title' Context which is provided by Scald Core and *always*
- *  generates *something*.  Even if a 
+ *  generates *something*.  Even if a
  *
  * @param $sid
  *   A Scald ID *OR* a Scald Atom.
