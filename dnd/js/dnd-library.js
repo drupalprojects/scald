@@ -19,8 +19,10 @@ Drupal.dnd.btSettings = {
   'spikeGirth': 9,
   'corner-radius' : 3,
   'strokeWidth': 1,
-  'fill': '#ffd',
-  'strokeStyle': '#555',
+  'fill': '#fff',
+  'shadow': true,
+  'shadowColor': '#666',
+  'strokeStyle': '#999',
   'closeWhenOthersOpen': true
 };
 
@@ -90,7 +92,20 @@ Drupal.behaviors.dndLibrary = function(context) {
 Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
   $this = $(this);
 
-  $this.html(data.library);
+  $this.html(data.menu + data.anchor + data.library);
+
+  // Rearrange some element for better logic and easier theming.
+  // @todo We'd better do it on server side.
+  $this.find('.scald-menu')
+    .prepend($this.find('.view-filters .summary'))
+    .append($this.find('.view-filters').addClass('filters'));
+  $this.find('.filters').html($this.find('.filters fieldset').html());
+  $this.find('.summary .toggle').click(function() {
+    // We toggle class only when animation finishes to avoid flash back.
+    $('.scald-menu').animate({left: $('.scald-menu').hasClass('search-on') ? '-42px' : '-256px'}, function() {
+      $(this).toggleClass('search-on');
+    });
+  });
 
   var settings = Drupal.settings.dndDropAreas[editor.get(0).id];
   var params = Drupal.wysiwyg.instances[editor.get(0).id];

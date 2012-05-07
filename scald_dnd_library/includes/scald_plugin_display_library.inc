@@ -82,7 +82,7 @@ class scald_plugin_display_library extends views_plugin_display_page {
           $value = implode(', ', $value);
         }
         if ($value) {
-          $summary[] = $filter->options['expose']['label'] .': '. $value;
+          $summary['criteria'][] = $filter->options['expose']['label'] .': '. $value;
         }
       }
     }
@@ -92,20 +92,33 @@ class scald_plugin_display_library extends views_plugin_display_page {
       $label = $this->view->field[$sort]->options['label'];
       $order = $this->view->style_plugin->order;
       $orders = array('asc' => t('Ascending'), 'desc' => t('Descending'));
-      $summary[] = t('Sort'). ': '. $label .' '. $orders[$order];
+      $summary['sort'] = t('<span class="label">Sort:</span> @criteria', array('@criteria' => $label .' '. $orders[$order]));
     }
     $this->view->hide_admin_links = TRUE;
     $view = $this->view->render();
     $messages = theme('status_messages');
     $library['library'] = $messages . $view;
-    if ($summary) {
-      $summary = theme('item_list', $summary);
-      $library['library'] = preg_replace('#</fieldset>#', '</fieldset>'. $summary, $library['library'], 1);
+    $header = '<div class="summary">';
+    $header .= '<div class="toggle"></div><div class="title">'. t('search') .'</div>';
+    if (!empty($summary['sort'])) {
+      $header .= '<div class="sort">'. $summary['sort'] .'</div>';
     }
+    $header .= theme('item_list', $summary['criteria']);
+    $header .= '</div>';
+    $library['library'] = preg_replace('#</fieldset>#', '</fieldset>'. $header, $library['library'], 1);
     foreach ($this->view->result as $result) {
       $sid = $result->sid;
       scald_dnd_library_add_item($library, $sid);
     }
+    // @todo replace this dummy data with real buttons
+    $buttons = array(
+      array('data' => l(t('Image'), 'node/add/rf-ressource-image', array('attributes' => array('class' => 'rf-frame-child rf-frame-size[650,650]'))), 'class' => 'add-image'),
+      array('data' => l(t('Video'), 'node/add/rf-ressource-video', array('attributes' => array('class' => 'rf-frame-child rf-frame-size[650,650]'))), 'class' => 'add-video'),
+      array('data' => l(t('Soundslide'), 'node/add/rf-ressource-diaporama', array('attributes' => array('class' => 'rf-frame-child rf-frame-size[650,650]'))), 'class' => 'add-soundslide'),
+    );
+    $library['menu'] = '<div class="scald-menu"><div class="add-buttons">'. theme_item_list($buttons) .'</div></div>';
+    $library['library'] = '<div class="scald-library">' . $library['library'] . '</div>';
+    $library['anchor'] = '<div class="scald-anchor"></div>';
     drupal_json($library);
   }
 }

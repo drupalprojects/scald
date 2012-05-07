@@ -1,5 +1,5 @@
 <?php foreach ($library_items as $id => $item): ?>
-  <div class="editor-item" id="sdl-<?php print $id; ?>">
+  <div class="editor-item clear-block" id="sdl-<?php print $id; ?>">
     <?php print $item; ?>
   </div>
 <?php endforeach; ?>
