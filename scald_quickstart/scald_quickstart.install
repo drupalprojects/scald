@@ -5,10 +5,21 @@
  */
 
 function scald_quickstart_install() {
+  // Create a few default types
   db_insert('scald_types')
     ->fields(array('type', 'provider', 'title', 'description'))
     ->values(array('audio', 'scald', 'Audio', 'Ressource audio'))
     ->values(array('image', 'scald', 'Image', 'Ressource image'))
+    ->values(array('video', 'scald', 'Video', 'Ressource video'))
     ->execute();
   scald_types(TRUE);
+
+  // Grant anoymous and authenticated user the right to see published atoms
+  $actions = scald_actions();
+  $standard = $actions['fetch']['bitmask'] + $actions['view']['bitmask'];
+  db_insert('scald_role_actions')
+    ->fields(array('rid', 'actions'))
+    ->values(array(0, $standard))
+    ->values(array(1, $standard))
+    ->execute();
 }
