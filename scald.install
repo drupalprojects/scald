@@ -343,7 +343,7 @@ function scald_enable() {
   // Register all existing Users as Scald Authors
   // Determine wether we can run it straight, or need to switch to batch processing,
   // depending on the number of users account that need to be registered.
-  $count = db_result(db_query("SELECT COUNT(uid) FROM {users} WHERE uid > 0"));
+  $count = db_query("SELECT COUNT(uid) FROM {users} WHERE uid > 0")->fetchField();
   if ($count < SCALD_ENABLE_BATCH_LIMIT) {
     $context = array();
     scald_enable_batch($context);
@@ -382,7 +382,7 @@ function scald_enable_batch(&$context) {
   if (!isset($context['sandbox']['last_uid'])) {
     $context['sandbox']['progress']   = 0;
     $context['sandbox']['last_uid']   = 0;
-    $context['sandbox']['total']      = db_result(db_query("
+    $context['sandbox']['total']      = db_query("
       SELECT
         COUNT(uid)
       FROM
@@ -391,26 +391,16 @@ function scald_enable_batch(&$context) {
         uid > 0
       ORDER BY
         uid
-    "));
+    ")->fetchField();
   }
 
-  $users_results = db_query_range(
-    "
-      SELECT
-        uid,
-        name
-      FROM
-        {users}
-      WHERE
-        uid > %d
-      ORDER BY
-        uid
-    ",
-    $context['sandbox']['last_uid'],
-    0,
-    SCALD_ENABLE_BATCH_LIMIT
-  );
-  while ($user_raw = db_fetch_array($users_results)) {
+  $users_results = db_select('users', 'u')
+    ->fields('u', array('uid', 'name'))
+    ->condition('u.uid', 0, '>')
+    ->orderBy('u.uid')
+    ->range($context['sandbox']['progress'], SCALD_ENABLE_BATCH_LIMIT)
+    ->execute();
+  while ($user_raw = $users_results->fetchAssoc()) {
     scald_register_author($user_raw);
     $context['sandbox']['last_uid'] = $user_raw['uid'];
     $context['sandbox']['progress']++;

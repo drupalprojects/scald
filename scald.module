@@ -306,7 +306,7 @@ function scald_atom_save(&$atom) {
   // Do "poor-man's" UID validation.
   if (empty($atom->publisher) || !is_numeric($atom->publisher) || !($atom->publisher > 0)) {
     global $user;
-    $publisher = $user->uid;
+    $atom->publisher = $user->uid;
   }
 
   field_attach_presave('scald_atom', $atom);
@@ -786,47 +786,14 @@ function scald_register_author($data = array()) {
     return FALSE;
   }
 
-  // Build SQL conditions
-  $sets = array();
-  $sql_data = array();
-  foreach ($data as $field => $value) {
-    switch ($field) {
-      case 'name':
-        $sets[] = 'name = \'%s\'';
-        $sql_data[] = $value;
-        break; // end 'name'
-
-      case 'uid':
-        $sets[] = 'uid = %d';
-        $sql_data[] = $value;
-        if (!isset($data['url'])) {
-          $sets[] = 'url = \'' . url('user') . '/%d\'';
-          $sql_data[] = $value;
-        }
-        break; // end 'uid'
-
-      case 'url':
-        $sets[] = 'url = \'%s\'';
-        $sql_data[] = $value;
-        break; // end 'url'
-
-      default:
-        continue;
-    }
+  // Prefill the URL if we have and uid and no url
+  if (empty($data['url']) && !empty($data['uid'])) {
+    $data['url'] = 'user/' . $data['uid'];
   }
 
-  if (!db_query(
-    "
-      INSERT INTO
-        {scald_authors}
-      SET "
-        . implode(', ', $sets),
-    $sql_data
-  )) {
-    return FALSE;
-  }
-
-  return db_last_insert_id('scald_authors', 'aid');
+  return db_insert('scald_authors')
+    ->fields($data)
+    ->execute();
 } // end scald_register_author()
 
 
