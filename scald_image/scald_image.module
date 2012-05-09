@@ -19,9 +19,27 @@ function scald_image_scald_atom_providers() {
 }
 
 /**
- * Implements hook_scald_atom_transcoders.
+ * Implements hook_scald_add_form.
  */
+function scald_image_scald_add_form(&$form, &$form_state) {
+  $form['file'] = array(
+    '#type' => 'managed_file',
+    '#title' => 'Image',
+  );
+}
 
+/**
+ * Implements hook_scald_add_form_submit.
+ */
+function scald_image_scald_add_form_submit(&$atom, $form, $form_state) {
+  $file = file_load($form_state['values']['file']);
+  $atom->title = $file->filename;
+  $atom->base_id = $file->fid;
+}
+
+/**
+ * Implements hook_scald_transcoders.
+ */
 function scald_image_scald_transcoders() {
   $transcoders = array();
   foreach (image_styles() as $name => $style) {

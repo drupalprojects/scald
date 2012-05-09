@@ -236,55 +236,19 @@ function _scald_get_info($type, $reset = FALSE) {
  ******************************************************************************/
 
 /**
- * Register a new Scald Atom with Scald Core.
+ * Save changes to a Scald Atom, or create a new one
  *
- * @param $values
- *  An associative array with keys which correspond to Scald Atom Object members
+ * @param $atom
+ *  A Scald Atom Object
  *   At minimum, 'type', 'provider', and 'base_id' (which uniquely identifies a
  *   given Atom) are required.  Additional included values which are keyed by
  *   recognized Scald Atom Object members will be used for those members and
  *   any additional values will be passed along to the Providers.
  * @return
- *   The Scald ID upon successful registration
+ *   The Scald ID upon successful save
  *   FALSE upon failure
  */
-function scald_register_atom($values) {
-  // Argument validation
-  if (!is_array($values) || empty($values)) {
-    return FALSE;
-  }
-
-
-  // Begin building the Atom object
-  $atom = new stdClass;
-
-  foreach ($values as $key => $value) {
-    switch ($key) {
-      // Recognized Atom object memebers are assigned and removed from $values
-      case 'provider':
-      case 'type':
-      case 'base_id':
-      case 'publisher':
-      case 'actions':
-      case 'title':
-      case 'authors':
-        $atom->$key = $value;
-        unset($values[$key]);
-        break;
-
-      // Recognized Atom object members which cannot reasonably be assigned
-      //  either by Scald Core or by one of the Providers are simply removed.
-      case 'sid':
-      case 'fetched':
-        unset($values[$key]);
-      break;
-
-      default:
-        break;
-    }
-  }
-
-
+function scald_atom_save(&$atom) {
   // First pass Atom object validation
   $types = scald_types();
 
@@ -307,16 +271,19 @@ function scald_register_atom($values) {
     $atom->authors = array();
   }
 
+  $op = empty($atom->sid) ? 'insert' : 'update';
+  $hook = ($op == 'insert') ? 'scald_register_atom' : 'scald_update_atom';
+
   // The Type Provider can implement some other defaults at this point, but
   //  the Atom Provider may override them.
-  module_invoke($types[$atom->type]['provider'], 'scald_register_atom', $atom, $values, 'type');
+  module_invoke($types[$atom->type]->provider, $hook, $atom, 'type');
 
-  // Hand the new Atom off to the Atom Provider to do additional processing and
+  // Hand the Atom off to the Atom Provider to do additional processing and
   //  population
   // NOTE: Providers explicitly have access to change the Atom's basic members
   //  to allow for hypothetical "dispatch Providers" which would determine the
   //  appropriate Provider and/or characteristics of an Atom upon registration.
-  module_invoke($atom->provider, 'scald_register_atom', $atom, $values, 'atom');
+  module_invoke($atom->provider, $hook, $atom, 'atom');
 
 
   // Another round of member validation is necessary due to the potential for
@@ -342,23 +309,14 @@ function scald_register_atom($values) {
     $publisher = $user->uid;
   }
 
+  field_attach_presave('scald_atom', $atom);
 
   // Put the basic data in the Scald Atom Registry
-  $sid = db_insert('scald_atoms')
-    ->fields(array(
-      'provider' => $atom->provider,
-      'type' => $atom->type,
-      'base_id' => $atom->base_id,
-      'published' => $atom->publisher,
-      'actions' => $atom->actions,
-      'title' => $atom->title
-    ))
-    ->execute();
-  if (!$sid) {
+  $written = drupal_write_record('scald_atoms', $atom);
+
+  if (!$written) {
     return FALSE;
   }
-
-  $atom->sid = $sid;
 
   // Handle a common error in the $values array.
 
@@ -373,6 +331,8 @@ function scald_register_atom($values) {
     $authors->execute();
   }
 
+  $function = 'field_attach_' . $op;
+  $function('scald_atom', $atom);
 
   // Transcoding
   // Only fire hook_register_atom() for Transcoder Providers that might be
@@ -386,132 +346,18 @@ function scald_register_atom($values) {
     if (isset($details['type_format'][$atom->type])) {
       $transcoder = $details['type_format'][$atom->type]['transcoder'];
       $values['@ccontext'] = $context;
-      module_invoke($transcoders[$transcoder]['provider'], 'scald_register_atom', $atom, $values, 'transcoder');
+      module_invoke($transcoders[$transcoder]['provider'], $hook, $atom, 'transcoder');
     }
-  }
-
-
-  return $atom->sid;
-} // end scald_register_atom()
-
-
-
-/**
- * Update a Scald Atom
- *
- * Passing just a SID will trigger hook_scald_update_atom() without updating any
- *  core Atom object values.
- *
- * @param $atom
- *  An Atom object which has a registered SID
- *  OR a SID
- * @param $values
- *  An optional array keyed with member names and values.  For recognized Atom
- *  members, the Atom is updated directly.  The array is passed to the Providers
- *  as well.
- * @return
- *  The fully-updated Atom object.  FALSE upon failure.
- */
-function scald_update_atom($atom, $values = NULL) {
-  // Argument validation
-  if (is_object($atom)) {
-    $sid = $atom->sid;
-  }
-  else {
-    $sid = $atom;
-  }
-
-  if ($my_atom = scald_is_registered($sid) === FALSE) {
-    return FALSE;
-  }
-
-  if (!is_object($atom)) {
-    $atom = $my_atom;
-  }
-
-  // If using the $values array
-  if (is_array($values) && !empty($values)) {
-    foreach ($values as $key => $value) {
-      switch ($key) {
-        // Recognized Atom object memebers are updated and removed from $values
-        case 'provider':
-        case 'type':
-        case 'base_id':
-        case 'publisher':
-        case 'actions':
-        case 'title':
-        case 'authors':
-          $atom->$key = $value;
-          unset($values[$key]);
-          break;
-
-        // Recognized Atom object members which cannot reasonably be updated
-        //  either by Scald Core or by one of the Providers are simply removed.
-        case 'sid':
-        case 'fetched':
-          unset($values[$key]);
-          break;
-
-        default:
-          break;
-      }
-    }
-  }
-
-  $types = scald_types();
-  $transcoders = scald_transcoders();
-
-  // Run the Provider Hooks
-  module_invoke($types[$atom->type]['provider'], 'scald_update_atom', $atom, $values, 'type');
-  module_invoke($atom->provider, 'scald_update_atom', $atom, $values, 'atom');
-
-  foreach (scald_contexts() as $context => $details) {
-    $transcoder = $details['type_format'][$atom->type]['transcoder'];
-    module_invoke($transcoders[$transcoder]['provider'], 'scald_update_atom', $atom, $values, 'transcoder');
-  }
-
-
-  // @@@TODO: Enforce defaults/valid values (as in scald_register_atom())
-
-  // Update the basic data in the Scald Atom Registry
-  $updated = db_update('scald_atoms')
-    ->fields(array(
-      'provider' => $atom->provider,
-      'type' => $atom->type,
-      'base_id' => $atom->base_id,
-      'publisher' => $atom->publisher,
-      'actions' => $atom->actions,
-      'title' => $atom->title
-    ))
-    ->condition('sid', $atom->sid)
-    ->execute();
-  if (!$updated) {
-    return FALSE;
-  }
-
-
-  // Authors
-  db_delete('scald_atom_authors')
-    ->condition('sid', $atom->sid)
-    ->execute();
-
-  if (count($atom->authors)) {
-    $authors = db_insert('scald_atom_authors')->fields(array('sid', 'aid', 'weight'));
-
-    foreach ($atom->authors as $weight => $author_id) {
-      $authors->values(array($atom->sid, $author_id, $weight));
-    }
-
-    $authors->execute();
   }
 
   // Clear the render cache
   cache_clear_all($atom->sid . ':', 'cache_scald', TRUE);
-  // Clear the memory caches
-  return scald_fetch($atom->sid, TRUE);
-} // end scald_update_atom()
 
+  // Clear the static caches
+  scald_fetch($atom->sid, TRUE);
 
+  return $atom->sid;
+} // end scald_atom_save()
 
 /**
  * Unregister a Scald Atom
