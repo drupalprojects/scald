@@ -1233,15 +1233,15 @@ function scald_prerender(&$atom, $context, $options = NULL) {
   module_invoke($context_config['provider'], 'scald_prerender', $atom, $context, $options, 'context');
 
   // Populate default rendered members & validate other rendered members.
-  $atom->rendered->title = check_plain($atom->rendered->title); // @@@TODO: Determine if it makes sense to *always* do this or make it dependant on Context render language.
-  $atom->rendered->description = check_markup($atom->rendered->description, FILTER_FORMAT_DEFAULT, FALSE); // @@@TODO: Determine if this is reasonable or if it should be left to Providers
+  $atom->rendered->title = check_plain($atom->rendered->title);
+  $atom->rendered->description = filter_xss($atom->rendered->description); 
   $atom->rendered->type = $types[$atom->type]->title;
 
   // Actions
   $atom->rendered->actions = array();
   $current_actions = scald_actions($atom) & ~SCALD_ACTIONS_ADMIN_BIT; // Remove the Admin bit as it is irrelevant for rendering purposes
   foreach ($actions as $slug => $details) {
-    if ($current_actions & $details['mask']) {
+    if ($current_actions & $details['bitmask']) {
       $atom->rendered->actions[] = array(
         'title' => $details['title'],
         'path'  => 'scald/actions/' . $slug . '/' . $atom->sid,
@@ -1276,7 +1276,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
     ->fields('u', array('name'))
     ->condition('u.uid', $atom->publisher)
     ->execute()
-    ->fetchCol();
+    ->fetchField();
 
   $atom->rendered->publisher = array(
     'uid'  => $atom->publisher,
@@ -1564,7 +1564,7 @@ function scald_scald_actions() {
  * @return
  *  None; $atom->rendered should be adjusted as appropriate
  */
-function scald_scald_prerender(&$atom, $mode, $context = NULL, $options = NULL) {
+function scald_scald_prerender($atom, $mode, $context = NULL, $options = NULL) {
   switch ($mode) {
     case 'type':
       break; // end 'type'
