@@ -185,9 +185,9 @@ function scald_transcoders($reset = FALSE) {
  *
  * This function returns an associative array with the following formats:
  * array(
- *   'module-name' => array(
- *     'type-slug1',
- *     'type-slug2',
+ *   'type-slug1' => array(
+ *     'module-name1',
+ *     'module-name2',
  *   )
  * );
  *
@@ -195,7 +195,15 @@ function scald_transcoders($reset = FALSE) {
  *   The Scald Atom Providers array.
  */
 function scald_atom_providers($reset = FALSE) {
-  return _scald_get_info('atom_providers', $reset);
+  $types = array();
+  $hook = 'scald_atom_providers';
+  foreach (module_implements($hook) as $module) {
+    foreach (module_invoke($module, $hook) as $type) {
+      $types[$type][] = $module;
+    }
+  }
+  drupal_alter($hook, $types);
+  return $types;
 }
 
 /**
