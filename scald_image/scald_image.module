@@ -5,102 +5,36 @@
  * Scald Image is a Scald Atom Provider for images.
  */
 
-require_once(drupal_get_path('module', 'scald') . '/scald.constants.inc');
-
 /*******************************************************************************
  * SCALD HOOK IMPLEMENTATIONS
  ******************************************************************************/
 
 /**
- * Implementation of hook_scald_provider().
+ * Implements hook_scald_atom_providers.
  */
-function scald_image_scald_provider() {
-  $provides = array(
-    'atoms'       => array(),
-    'transcoders' => array(),
+function scald_image_scald_atom_providers() {
+  return array(
+    'image'
   );
-
-  // Ensure that the non-bootstrap list of modules is used.  The hit to rebuild
-  //  the list should be minimal because this function should be executing very
-  //  rarely.
-  module_list(TRUE, FALSE);
-
-  // Conditionally declare possible Base Entities for Atom Provider
-  if (module_exists('upload')) {
-    if (!is_array($provides['atoms']['image'])) {
-      $provides['atoms']['image'] = array();
-    }
-    $provides['atoms']['image'][] = t('Files attached to Nodes.');
-  }
-  if (module_exists('filefield')) {
-    if (!is_array($provides['atoms']['image'])) {
-      $provides['atoms']['image'] = array();
-    }
-    $provides['atoms']['image'][] = t('Filefield files from CCK Fields.');
-  }
-  if (module_exists('imagefield')) {
-    if (!is_array($provides['atoms']['image'])) {
-      $provides['atoms']['image'] = array();
-    }
-    $provides['atoms']['image'][] = t('Images from imagefield CCK Fields.');
-  }
-
-  // Conditionally Provide Imagecache-based Transcoders
-  if (module_exists('imagecache')) {
-    // Provide ability to filter available presets ?
-    foreach(imagecache_presets() as $id => $preset) {
-      $provides['transcoders']['imagecache-'. $preset['presetname']] = array(
-        'title' => $preset['presetname'] . ' (ImageCache preset)',
-        'description' => "Uses the ImageCache preset {$preset['presetname']} to prepare the image.",
-        'formats' => array(
-          'image' => 'passthrough',
-          'audio' => 'passthrough',
-          'video' => 'passthrough',
-        )
-      );
-    }
-  }
-
-  return $provides;
 }
-
-
 
 /**
- * Implementation of hook_scald_register_atom().
+ * Implements hook_scald_atom_transcoders.
  */
-function scald_image_scald_register_atom(&$atom, $values, $mode) {
 
+function scald_image_scald_transcoders() {
+  $transcoders = array();
+  foreach (image_styles() as $name => $style) {
+    $transcoders['style-' . $name] = array(
+      'title' => $name . ' (Image style)',
+      'description' => "Uses the Image style {$name} to prepare the image",
+      'formats' => array(
+        'image' => 'passthrough'
+      )
+    );
+  }
+  return $transcoders;
 }
-
-
-
-/**
- * Implementation of hook_scald_update_atom().
- */
-function scald_image_scald_update_atom(&$atom, $values, $mode) {
-
-}
-
-
-
-/**
- * Implementation of hook_scald_unregister_atom().
- */
-function scald_image_scald_unregister_atom($atom, $mode) {
-
-}
-
-
-
-/**
- * Implementation of hook_scald_fetch().
- */
-function hook_scald_fetch(&$atom, $mode) {
-
-}
-
-
 
 /**
  * Implementation of hook_scald_prerender().
@@ -108,23 +42,14 @@ function hook_scald_fetch(&$atom, $mode) {
 function scald_image_scald_prerender(&$atom, $context, $options, $mode) {
   if ($mode == 'transcoder' && !empty($atom->file_source)) {
     // Find out which transcoder to use. This seems unnecesarilly complex.
-    $config = variable_get('scald_config', 0);
-    $context_config = $config->contexts[$context]['type_format'][$atom->type];
-    if (preg_match('/^imagecache-(.*)$/', $context_config['transcoder'], $match)) {
-      $preset = imagecache_preset_by_name($match[1]);
+    $contexts = scald_contexts();
+    $context_config = $contexts[$context]['type_format'][$atom->type];
+    if (preg_match('/^style-(.*)$/', $context_config['transcoder'], $match)) {
+      $preset = imagecache_style_load($match[1]);
       $dir = file_directory_path();
-      $path = str_replace($dir, $dir .'/imagecache/'. $preset['presetname'], $atom->file_source);
+      $path = str_replace($dir, $dir .'/styles/'. $preset['name'] . '/public', $atom->file_source);
       $atom->file_transcoded = $path;
       $atom->rendered->file_transcoded_url = url($path);
     }
   }
-}
-
-
-
-/**
- * Implementation of hook_scald_action()
- */
-function scald_image_scald_action($atom, $action, $mode) {
-
 }

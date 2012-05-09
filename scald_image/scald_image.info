@@ -1,5 +1,6 @@
 name = Scald Image
-description = "Scald Provider: Provides Image Atoms from files attached to Drupal nodes (upload.module) and from CCK fields (filefield.module, imagefield.module).  Provides Transcoders from Imagecache presets (imagecache.module)."
+description = Allows the creation and edition of Images using the core Image module. Allows the use of image styles as transcoders.
 package = Scald
-core = 6.x
+core = 7.x
 dependencies[] = scald
+dependencies[] = image
