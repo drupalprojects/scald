@@ -185,7 +185,7 @@ function scald_admin_atoms() {
   $content = t('
     <h3>Scald Atoms</h3>
 
-    <h4>Currently, there are ' . db_result(db_query("SELECT COUNT(*) FROM {scald_atoms}")) . ' Atoms registered with Scald Core.</h4>
+    <h4>Currently, there are ' . db_query("SELECT COUNT(*) FROM {scald_atoms}")->fetchCol() . ' Atoms registered with Scald Core.</h4>
 
     <p>Enable the Views module to get an handy paginated table with filters which will allow you to browse your atoms</p>
 
