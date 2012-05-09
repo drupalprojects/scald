@@ -55,9 +55,20 @@ function scald_image_scald_transcoders() {
 }
 
 /**
- * Implementation of hook_scald_prerender().
+ * Implements hook_scald_fetch.
  */
-function scald_image_scald_prerender(&$atom, $context, $options, $mode) {
+function scald_image_scald_fetch($atom, $type) {
+  if ($type == 'atom') {
+    $file = file_load($atom->base_id);
+    $atom->base_entity = $file;
+    $atom->file_source = $file->uri;
+  }
+}
+
+/**
+ * Implements hook_scald_prerender().
+ */
+function scald_image_scald_prerender($atom, $context, $options, $mode) {
   if ($mode == 'transcoder' && !empty($atom->file_source)) {
     // Find out which transcoder to use. This seems unnecesarilly complex.
     $contexts = scald_contexts();
