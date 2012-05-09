@@ -107,7 +107,7 @@ function scald_atom_add_form_submit($form, &$form_state) {
 
       // Allow the source provider to alter it, filling in
       // defaults value.
-      $function = $atom->provider . '_scald_add_form_submit';
+      $function = $atom->provider . '_scald_add_form_fill';
       if (function_exists($function)) {
         $function($atom, $form, $form_state);
       }
