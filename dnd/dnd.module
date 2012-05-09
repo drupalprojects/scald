@@ -8,11 +8,11 @@ define('DND_ID_SUFFIX', '-dnd-library');
  */
 function dnd_menu() {
   $items = array();
-  $items['admin/settings/dnd'] = array(
+  $items['admin/config/content/dnd'] = array(
     'title' => 'Drag and Drop Library',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('dnd_admin_form'),
-    'description' => 'Configure drag-and-drop enabled textareas.',
+    'description' => 'Configure the ressource library used when creating content.',
     'access arguments' => array('administer dnd'),
     'file' => 'dnd.admin.inc',
   );
@@ -37,18 +37,16 @@ function dnd_theme() {
 
 
 /**
- * Implementation of hook_elements().
+ * Implementation of hook_element_info_alter().
  *
- * Overload textareas.
+ * Add a process to all textareas.
  */
-function dnd_elements() {
-  $type = array();
-  $type['textarea'] = array(
-    '#dnd-enabled' => FALSE,
-    '#dnd-settings' => NULL,
-    '#process' => array('form_expand_ahah', 'dnd_process_textarea'),
-  );
-  return $type;
+function dnd_element_info_alter(&$types) {
+  if (isset($types['textfield'])) {
+    $types['textfield']['#dnd-enabled'] = FALSE;
+    $types['textfield']['#dnd-settings'] = NULL;
+    $types['textfield']['#process'][] = 'dnd_process_textarea';
+  }
 }
 
 /**
@@ -70,7 +68,7 @@ function dnd_elements() {
  *   configuration options
  *   callback should be smart about attachment and detachment
  */
-function dnd_process_textarea($element, $edit, $form_state, $form) {
+function dnd_process_textarea($element, $form_state) {
   if (isset($element['#dnd-enabled']) && $element['#dnd-enabled']) {
     dnd_add_library();
 

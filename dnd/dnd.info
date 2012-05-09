@@ -2,5 +2,5 @@ name = DnD Library
 package = User interface
 description = Enable a drag and drop media interface for rich text editors.
 dependencies[] = wysiwyg
-core = 6.x
+core = 7.x
 
