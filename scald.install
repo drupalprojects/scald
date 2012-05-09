@@ -438,5 +438,22 @@ function scald_update_7000() {
   // Better solutions for this problems exists in Contrib, now
   // that we're going for an entity-based solutions
   db_drop_table('scald_atom_relationships');
-
+  
+  // Convert the 'scald_atom_types' variable, whose format changed
+  // between 6.x and 7.x
+  $defaults = variable_get('scald_atom_defaults', NULL);
+  if (!empty($defaults)) {
+    $temp = array();
+    $properties = array('thumbnail_source', 'description', 'actions');
+    foreach ($properties as $property) {
+      foreach ($defaults->{$property} as $name => $value) {
+        $temp[$name][$property] = $source;
+      }
+    }
+    $new_defaults = array();
+    foreach ($temp as $name => $default) {
+      $new_defaults[$name] = (object)$default;
+    }
+    variable_set('scald_atom_defaults', $new_defaults);
+  }
 }

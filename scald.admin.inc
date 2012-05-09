@@ -70,7 +70,17 @@ function scald_admin_type_form($form, $form_state, $type) {
     '#required'       => TRUE,
   );
 
-  $scald_atom_defaults = variable_get('scald_atom_defaults', NULL);
+  $defaults = variable_get('scald_atom_defaults', array());
+  if (empty($defaults) || !isset($defaults[$type_name])) {
+    $default = new stdClass;
+    $default->thumbnail_source = '';
+    $default->description = '';
+    $default->actions = '';
+  }
+  else {
+    $default = $defaults[$type_name];
+  }
+
   $form['defaults'] = array(
     '#type'         => 'fieldset',
     '#title'        => t('Defaults'),
@@ -81,7 +91,7 @@ function scald_admin_type_form($form, $form_state, $type) {
     '#type'           => 'textfield',
     '#title'          => t('Default Thumbnail Image'),
     '#description'    => t('Specify a path relative to the Drupal install directory.  This image file will be automatically resized and transcoded as appropriate when generating the actual thumbnail image.'),
-    '#default_value'  => $scald_atom_defaults->thumbnail_source[$type_name],
+    '#default_value'  => $default->thumbnail_source,
     '#size'           => 40,
     '#maxlength'      => 255,
     '#required'       => TRUE,
@@ -90,7 +100,7 @@ function scald_admin_type_form($form, $form_state, $type) {
     '#type'           => 'textfield',
     '#title'          => t('Default Description'),
     '#description'    => t('Empty strings are permitted.'),
-    '#default_value'  => $scald_atom_defaults->description[$type_name],
+    '#default_value'  => $default->description,
     '#size'           => 40,
     '#maxlength'      => 255,
     '#required'       => TRUE,
@@ -100,10 +110,15 @@ function scald_admin_type_form($form, $form_state, $type) {
     '#type'           => 'textfield',
     '#title'          => t('Default Actions bitstring'),
     '#description'    => t('Should be an integer.  Note that the numbering on the Actions Admin page does not correspond to bit order.'),
-    '#default_value'  => $scald_atom_defaults->actions[$type_name],
+    '#default_value'  => $default->actions,
     '#size'           => 10,
     '#maxlength'      => 24,
     '#required'       => TRUE,
+  );
+
+  $form['atom_type'] = array(
+    '#type' => 'value',
+    '#value' => $type_name
   );
   
   $form['submit'] = array(
@@ -123,14 +138,16 @@ function scald_admin_type_form($form, $form_state, $type) {
  *  Configuration Object is rebuilt from the db.
  */
 function scald_admin_type_form_submit($form, &$form_state) {
-  $scald_atom_defaults = variable_get('scald_atom_defaults', NULL);
-  if (empty($scald_atom_defaults)) {
-    $scald_atom_defaults = new stdClass();
+  $scald_atom_defaults = variable_get('scald_atom_defaults', array());
+  $type = $form_state['values']['atom_type'];
+
+  if (empty($scald_atom_defaults[$type])) {
+    $scald_atom_defaults[$type] = new stdClass();
   }
+
 
   foreach ($form_state['values'] as $key => $value) {
     if (substr($key, 0, 5) == 'type_') {
-      $type = substr($key, 5, -6);
       switch (substr($key, -6)) {
         case '_title':
           db_update('scald_types')
@@ -140,20 +157,21 @@ function scald_admin_type_form_submit($form, &$form_state) {
           break; // end '_title'
 
         case '_thumb':
-          $scald_atom_defaults->thumbnail_source[$type] = $value;
+          $scald_atom_defaults[$type]->thumbnail_source = $value;
           break; // end '_thumb'
 
         case '_descr':
-          $scald_atom_defaults->description[$type] = $value;
+          $scald_atom_defaults[$type]->description = $value;
           break; // end '_descr'
 
         case '_actin':
-          $scald_atom_defaults->actions[$type] = (int) $value;
+          $scald_atom_defaults[$type]->actions = (int) $value;
           break; // end '_actin'
       }
     }
   }
 
+  drupal_set_message(t('Atom settings changed'));
   variable_set('scald_atom_defaults', $scald_atom_defaults);
   scald_types(TRUE);
 } // end scald_admin_types_form_submit()
