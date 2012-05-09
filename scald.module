@@ -355,7 +355,6 @@ function scald_atom_save(&$atom) {
 
   // Clear the static caches
   entity_get_controller('scald_atom')->resetCache(array($atom->sid));
-  scald_fetch($atom->sid, TRUE);
 
   return $atom->sid;
 } // end scald_atom_save()
@@ -446,13 +445,13 @@ function scald_is_registered($sid, $rebuild = FALSE) {
   }
 
   // Build the Atom from the db
-  $registration_results = db_query("SELECT * FROM {scald_atoms} WHERE sid = %d", $sid);
+  $registration_results = db_query("SELECT * FROM {scald_atoms} WHERE sid = :sid", array(':sid' => $sid));
   if (!$registration_results) {
     // Ensure that no Atoms linger improperly post-deletion
     unset($scald_atoms[$sid]);
     return FALSE;
   }
-  $atom = db_fetch_object($registration_results);
+  $atom = $registration_results->fetchObject();
 
   if (!empty($atom)) {
     $atom->fetched = FALSE;
@@ -508,7 +507,7 @@ function scald_fetch($sid, $rebuild = FALSE) {
   // Let the Atom Type Provider handle any defaults
   $types = scald_types();
 
-  module_invoke($types[$atom->type]['provider'], 'scald_fetch', $atom, 'type');
+  module_invoke($types[$atom->type]->provider, 'scald_fetch', $atom, 'type');
 
   $atom->authors = db_select('scald_atom_authors', 'saa')
     ->fields('saa', array('weight', 'aid'))
@@ -530,15 +529,15 @@ function scald_fetch($sid, $rebuild = FALSE) {
   //  values.  NOTE: it is assumed that Atom Providers won't be monkeying with
   //  the "essentials" like the Type, Provider, SID, etc.
   $scald_atom_defaults = variable_get('scald_atom_defaults', array());
-  $defaults = $scald_atom_defautls[$atom->type];
+  $defaults = $scald_atom_defaults[$atom->type];
   if (empty($atom->file_source)) {
-    $atom->file_source = $defaults[$atom->type]->file_source;
+    $atom->file_source = $defaults->file_source;
   }
   if (empty($atom->thumbnail_source)) {
-    $atom->thumbnail_source = $defaults[$type]->thumbnail_source;
+    $atom->thumbnail_source = $defaults->thumbnail_source;
   }
   if (empty($atom->description)) {
-    $atom->description = $defaults[$type]->description;
+    $atom->description = $defaults->description;
   }
 
   $atom->fetched = TRUE;
@@ -1125,15 +1124,14 @@ function scald_user_actions($atom, $account = NULL) {
     //  {scald_role_actions} table only contains Roles which have that
     //  permission), checking for said permission is not necessary (thus saving
     //  a fairly expensive check).
-    $account->scald_actions = db_result(db_query("
+    $account->scald_actions = db_query("
       SELECT
         actions
       FROM
         {scald_role_actions}
       WHERE
-        rid = %d",
-      DRUPAL_ANONYMOUS_RID
-    ));
+        rid = :rid",
+      array(':rid' => DRUPAL_ANONYMOUS_RID))->fetchCol();
     if ($account->uid == $user->uid) {
       $user->scald_actions = $account->scald_actions;
     }
@@ -1186,7 +1184,7 @@ function scald_action_permitted($atom, $action = 'fetch', $account = NULL) {
     return FALSE;
   }
 
-  return (bool) (scald_user_actions($atom, $account) & $actions[$action]['mask']);
+  return (bool) (scald_user_actions($atom, $account) & $actions[$action]['bitmask']);
 } // end scald_action_permitted()
 
 
