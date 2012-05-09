@@ -1219,7 +1219,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
   $atom->rendered->nocache = FALSE;
 
   // Type & Atom prerenders
-  module_invoke($types[$atom->type]['provider'], 'scald_prerender', $atom, $context, $options, 'type');
+  module_invoke($types[$atom->type]->provider, 'scald_prerender', $atom, $context, $options, 'type');
   module_invoke($atom->provider, 'scald_prerender', $atom, $context, $options, 'atom');
 
   // Transcoder Provider prerender -- only if there is a Transcoder specified
@@ -1235,7 +1235,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
   // Populate default rendered members & validate other rendered members.
   $atom->rendered->title = check_plain($atom->rendered->title); // @@@TODO: Determine if it makes sense to *always* do this or make it dependant on Context render language.
   $atom->rendered->description = check_markup($atom->rendered->description, FILTER_FORMAT_DEFAULT, FALSE); // @@@TODO: Determine if this is reasonable or if it should be left to Providers
-  $atom->rendered->type = $types[$atom->type]['title'];
+  $atom->rendered->type = $types[$atom->type]->title;
 
   // Actions
   $atom->rendered->actions = array();
