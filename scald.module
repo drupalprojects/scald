@@ -354,6 +354,7 @@ function scald_atom_save(&$atom) {
   cache_clear_all($atom->sid . ':', 'cache_scald', TRUE);
 
   // Clear the static caches
+  entity_get_controller('scald_atom')->resetCache(array($atom->sid));
   scald_fetch($atom->sid, TRUE);
 
   return $atom->sid;
