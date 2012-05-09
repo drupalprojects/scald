@@ -97,7 +97,7 @@ function scald_contexts($reset = FALSE) {
 
 /**
  * Implements hook_scald_contexts_alter.
- * 
+ *
  * Adds informations on the configured transcoder formats to
  * the standard info hook output.
  */
@@ -132,6 +132,29 @@ function scald_scald_contexts_alter(&$contexts) {
  */
 function scald_actions($reset = FALSE) {
   return _scald_get_info('actions', $reset);
+}
+
+/**
+ * Implements hook_scald_actions_alter.
+ *
+ * Assigns each actions an unique bitmask.
+ */
+function scald_scald_actions_alter(&$actions) {
+  $powers = variable_get('scald_actions_powers', array('@admin' => 0));
+  $max_power = empty($powers) ? 0 : max($powers);
+  $new_power = FALSE;
+  foreach ($actions as $name => $action) {
+    if (!isset($powers[$name])) {
+      $new_power = TRUE;
+      $powers[$name] = ++$max_power;
+    }
+
+    $actions[$name]['bitmask'] = pow(2, $powers[$name]);
+  }
+
+  if ($new_power) {
+    variable_set('scald_actions_powers', $powers);
+  }
 }
 
 /**
