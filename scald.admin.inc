@@ -70,16 +70,7 @@ function scald_admin_type_form($form, $form_state, $type) {
     '#required'       => TRUE,
   );
 
-  $defaults = variable_get('scald_atom_defaults', array());
-  if (empty($defaults) || !isset($defaults[$type_name])) {
-    $default = new stdClass;
-    $default->thumbnail_source = '';
-    $default->description = '';
-    $default->actions = '';
-  }
-  else {
-    $default = $defaults[$type_name];
-  }
+  $default = scald_atom_defaults($type_name);
 
   $form['defaults'] = array(
     '#type'         => 'fieldset',
