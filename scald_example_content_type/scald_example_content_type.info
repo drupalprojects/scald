@@ -1,3 +1,0 @@
-name = Scald Example Provider based on a Content Type
-description = This module is an example of the creation of a new node type, whose node will be fed to Scald, transforming them into atoms.
-core = 6.x
