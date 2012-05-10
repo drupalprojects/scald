@@ -377,7 +377,7 @@ body {
 }
 
 .scald-menu .add-buttons {
-  background-color : #a5a9a8;
+  background : #a5a9a8 url('../icons/plus-white.png') 14px 44px no-repeat;
   border-bottom-left-radius: 5px 4px;
   padding-top: 50px;
   padding-bottom: 20px;
