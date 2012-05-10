@@ -50,7 +50,8 @@
   min-width: 160px;
 }
 .dnd-library-wrapper .view-filters .views-exposed-widget {
-  padding-right: 0;
+  margin-right: 5px;
+  float: none;
 }
 .dnd-library-wrapper .view-filters .date-month .form-item select {
   margin-right: 0;
@@ -86,6 +87,9 @@
   min-height: 70px;
   padding-top: 4px;
 }
+.dnd-library-wrapper .editor-item:hover {
+  background-color: #e3f4f0;
+}
 .dnd-library-wrapper .editor-item.bt-active {
   background: #eee;
 }
@@ -93,13 +97,36 @@
   float: left;
   width: 52px;
 }
+.dnd-library-wrapper .editor-item .image img {
+  width: 48px;
+  height: auto;
+}
+.dnd-library-wrapper .editor-item:hover img,
 .dnd-library-wrapper .editor-item.bt-active img {
   outline: 1px solid #68baf9;
 }
 .dnd-library-wrapper .editor-item .meta {
   float: left;
-  width: 210px;
+  width: 214px;
   margin-left: 0!important;/* @todo remove - quickfix to override incorrect CSS in theme */
+}
+.dnd-library-wrapper .editor-item .type {
+  float: right;
+  width: 20px;
+  height: 20px;
+  background: 100% 0 no-repeat;
+}
+.dnd-library-wrapper .editor-item .type.type-audio {
+  background-image: url('../icons/audio.png');
+}
+.dnd-library-wrapper .editor-item .type.type-image {
+  background-image: url('../icons/image.png');
+}
+.dnd-library-wrapper .editor-item .type.type-video {
+  background-image: url('../icons/video.png');
+}
+.dnd-library-wrapper .editor-item .type.type-soundslide {
+  background-image: url('../icons/soundslide.png');
 }
 .dnd-library-wrapper .editor-item .title {
   color: #666;
@@ -324,12 +351,31 @@ body {
 .scald-menu .filters {
   background-color : #959896;
   border-bottom-left-radius: 5px 4px;
+  color: #fff;
   left: 42px;
   top: 72px;
   right: 60px;
   bottom: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-top: 20px;
   position: absolute;
 }
+.scald-menu .filters input[type="text"] {
+  width: 100%;
+}
+.scald-menu .filters input[type="submit"] {
+  width: 100%;
+  font-size: 16px;
+}
+.scald-menu .filters input[type="reset"] {
+  float: right;
+  margin-top: 5px;
+}
+.scald-menu .filters .description {
+  color: #fff;
+}
+
 .scald-menu .add-buttons {
   background-color : #a5a9a8;
   border-bottom-left-radius: 5px 4px;
@@ -361,8 +407,11 @@ body {
   width: 30px;
   height: 30px;
 }
-.scald-menu .add-buttons .add-image {
+.scald-menu .add-buttons .add-audio {
   background: url('../icons/audio-large-inverted.png') 50% 50% no-repeat;
+}
+.scald-menu .add-buttons .add-image {
+  background: url('../icons/image-large-inverted.png') 50% 50% no-repeat;
 }
 .scald-menu .add-buttons .add-video {
   background: url('../icons/video-large-inverted.png') 50% 50% no-repeat;
@@ -370,8 +419,11 @@ body {
 .scald-menu .add-buttons .add-soundslide {
   background: url('../icons/soundslide-large-inverted.png') 50% 50% no-repeat;
 }
-.scald-menu .add-buttons .add-image:hover {
+.scald-menu .add-buttons .add-audio:hover {
   background-image: url('../icons/audio-large-color.png');
+}
+.scald-menu .add-buttons .add-image:hover {
+  background-image: url('../icons/image-large-color.png');
 }
 .scald-menu .add-buttons .add-video:hover {
   background-image: url('../icons/video-large-color.png');
@@ -478,11 +530,8 @@ body {
   border-bottom-left-radius: 5px;
   position: absolute;
 }
-.scald-anchor.fold {
-  background  : url("../icons/library-dark.png") 50% 50% no-repeat;
-}
-.scald-anchor.unfold {
-  background  : url("../icons/library-light.png") 50% 50% no-repeat;
+.scald-anchor:hover {
+  background-image: url("../icons/library-dark.png");
 }
 
 /** BeautyTips **/
