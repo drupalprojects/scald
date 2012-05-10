@@ -78,6 +78,12 @@ Drupal.behaviors.dndLibrary = function(context) {
 Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
   $this = $(this);
 
+  // Save the current status
+  var dndStatus = {
+    search: $this.find('.scald-menu').hasClass('search-on')
+    ,library: $this.find('.dnd-library-wrapper').hasClass('library-on')
+  };
+
   $this.html(data.menu + data.anchor + data.library);
 
   // Rearrange some element for better logic and easier theming.
@@ -85,7 +91,12 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
   $this.find('.scald-menu')
     .prepend($this.find('.view-filters .summary'))
     .append($this.find('.view-filters').addClass('filters'));
-  $this.find('.filters').html($this.find('.filters fieldset').html());
+  $this.find('.filters').html($this.find('.filters fieldset').remove('legend').html())
+    .find('legend').remove();
+  if (dndStatus.search) {
+    $this.find('.scald-menu').addClass('search-on');
+    $this.find('.dnd-library-wrapper').addClass('library-on');
+  }
   $this.find('.summary .toggle').click(function() {
     // We toggle class only when animation finishes to avoid flash back.
     $('.scald-menu').animate({left: $('.scald-menu').hasClass('search-on') ? '-42px' : '-256px'}, function() {
