@@ -53,20 +53,6 @@ Drupal.behaviors.dndLibrary = function(context) {
     return;
   }
 
-  // Start to setup autohiding library
-  $(".dnd-library-wrapper").hover(
-    function() {
-      $(this)
-        .stop(true)
-        .animate({'right': 0});
-    },
-    function() {
-      $(this)
-        .stop(true)
-        .animate({'right': -180});
-    }
-  ).css('right', -180);
-
   // Bind our functions to WYSIWYG attach / detach events
   for (editor in Drupal.settings.dndDropAreas) {
     var $editor = $('#' + editor, context);
@@ -104,6 +90,16 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
     // We toggle class only when animation finishes to avoid flash back.
     $('.scald-menu').animate({left: $('.scald-menu').hasClass('search-on') ? '-42px' : '-256px'}, function() {
       $(this).toggleClass('search-on');
+    });
+    // When display search, we certainly want to display the library, too.
+    if (!$('.dnd-library-wrapper').hasClass('library-on')) {
+      $('.scald-anchor').click();
+    }
+  });
+  $this.find('.scald-anchor').click(function() {
+    // We toggle class only when animation finishes to avoid flash back.
+    $('.dnd-library-wrapper').animate({right: $('.dnd-library-wrapper').hasClass('library-on') ? '-276px' : '0'}, function() {
+      $('.dnd-library-wrapper').toggleClass('library-on');
     });
   });
 

@@ -246,10 +246,13 @@
 .dnd-library-wrapper {
   position : fixed;
   top      : 150px;
-  right    : 0px;
+  right    : -276px;
   bottom   : 30px;
   width    : 276px!important;/* @todo remove - theme override quickfix */
   z-index  : 999;
+}
+.dnd-library-wrapper.library-on {
+  right: 0px;
 }
 
 body {
