@@ -92,7 +92,7 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
       $(this).toggleClass('search-on');
     });
     // When display search, we certainly want to display the library, too.
-    if (!$('.dnd-library-wrapper').hasClass('library-on')) {
+    if (!$('.scald-menu').hasClass('search-on') && !$('.dnd-library-wrapper').hasClass('library-on')) {
       $('.scald-anchor').click();
     }
   });
