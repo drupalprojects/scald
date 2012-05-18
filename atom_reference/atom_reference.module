@@ -234,3 +234,11 @@ function atom_reference_field_widget_form(&$form, &$form_state, $field, $instanc
   $element['sid']['#default_value'] = $default;
   return $element;
 }
+
+/**
+ * Implements hook_field_widget_error.
+ */
+function atom_reference_field_widget_error($element, $error, $form, &$form_state) {
+  $name = implode('][', $element['sid']['#array_parents']);
+  form_set_error($name, $error['message']);
+}
