@@ -3,58 +3,60 @@
  *   Provides the JavaScript behaviors for the Atom Reference field.
  */
 (function($) {
-Drupal.behaviors.atom_reference = function(context) {
-  $("div.atom_reference_drop_zone:not(.atom_reference_processed)").each(function() {
-    var $this = $(this);
-    var $reset = $("<input type='button' />")
-      .val(Drupal.t('Delete'))
-      .click(function() {
-        $(this)
-          .hide()
-          .parents('div.form-item')
-          .find('input:text')
-          .val('')
-          .end()
-          .find('div.atom_reference_drop_zone')
-          .empty()
-          .append(Drupal.t('Drop a resource here'))
-      });
-    // If the element doesn't have a value yet, hide the Delete button
-    // by default
-    if (!$this.parents('div.form-item').find('input:text').val()) {
-      $reset.css('display', 'none');
-    }
-    $this
-      .addClass('atom_reference_processed')
-      .bind('dragover', function(e) {e.preventDefault();})
-      .bind('dragenter', function(e) {e.preventDefault();})
-      .bind('drop', function(e) {
-        var dt = e.originalEvent.dataTransfer.getData('Text');
-        var ret = Drupal.atom_reference.droppable(dt, this);
-        var $this = $(this);
-        if (ret.found && ret.keepgoing) {
-          $this
-            .empty()
-            .append(Drupal.dnd.Atoms[dt].editor)
-            .parents('div.form-item')
+Drupal.behaviors.atom_reference = {
+  attach: function(context) {
+    $("div.atom_reference_drop_zone:not(.atom_reference_processed)").each(function() {
+      var $this = $(this);
+      var $reset = $("<input type='button' />")
+        .val(Drupal.t('Delete'))
+        .click(function() {
+          $(this)
+            .hide()
+            .closest('div.form-item')
             .find('input:text')
-            .val(dt)
+            .val('')
             .end()
-            .find('input:button')
-            .show();
-        }
-        else {
-          var placeholder = Drupal.t("You can't drop a resource of type %type in this field", {'%type': ret.type});
-          $this.empty().append(placeholder);
-        }
-        e.preventDefault();
-      })
-      .parents('div.form-item')
-      .find('input')
-      .css('display', 'none')
-      .end()
-      .append($reset);
-  });
+            .find('div.atom_reference_drop_zone')
+            .empty()
+            .append(Drupal.t('Drop a resource here'))
+        });
+      // If the element doesn't have a value yet, hide the Delete button
+      // by default
+      if (!$this.closest('div.form-item').find('input:text').val()) {
+        $reset.css('display', 'none');
+      }
+      $this
+        .addClass('atom_reference_processed')
+        .bind('dragover', function(e) {e.preventDefault();})
+        .bind('dragenter', function(e) {e.preventDefault();})
+        .bind('drop', function(e) {
+          var dt = e.originalEvent.dataTransfer.getData('Text');
+          var ret = Drupal.atom_reference.droppable(dt, this);
+          var $this = $(this);
+          if (ret.found && ret.keepgoing) {
+            $this
+              .empty()
+              .append(Drupal.dnd.Atoms[dt].editor)
+              .closest('div.form-item')
+              .find('input:text')
+              .val(dt)
+              .end()
+              .find('input:button')
+              .show();
+          }
+          else {
+            var placeholder = Drupal.t("You can't drop a resource of type %type in this field", {'%type': ret.type});
+            $this.empty().append(placeholder);
+          }
+          e.preventDefault();
+        })
+        .closest('div.form-item')
+        .find('input')
+        .css('display', 'none')
+        .end()
+        .append($reset);
+    });
+  }
 }
 
 if (!Drupal.atom_reference) {

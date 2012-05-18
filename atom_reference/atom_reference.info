@@ -1,7 +1,7 @@
 name = Atom Reference
 package = Scald
-core = 6.x
+core = 7.x
 
-dependencies[] = content
+dependencies[] = field
 dependencies[] = scald
 dependencies[] = dnd

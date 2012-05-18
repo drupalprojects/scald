@@ -13,54 +13,90 @@ function atom_reference_field_info() {
     'atom_reference' => array(
       'label' => t('Atom Reference'),
       'description' => 'This field stores the ID of a related atom as an integer value',
+      'instance_settings' => array(
+        'referencable_types' => array()
+      ),
+      'default_widget' => 'textfield',
+      'default_formatter' => 'title',
     )
   );
 }
 
 /**
- * Implements hook_field_settings().
+ * Implements hook_field_instance_settings_form().
  */
-function atom_reference_field_settings($op, $field) {
-  switch ($op) {
-    case 'form':
-      $types = _scald_types();
-      $options = array();
-      foreach(_scald_types() as $name => $type) {
-        $options[$name] = $type['title'];
-      }
-      $form = array();
-      $form['referencable_types'] = array(
-        '#type' => 'checkboxes',
-        '#title' => t('Atom types that can be referenced'),
-        '#multiple' => TRUE,
-        '#options' => $options,
-        '#default_value' => $field['referencable_types']
+function atom_reference_field_instance_settings_form($field, $instance) {
+  $options = array();
+  foreach(scald_types() as $name => $type) {
+    $options[$name] = $type->title;
+  }
+  $form = array();
+  $form['referencable_types'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Atom types that can be referenced'),
+    '#multiple' => TRUE,
+    '#options' => $options,
+    '#default_value' => $instance['settings']['referencable_types']
+  );
+  return $form;
+}
+
+/**
+ * Implements hook_field_schema().
+ */
+function atom_reference_field_schema($field) {
+  return array(
+    'columns' => array(
+      'sid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE
+      )
+    ),
+    'indexes' => array(
+      'sid' => array('sid')
+    )
+  );
+}
+
+/**
+ * Implements hook_field_views_data().
+ */
+function atom_reference_field_views_data($field) {
+  $data = field_views_field_default_views_data($field);
+  $current_table = _field_sql_storage_tablename($field);
+  $column = _field_sql_storage_columnname($field['field_name'], 'sid');
+
+  // Relationship: add a relationship for related atom.
+  $data[$current_table][$column]['relationship'] = array(
+    'base' => 'scald_atoms',
+    'field' => $column,
+    'handler' => 'views_handler_relationship',
+    'label' => t($field['widget']['label']),
+    'field_name' => $field['field_name'],
+  );
+
+  return $data;
+}
+
+/**
+ * Implements hook_field_validate().
+ */
+function atom_reference_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
+  // Ensure that the types of the referenced atoms match the one of those
+  // that were defined in the field configuration.
+  $types = $instance['settings']['referencable_types'];
+  foreach ($items as $delta => $item) {
+    if (empty($item['sid'])) {
+      continue;
+    }
+    $atom = scald_fetch($item['sid']);
+    if (!isset($types[$atom->type]) || empty($types[$atom->type])) {
+      $errors[$field['field_name']][$langcode][$delta][] = array(
+        'error' => 'atom_reference_bad_type',
+        'message' => t("Atom %title is of type %type, which can't be referenced in field %field", array('%title' => $atom->title, '%type' => $atom->type, '%field' => $instance['label']))
       );
-      return $form;
-    case 'save':
-      return array('referencable_types');
-
-    case 'database columns':
-      $columns = array(
-        'sid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE, 'index' => TRUE)
-      );
-      return $columns;
-
-    case 'views data':
-      $data = content_views_field_views_data($field);
-      $db_info = content_database_info($field);
-      $table_alias = content_views_tablename($field);
-
-      // Relationship: add a relationship for related atom.
-      $data[$table_alias][$field['field_name'] .'_sid']['relationship'] = array(
-        'base' => 'scald_atoms',
-        'field' => $db_info['columns']['sid']['column'],
-        'handler' => 'content_handler_relationship',
-        'label' => t($field['widget']['label']),
-        'content_field_name' => $field['field_name'],
-      );
-
-      return $data;
+    }
   }
 }
 
@@ -69,19 +105,6 @@ function atom_reference_field_settings($op, $field) {
  */
 function atom_reference_field($op, &$node, $field, &$items, $teaser, $page) {
   switch ($op) {
-    case 'validate':
-      // Ensure that the types of the referenced atoms match the one of those
-      // that were defined in the field configuration.
-      $types = $field['referencable_types'];
-      foreach ($items as $item) {
-        if (!$item['sid']) {
-          continue;
-        }
-        $atom = scald_fetch($item['sid']);
-        if (!isset($types[$atom->type]) || empty($types[$atom->type])) {
-          form_set_error('toto', t("Atom %title is of type %type, which can't be referenced in field %field", array('%title' => $atom->title, '%type' => $atom->type, '%field' => $field['widget']['label'])));
-        }
-      }
     case 'sanitize':
       // Get some safe values about the references atoms, checking that
       // they still exist and are fetchable.
@@ -103,9 +126,9 @@ function atom_reference_field($op, &$node, $field, &$items, $teaser, $page) {
 }
 
 /**
- * Implements hook_content_is_empty().
+ * Implements hook_field_is_empty().
  */
-function atom_reference_content_is_empty($item, $field) {
+function atom_reference_field_is_empty($item, $field) {
   return empty($item['sid']);
 }
 
@@ -114,123 +137,70 @@ function atom_reference_content_is_empty($item, $field) {
  */
 function atom_reference_field_formatter_info() {
   return array(
-    'default' => array(
+    'title' => array(
       'label' => 'Title',
       'field types' => array('atom_reference'),
-      'multiple values' => CONTENT_HANDLE_CORE
     ),
     'library' => array(
       'label' => 'Library',
       'field types' => array('atom_reference'),
-      'multiple values' => CONTENT_HANDLE_CORE
     ),
     'editor' => array(
       'label' => 'Editor',
       'field types' => array('atom_reference'),
-      'multiple values' => CONTENT_HANDLE_CORE
     ),
   );
 }
 
 /**
- * Implements hook_theme().
- * Defines all the theme callbacks used by the formatters mentionned above,
- * in hook_field_formatter_info, and the theme function releated to the new
- * widget elements we're declaring below.
+ * Implements hook_field_formatter_view.
  */
-function atom_reference_theme() {
-  return array(
-    'atom_reference_formatter_default' => array(
-      'arguments' => array('element' => NULL)
-    ),
-    'atom_reference_formatter_library' => array(
-      'arguments' => array('element' => NULL)
-    ),
-    'atom_reference_formatter_editor' => array(
-      'arguments' => array('element' => NULL)
-    ),
-    'atom_reference_textfield' => array(
-      'arguments' => array('element' => NULL)
-    )
-  );
-}
+function atom_reference_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
 
-/**
- * Theme function for the 'default' formatter.
- */
-function theme_atom_reference_formatter_default($element) {
-  return scald_render($element['#item']['sid'], 'title');
-}
+  foreach ($items as $delta => $item) {
+    $sid = $item['sid'];
+    switch ($display['type']) {
+      case 'title':
+        $element[$delta] = array('#markup' => scald_render($sid, 'title'));
+        break;
 
-/**
- * Theme function for the 'library' formatter.
- */
-function theme_atom_reference_formatter_library($element) {
-  return scald_render($element['#item']['sid'], 'sdl_library_item');
-}
+      case 'library':
+        $element[$delta] = array('#markup' => scald_render($sid, 'sdl_library_item'));
+        break;
 
-/**
- * Theme function for the 'editor' formatter.
- */
-function theme_atom_reference_formatter_editor($element) {
-  return scald_render($element['#item']['sid'], 'sdl_editor_representation');
-}
-
-/**
- * Implements hook_widget_info.
- */
-function atom_reference_widget_info() {
-  return array(
-    'atom_reference_textfield' => array(
-      'label' => t('Text field'),
-      'field types' => array('atom_reference'),
-      'multiple values' => CONTENT_HANDLE_CORE
-    )
-  );
-}
-
-/**
- * Implements hook_elements.
- */
-function atom_reference_elements() {
-  return array(
-    'atom_reference_textfield' => array(
-      '#input' => TRUE,
-      '#delta' => 0,
-      '#columns' => array('sid'),
-      '#process' => array('atom_reference_textfield_process'),
-    ),
-  );
-}
-
-/**
- * Implements hook_widget.
- */
-function atom_reference_widget(&$form, &$form_state, $field, $items, $delta = 0) {
-  if ($field['referencable_types']) {
-    $types = array_keys(array_filter($field['referencable_types']));
+      case 'editor':
+        $element[$delta] = array('#markup' => scald_render($sid, 'editor'));
+        break;
+    }
   }
-  else {
-    $types = array();
-  }
-  $element = array(
-    '#type' => $field['widget']['type'],
-    '#default_value' => isset($items[$delta]) ? $items[$delta] : '',
-    '#types' => $types
-  );
+
   return $element;
 }
 
 /**
- * Process an individual element, building the actual form api components needed
- * for this widget.
+ * Implements hook_field_widget_info.
  */
-function atom_reference_textfield_process($element, $edit, $form_state, $form) {
+function atom_reference_field_widget_info() {
+  return array(
+    'atom_reference_textfield' => array(
+      'label' => t('Text field'),
+      'field types' => array('atom_reference'),
+    )
+  );
+}
+
+/**
+ * Implements hook_field_widget_form.
+ */
+function atom_reference_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   dnd_add_library();
 
   drupal_add_js(drupal_get_path('module', 'atom_reference') . '/atom_reference.js');
   drupal_add_css(drupal_get_path('module', 'atom_reference') . '/atom_reference.css');
-  $default = isset($element['#value']['sid']) ? $element['#value']['sid'] : '';
+
+  // Get the default value, and format the placeholder accordingly.
+  $default = isset($items[$delta]) ? $items[$delta] : '';
   if ($default) {
     $prefix = '<div class="atom_reference_drop_zone">' . scald_render($default, 'sdl_editor_representation') .'</div>';
   }
@@ -239,31 +209,28 @@ function atom_reference_textfield_process($element, $edit, $form_state, $form) {
     $prefix = '<div class="atom_reference_drop_zone"><em>' . $placeholder . '</em></div>';
   }
 
+  $types = $instance['settings']['referencable_types'];
+  $all = scald_types();
+  $options = array();
+  foreach ($types as $name => $value) {
+    if ($value && isset($all[$name])) {
+      $options[$name] = $all[$name]->title;
+    }
+  }
+
   $help = format_plural(
-    count($element['#types']),
+    count($options),
     'Allowed resource format: %types',
     'Allowed resource formats: %types',
-    array('%types' => implode(', ', $element['#types']))
+    array('%types' => implode(', ', $options))
   );
-  $element['sid'] = array(
-    '#type' => 'textfield',
-    '#default_value' => $default,
-    '#title' => $element['#title'],
-    '#description' => $element['#description'] . $help,
-    '#required' => $element['#required'],
-    '#field_name' => $element['#field_name'],
-    '#type_name' => $element['#type_name'],
-    '#delta' => $element['#delta'],
-    '#columns' => $element['#columns'],
-    '#attributes' => array('atom:types' => implode(',', $element['#types'])),
-    '#field_prefix' => $prefix
-  );
-  return $element;
-}
 
-/**
- * Theme function for the custom widget we've defined.
- */
-function theme_atom_reference_textfield($element) {
-  return $element['#children'];
+  $element['sid'] = $element;
+  $element['sid']['#description'] .= $help;
+
+  $element['sid']['#type'] = 'textfield';
+  $element['sid']['#field_prefix'] = $prefix;
+  $element['sid']['#attributes'] = array('data-types' => implode(',', array_keys($options)));
+  $element['sid']['#default_value'] = $default;
+  return $element;
 }
