@@ -184,7 +184,7 @@ function atom_reference_field_formatter_view($entity_type, $entity, $field, $ins
 function atom_reference_field_widget_info() {
   return array(
     'atom_reference_textfield' => array(
-      'label' => t('Text field'),
+      'label' => t('Drop box'),
       'field types' => array('atom_reference'),
     )
   );
