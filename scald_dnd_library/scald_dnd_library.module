@@ -281,8 +281,8 @@ function theme_sdl_library_item($atom, $image) {
   }
   $return .= "
   <div class='meta'>
+    <div class='type type-" . strtolower($informations->type) ."'></div>
     <div class='title'>{$informations->title}</div>
-    <div class='date'>{$informations->type}</div>
     <div class='author'>{$informations->authors[0]['link']}</div>
     {$links}
   </div>

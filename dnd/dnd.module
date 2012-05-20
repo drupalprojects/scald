@@ -35,7 +35,6 @@ function dnd_theme() {
   );
 }
 
-
 /**
  * Implementation of hook_element_info_alter().
  *

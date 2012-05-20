@@ -19,8 +19,10 @@ Drupal.dnd.btSettings = {
   'spikeGirth': 9,
   'corner-radius' : 3,
   'strokeWidth': 1,
-  'fill': '#ffd',
-  'strokeStyle': '#555',
+  'fill': '#fff',
+  'shadow': true,
+  'shadowColor': '#666',
+  'strokeStyle': '#999',
   'closeWhenOthersOpen': true
 };
 
@@ -51,20 +53,6 @@ Drupal.behaviors.dndLibrary = function(context) {
     return;
   }
 
-  // Start to setup autohiding library
-  $(".dnd-library-wrapper").hover(
-    function() {
-      $(this)
-        .stop(true)
-        .animate({'right': 0});
-    },
-    function() {
-      $(this)
-        .stop(true)
-        .animate({'right': -180});
-    }
-  ).css('right', -180);
-
   // Bind our functions to WYSIWYG attach / detach events
   for (editor in Drupal.settings.dndDropAreas) {
     var $editor = $('#' + editor, context);
@@ -90,7 +78,41 @@ Drupal.behaviors.dndLibrary = function(context) {
 Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
   $this = $(this);
 
-  $this.html(data.library);
+  // Save the current status
+  var dndStatus = {
+    search: $this.find('.scald-menu').hasClass('search-on')
+    ,library: $this.find('.dnd-library-wrapper').hasClass('library-on')
+  };
+
+  $this.html(data.menu + data.anchor + data.library);
+
+  // Rearrange some element for better logic and easier theming.
+  // @todo We'd better do it on server side.
+  $this.find('.scald-menu')
+    .prepend($this.find('.view-filters .summary'))
+    .append($this.find('.view-filters').addClass('filters'));
+  $this.find('.filters').html($this.find('.filters fieldset').remove('legend').html())
+    .find('legend').remove();
+  if (dndStatus.search) {
+    $this.find('.scald-menu').addClass('search-on');
+    $this.find('.dnd-library-wrapper').addClass('library-on');
+  }
+  $this.find('.summary .toggle').click(function() {
+    // We toggle class only when animation finishes to avoid flash back.
+    $('.scald-menu').animate({left: $('.scald-menu').hasClass('search-on') ? '-42px' : '-256px'}, function() {
+      $(this).toggleClass('search-on');
+    });
+    // When display search, we certainly want to display the library, too.
+    if (!$('.scald-menu').hasClass('search-on') && !$('.dnd-library-wrapper').hasClass('library-on')) {
+      $('.scald-anchor').click();
+    }
+  });
+  $this.find('.scald-anchor').click(function() {
+    // We toggle class only when animation finishes to avoid flash back.
+    $('.dnd-library-wrapper').animate({right: $('.dnd-library-wrapper').hasClass('library-on') ? '-276px' : '0'}, function() {
+      $('.dnd-library-wrapper').toggleClass('library-on');
+    });
+  });
 
   var settings = Drupal.settings.dndDropAreas[editor.get(0).id];
   var params = Drupal.wysiwyg.instances[editor.get(0).id];
