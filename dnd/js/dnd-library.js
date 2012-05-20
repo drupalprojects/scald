@@ -26,6 +26,8 @@ Drupal.dnd.btSettings = {
   'closeWhenOthersOpen': true
 };
 
+(function($) {
+
 /**
  *  Extend jQuery a bit
  *
@@ -33,22 +35,21 @@ Drupal.dnd.btSettings = {
  *  often have non-breaking spaces and <br /> tags).  An exception is required
  *  to make this work in IE.
  */
-(function($) {
-  // Custom selectors
-  $.extend($.expr[":"], {
-    'dnd_empty' : function(a, i, m) {
-      return !$(a).filter(function(i) {
-        return !$(this).is('br');
-      }).length && !$.trim(a.textContent || a.innerText||$(a).text() || "");
-    }
-  });
-}) (jQuery);
+// Custom selectors
+$.extend($.expr[":"], {
+  'dnd_empty' : function(a, i, m) {
+    return !$(a).filter(function(i) {
+      return !$(this).is('br');
+    }).length && !$.trim(a.textContent || a.innerText||$(a).text() || "");
+  }
+});
 
 /**
  * Initialize and load drag and drop library and pass off rendering and
  * behavior attachment.
  */
-Drupal.behaviors.dndLibrary = function(context) {
+Drupal.behaviors.dndLibrary = {
+attach: function(context, settings) {
   if (!Drupal.settings.dndDropAreas || Drupal.settings.dnd.suppress) {
     return;
   }
@@ -62,20 +63,20 @@ Drupal.behaviors.dndLibrary = function(context) {
     $editor.bind('wysiwygDetach', Drupal.behaviors.dndLibrary.detach_library);
   }
 
-  if ($("#node-form:not(.dnd-processed)").length) {
-    $("#node-form")
+  if ($(".node-form:not(.dnd-processed)").length) {
+    $(".node-form")
       .addClass('dnd-processed')
       .append('<div class="dnd-library-wrapper"></div>');
-    var wrapper = $('#node-form .dnd-library-wrapper');
+    var wrapper = $('.node-form .dnd-library-wrapper');
     $editor = $("<a />");
     wrapper.library_url = Drupal.settings.dnd.url;
     $.getJSON(wrapper.library_url, function(data) {
       Drupal.behaviors.dndLibrary.renderLibrary.call(wrapper, data, $editor);
     });
   }
-}
+},
 
-Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
+renderLibrary: function(data, editor) {
   $this = $(this);
 
   // Save the current status
@@ -89,10 +90,8 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
   // Rearrange some element for better logic and easier theming.
   // @todo We'd better do it on server side.
   $this.find('.scald-menu')
-    .prepend($this.find('.view-filters .summary'))
+    .prepend($this.find('.summary'))
     .append($this.find('.view-filters').addClass('filters'));
-  $this.find('.filters').html($this.find('.filters fieldset').remove('legend').html())
-    .find('legend').remove();
   if (dndStatus.search) {
     $this.find('.scald-menu').addClass('search-on');
     $this.find('.dnd-library-wrapper').addClass('library-on');
@@ -259,22 +258,23 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
 
   // Attach all the behaviors to our new HTML fragment
   Drupal.attachBehaviors($this);
-}
+},
 
 // Dynamically compose a callback based on the editor name
-Drupal.behaviors.dndLibrary.attach_library = function(e, data) {
+attach_library: function(e, data) {
   var settings = $.extend({idSelector: Drupal.behaviors.dndLibrary.idSelector}, Drupal.settings.dndDropAreas[data.field]);
   var editor_fn = 'attach_' + data.editor;
   if ($.isFunction(window.Drupal.behaviors.dndLibrary[editor_fn])) {
     window.Drupal.behaviors.dndLibrary[editor_fn](data, settings);
   }
-}
+},
 
 // Do garbage collection on detach
-Drupal.behaviors.dndLibrary.detach_library = function(e, data) {}
+detach: function() {
+},
 
 // Basic textareas
-Drupal.behaviors.dndLibrary.attach_none = function(data, settings) {
+attach_none: function(data, settings) {
   settings = $.extend({
     targets: $('#'+ data.field),
     processTextAreaClick: function(clicked, representation_id, e, data) {
@@ -292,10 +292,10 @@ Drupal.behaviors.dndLibrary.attach_none = function(data, settings) {
     }
   }, settings);
   $(settings.drop_selector).dnd(settings);
-}
+},
 
 // Attach TinyMCE
-Drupal.behaviors.dndLibrary.attach_tinymce = function(data, settings) {
+attach_tinymce: function(data, settings) {
   var tiny_instance = tinyMCE.getInstanceById(data.field);
 
   // If the Tiny instance exists, attach directly, otherwise wait until Tiny
@@ -312,17 +312,17 @@ Drupal.behaviors.dndLibrary.attach_tinymce = function(data, settings) {
       }
     }, 100);
   }
-}
+},
 
-Drupal.behaviors.dndLibrary.idSelector = function(element) {
+idSelector: function(element) {
   if ($(element).is('img')) {
     return $.url.setUrl(element.src).param('dnd_id');
   }
   return false;
-}
+},
 
 // Really attach TinyMCE
-Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_instance) {
+_attach_tinymce: function(data, settings, tiny_instance) {
   var ed = tiny_instance, dom = ed.dom, s = ed.selection;
 
   settings = $.extend({
@@ -446,11 +446,10 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
   }, settings);
 
   $(settings.drop_selector).dnd(settings);
-}
-
+},
 
 // Keep a counter of times a representation ID has been used
-Drupal.behaviors.dndLibrary.countElements = function(target, representation_id, decrement) {
+countElements: function(target, representation_id, decrement) {
   var counter = $(target).data('dnd_representation_counter');
   if (!counter) {
     counter = {}
@@ -462,6 +461,7 @@ Drupal.behaviors.dndLibrary.countElements = function(target, representation_id, 
   }
   $(target).data('dnd_representation_counter', counter);
   return counter[representation_id];
+}
 }
 
 /**
@@ -477,3 +477,4 @@ Drupal.dnd.refreshLibraries = function() {
     });
   }
 }
+}) (jQuery);

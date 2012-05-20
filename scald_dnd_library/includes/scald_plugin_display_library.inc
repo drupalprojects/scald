@@ -103,9 +103,15 @@ class scald_plugin_display_library extends views_plugin_display_page {
     if (!empty($summary['sort'])) {
       $header .= '<div class="sort">'. $summary['sort'] .'</div>';
     }
-    $header .= theme('item_list', $summary['criteria']);
+    if (!isset($summary['criteria'])) {
+      // @todo remove this workaround. Normally is it always set.
+      $summary['criteria'] = array();
+    }
+    $header .= theme('item_list', array('items' => $summary['criteria']));
     $header .= '</div>';
-    $library['library'] = preg_replace('#</fieldset>#', '</fieldset>'. $header, $library['library'], 1);
+    //@todo verify: D7 Views exposed filter does not use fieldset.
+    //$library['library'] = preg_replace('#</fieldset>#', '</fieldset>'. $header, $library['library'], 1);
+    $library['library'] .= $header;
     foreach ($this->view->result as $result) {
       $sid = $result->sid;
       scald_dnd_library_add_item($library, $sid);
@@ -121,6 +127,7 @@ class scald_plugin_display_library extends views_plugin_display_page {
     $library['menu'] = '<div class="scald-menu"><div class="add-buttons">'. theme_item_list($buttons) .'</div></div>';
     $library['library'] = '<div class="scald-library">' . $library['library'] . '</div>';
     $library['anchor'] = '<div class="scald-anchor"></div>';
-    drupal_json($library);
+    drupal_json_output($library);
   }
 }
+

@@ -5,6 +5,7 @@
  *   but I haven't figured out a cleaner way to do this yet.
  */
 class scald_plugin_style_library extends views_plugin_style {
+
   function option_definition() {
     $options = parent::option_definition();
 
@@ -54,3 +55,4 @@ class scald_plugin_style_library extends views_plugin_style {
     return;
   }
 }
+

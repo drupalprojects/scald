@@ -22,10 +22,14 @@ function scald_dnd_library_menu() {
 }
 
 /**
- * Implementation of hook_perm().
+ * Implementation of hook_permission().
  */
-function scald_dnd_library_perm() {
-  return array('access scald dnd library');
+function scald_dnd_library_permission() {
+  return array(
+    'access scald dnd library' => array(
+      'title' => t('Access Scald DnD Library'),
+    ),
+  );
 }
 
 /**
@@ -33,13 +37,30 @@ function scald_dnd_library_perm() {
  */
 function scald_dnd_library_theme() {
   return array(
-    'sdl_header' => array('arguments' => array('page' => NULL, 'count' => 0, 'form' => NULL), 'template' => 'sdl-header'),
-    'sdl_library' => array('arguments' => array('page' => NULL, 'library_items' => NULL), 'template' => 'sdl-library'),
-    'sdl_footer' => array('arguments' => array('page' => NULL, 'count' => 0, 'pager' => NULL), 'template' => 'sdl-footer'),
-    'sdl_library_item' => array('arguments' => array('informations' => array(), 'image' => NULL)),
-    'sdl_editor_item' => array('arguments' => array('informations' => array(), 'image' => NULL)),
-    'sdl_editor_legend' => array('arguments' => array('atom' => array())),
-    'sdl_preview_item' => array('arguments' => array('atom' => array(), 'image' => NULL))
+    'sdl_header' => array(
+      'variables' => array('page' => NULL, 'count' => 0, 'form' => NULL),
+      'template' => 'sdl-header',
+    ),
+    'sdl_library' => array(
+      'variables' => array('page' => NULL, 'library_items' => NULL),
+      'template' => 'sdl-library',
+    ),
+    'sdl_footer' => array(
+      'variables' => array('page' => NULL, 'count' => 0, 'pager' => NULL),
+      'template' => 'sdl-footer',
+    ),
+    'sdl_library_item' => array(
+      'variables' => array('informations' => array(), 'image' => NULL),
+    ),
+    'sdl_editor_item' => array(
+      'variables' => array('informations' => array(), 'image' => NULL),
+    ),
+    'sdl_editor_legend' => array(
+      'variables' => array('atom' => array()),
+    ),
+    'sdl_preview_item' => array(
+      'variables' => array('atom' => array(), 'image' => NULL),
+    ),
   );
 }
 
@@ -294,8 +315,8 @@ function theme_sdl_library_item($atom, $image) {
 /**
  * Returns HTML for an atom rendered in the "Editor Representation" context.
  */
-function theme_sdl_editor_item($informations, $image) {
-  $data = !empty($informations->player) ? $informations->player : $image;
+function theme_sdl_editor_item($variables) {
+  $data = !empty($variables['informations']->player) ? $variables['informations']->player : $variables['image'];
   return "
   <div class='image'>
     {$data}
@@ -306,7 +327,8 @@ function theme_sdl_editor_item($informations, $image) {
 /**
  * Returns HTML for the legend of an atom, used in the Editor Representation context.
  */
-function theme_sdl_editor_legend($atom) {
+function theme_sdl_editor_legend($variables) {
+  $atom = $variables['atom'];
   $informations = $atom->rendered;
   $by = isset($informations->authors[0]['link']) ? $informations->authors[0]['link'] : $informations->publisher['link'];
   $by = t('by %name', array('%name' => $by));
@@ -320,7 +342,9 @@ function theme_sdl_editor_legend($atom) {
 /**
  * Returns HTML for an atom rendered in the "Preview" context.
  */
-function theme_sdl_preview_item($atom, $image) {
+function theme_sdl_preview_item($variables) {
+  $atom = $variables['atom'];
+  $image = $variables['image'];
   $resource_label = t('Resource');
   $informations_label = t('Informations');
   $resource = theme('sdl_editor_item', $atom->rendered, $image);
@@ -348,8 +372,9 @@ function theme_sdl_preview_item($atom, $image) {
  */
 function scald_dnd_library_form_alter(&$form, $form_state, $form_id) {
   if ($form_id == 'views_exposed_form') {
+    return;
     // Check if the style plugin is scald_library.
-    $view = $form['#parameters'][1]['view'];
+    $view = $form_state['view'];
     if ($view->display_handler->get_option('style_plugin') == 'scald_library') {
       // Put the filters in a fieldset... Hackish.
       $filter = t('Filter');
@@ -396,10 +421,12 @@ function scald_dnd_library_form_alter(&$form, $form_state, $form_id) {
  */
 function scald_dnd_library_views_api() {
   return array(
-    'api' => 2,
-    'path' => drupal_get_path('module', 'scald_dnd_library') .'/includes',
+    'api' => 3,
+    'path' => drupal_get_path('module', 'scald_dnd_library') . '/includes',
   );
 }
+// @todo Why the following file is sometimes not automatically included?
+module_load_include('inc', 'scald_dnd_library', 'includes/scald_dnd_library.views');
 
 /**
  * Provides default ImageCache presets that can be overridden by site
@@ -432,3 +459,4 @@ function scald_dnd_library_imagecache_default_presets() {
   );
   return $presets;
 }
+
