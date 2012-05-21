@@ -72,7 +72,7 @@ function atom_reference_field_views_data($field) {
     'base' => 'scald_atoms',
     'field' => $column,
     'handler' => 'views_handler_relationship',
-    'label' => t($field['widget']['label']),
+    'label' => $data[$current_table][$field['field_name']]['title'],
     'field_name' => $field['field_name'],
   );
 
