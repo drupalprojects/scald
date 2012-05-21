@@ -95,6 +95,7 @@ function scald_dnd_library_views_default_views() {
         'button' => 'Remplacer',
       ),
     ),
+    /*
     'representation' => array(
       'label' => 'Representation',
       'alter' => array(
@@ -125,6 +126,7 @@ function scald_dnd_library_views_default_views() {
       'field' => 'representation',
       'relationship' => 'none',
     ),
+    */
   ));
   $handler->override_option('filters', array(
     'title' => array(
@@ -168,6 +170,7 @@ function scald_dnd_library_views_default_views() {
         'button' => 'Remplacer',
       ),
     ),
+    /*
     'type' => array(
       'operator' => 'in',
       'value' => array(),
@@ -208,6 +211,7 @@ function scald_dnd_library_views_default_views() {
       ),
       'relationship' => 'none',
     ),
+    */
   ));
   $handler->override_option('access', array(
     'type' => 'perm',
@@ -241,6 +245,7 @@ function scald_dnd_library_views_default_views() {
   ));
   $handler = $view->new_display('dnd_library', 'Scald Library', 'dnd_library_2');
   $handler->override_option('fields', array(
+  /*
     'representation' => array(
       'label' => '',
       'alter' => array(
@@ -274,6 +279,7 @@ function scald_dnd_library_views_default_views() {
         'button' => 'Utiliser la valeur par défaut',
       ),
     ),
+    */
     'title' => array(
       'label' => 'Titre',
       'alter' => array(

@@ -82,7 +82,7 @@ class scald_plugin_display_library extends views_plugin_display_page {
           $value = implode(', ', $value);
         }
         if ($value) {
-          $summary[] = $filter->options['expose']['label'] .': '. $value;
+          $summary['criteria'][] = $filter->options['expose']['label'] .': '. $value;
         }
       }
     }
@@ -92,20 +92,42 @@ class scald_plugin_display_library extends views_plugin_display_page {
       $label = $this->view->field[$sort]->options['label'];
       $order = $this->view->style_plugin->order;
       $orders = array('asc' => t('Ascending'), 'desc' => t('Descending'));
-      $summary[] = t('Sort'). ': '. $label .' '. $orders[$order];
+      $summary['sort'] = t('<span class="label">Sort:</span> @criteria', array('@criteria' => $label .' '. $orders[$order]));
     }
     $this->view->hide_admin_links = TRUE;
     $view = $this->view->render();
     $messages = theme('status_messages');
     $library['library'] = $messages . $view;
-    if ($summary) {
-      $summary = theme('item_list', $summary);
-      $library['library'] = preg_replace('#</fieldset>#', '</fieldset>'. $summary, $library['library'], 1);
+    $header = '<div class="summary">';
+    $header .= '<div class="toggle"></div><div class="title">'. t('search') .'</div>';
+    if (!empty($summary['sort'])) {
+      $header .= '<div class="sort">'. $summary['sort'] .'</div>';
     }
+    if (!isset($summary['criteria'])) {
+      // @todo remove this workaround. Normally is it always set.
+      $summary['criteria'] = array();
+    }
+    $header .= theme('item_list', array('items' => $summary['criteria']));
+    $header .= '</div>';
+    //@todo verify: D7 Views exposed filter does not use fieldset.
+    //$library['library'] = preg_replace('#</fieldset>#', '</fieldset>'. $header, $library['library'], 1);
+    $library['library'] .= $header;
     foreach ($this->view->result as $result) {
       $sid = $result->sid;
       scald_dnd_library_add_item($library, $sid);
     }
-    drupal_json($library);
+    $atom_types = module_invoke_all('scald_atom_quickadd');
+    $buttons = array();
+    foreach ($atom_types as $type) {
+      $buttons[] = array(
+        'data' => l(t($type['type']), $type['addpath'], array('attributes' => array('class' => $type['class']))),
+        'class' => 'add-' . strtolower($type['type']),
+      );
+    }
+    $library['menu'] = '<div class="scald-menu"><div class="add-buttons">'. theme_item_list($buttons) .'</div></div>';
+    $library['library'] = '<div class="scald-library">' . $library['library'] . '</div>';
+    $library['anchor'] = '<div class="scald-anchor"></div>';
+    drupal_json_output($library);
   }
 }
+

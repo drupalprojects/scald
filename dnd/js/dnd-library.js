@@ -19,10 +19,14 @@ Drupal.dnd.btSettings = {
   'spikeGirth': 9,
   'corner-radius' : 3,
   'strokeWidth': 1,
-  'fill': '#ffd',
-  'strokeStyle': '#555',
+  'fill': '#fff',
+  'shadow': true,
+  'shadowColor': '#666',
+  'strokeStyle': '#999',
   'closeWhenOthersOpen': true
 };
+
+(function($) {
 
 /**
  *  Extend jQuery a bit
@@ -31,39 +35,24 @@ Drupal.dnd.btSettings = {
  *  often have non-breaking spaces and <br /> tags).  An exception is required
  *  to make this work in IE.
  */
-(function($) {
-  // Custom selectors
-  $.extend($.expr[":"], {
-    'dnd_empty' : function(a, i, m) {
-      return !$(a).filter(function(i) {
-        return !$(this).is('br');
-      }).length && !$.trim(a.textContent || a.innerText||$(a).text() || "");
-    }
-  });
-}) (jQuery);
+// Custom selectors
+$.extend($.expr[":"], {
+  'dnd_empty' : function(a, i, m) {
+    return !$(a).filter(function(i) {
+      return !$(this).is('br');
+    }).length && !$.trim(a.textContent || a.innerText||$(a).text() || "");
+  }
+});
 
 /**
  * Initialize and load drag and drop library and pass off rendering and
  * behavior attachment.
  */
-Drupal.behaviors.dndLibrary = function(context) {
+Drupal.behaviors.dndLibrary = {
+attach: function(context, settings) {
   if (!Drupal.settings.dndDropAreas || Drupal.settings.dnd.suppress) {
     return;
   }
-
-  // Start to setup autohiding library
-  $(".dnd-library-wrapper").hover(
-    function() {
-      $(this)
-        .stop(true)
-        .animate({'right': 0});
-    },
-    function() {
-      $(this)
-        .stop(true)
-        .animate({'right': -180});
-    }
-  ).css('right', -180);
 
   // Bind our functions to WYSIWYG attach / detach events
   for (editor in Drupal.settings.dndDropAreas) {
@@ -74,23 +63,55 @@ Drupal.behaviors.dndLibrary = function(context) {
     $editor.bind('wysiwygDetach', Drupal.behaviors.dndLibrary.detach_library);
   }
 
-  if ($("#node-form:not(.dnd-processed)").length) {
-    $("#node-form")
+  if ($(".node-form:not(.dnd-processed)").length) {
+    $(".node-form")
       .addClass('dnd-processed')
       .append('<div class="dnd-library-wrapper"></div>');
-    var wrapper = $('#node-form .dnd-library-wrapper');
+    var wrapper = $('.node-form .dnd-library-wrapper');
     $editor = $("<a />");
     wrapper.library_url = Drupal.settings.dnd.url;
     $.getJSON(wrapper.library_url, function(data) {
       Drupal.behaviors.dndLibrary.renderLibrary.call(wrapper, data, $editor);
     });
   }
-}
+},
 
-Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
+renderLibrary: function(data, editor) {
   $this = $(this);
 
-  $this.html(data.library);
+  // Save the current status
+  var dndStatus = {
+    search: $this.find('.scald-menu').hasClass('search-on')
+    ,library: $this.find('.dnd-library-wrapper').hasClass('library-on')
+  };
+
+  $this.html(data.menu + data.anchor + data.library);
+
+  // Rearrange some element for better logic and easier theming.
+  // @todo We'd better do it on server side.
+  $this.find('.scald-menu')
+    .prepend($this.find('.summary'))
+    .append($this.find('.view-filters').addClass('filters'));
+  if (dndStatus.search) {
+    $this.find('.scald-menu').addClass('search-on');
+    $this.find('.dnd-library-wrapper').addClass('library-on');
+  }
+  $this.find('.summary .toggle').click(function() {
+    // We toggle class only when animation finishes to avoid flash back.
+    $('.scald-menu').animate({left: $('.scald-menu').hasClass('search-on') ? '-42px' : '-256px'}, function() {
+      $(this).toggleClass('search-on');
+    });
+    // When display search, we certainly want to display the library, too.
+    if (!$('.scald-menu').hasClass('search-on') && !$('.dnd-library-wrapper').hasClass('library-on')) {
+      $('.scald-anchor').click();
+    }
+  });
+  $this.find('.scald-anchor').click(function() {
+    // We toggle class only when animation finishes to avoid flash back.
+    $('.dnd-library-wrapper').animate({right: $('.dnd-library-wrapper').hasClass('library-on') ? '-276px' : '0'}, function() {
+      $('.dnd-library-wrapper').toggleClass('library-on');
+    });
+  });
 
   var settings = Drupal.settings.dndDropAreas[editor.get(0).id];
   var params = Drupal.wysiwyg.instances[editor.get(0).id];
@@ -237,22 +258,23 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
 
   // Attach all the behaviors to our new HTML fragment
   Drupal.attachBehaviors($this);
-}
+},
 
 // Dynamically compose a callback based on the editor name
-Drupal.behaviors.dndLibrary.attach_library = function(e, data) {
+attach_library: function(e, data) {
   var settings = $.extend({idSelector: Drupal.behaviors.dndLibrary.idSelector}, Drupal.settings.dndDropAreas[data.field]);
   var editor_fn = 'attach_' + data.editor;
   if ($.isFunction(window.Drupal.behaviors.dndLibrary[editor_fn])) {
     window.Drupal.behaviors.dndLibrary[editor_fn](data, settings);
   }
-}
+},
 
 // Do garbage collection on detach
-Drupal.behaviors.dndLibrary.detach_library = function(e, data) {}
+detach: function() {
+},
 
 // Basic textareas
-Drupal.behaviors.dndLibrary.attach_none = function(data, settings) {
+attach_none: function(data, settings) {
   settings = $.extend({
     targets: $('#'+ data.field),
     processTextAreaClick: function(clicked, representation_id, e, data) {
@@ -270,10 +292,10 @@ Drupal.behaviors.dndLibrary.attach_none = function(data, settings) {
     }
   }, settings);
   $(settings.drop_selector).dnd(settings);
-}
+},
 
 // Attach TinyMCE
-Drupal.behaviors.dndLibrary.attach_tinymce = function(data, settings) {
+attach_tinymce: function(data, settings) {
   var tiny_instance = tinyMCE.getInstanceById(data.field);
 
   // If the Tiny instance exists, attach directly, otherwise wait until Tiny
@@ -290,17 +312,17 @@ Drupal.behaviors.dndLibrary.attach_tinymce = function(data, settings) {
       }
     }, 100);
   }
-}
+},
 
-Drupal.behaviors.dndLibrary.idSelector = function(element) {
+idSelector: function(element) {
   if ($(element).is('img')) {
     return $.url.setUrl(element.src).param('dnd_id');
   }
   return false;
-}
+},
 
 // Really attach TinyMCE
-Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_instance) {
+_attach_tinymce: function(data, settings, tiny_instance) {
   var ed = tiny_instance, dom = ed.dom, s = ed.selection;
 
   settings = $.extend({
@@ -424,11 +446,10 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
   }, settings);
 
   $(settings.drop_selector).dnd(settings);
-}
-
+},
 
 // Keep a counter of times a representation ID has been used
-Drupal.behaviors.dndLibrary.countElements = function(target, representation_id, decrement) {
+countElements: function(target, representation_id, decrement) {
   var counter = $(target).data('dnd_representation_counter');
   if (!counter) {
     counter = {}
@@ -440,6 +461,7 @@ Drupal.behaviors.dndLibrary.countElements = function(target, representation_id, 
   }
   $(target).data('dnd_representation_counter', counter);
   return counter[representation_id];
+}
 }
 
 /**
@@ -455,3 +477,4 @@ Drupal.dnd.refreshLibraries = function() {
     });
   }
 }
+}) (jQuery);

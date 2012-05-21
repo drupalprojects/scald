@@ -22,8 +22,12 @@ function dnd_menu() {
 /**
  * Implementation of hook_perm().
  */
-function dnd_perm() {
-  return array('administer dnd');
+function dnd_permission() {
+  return array(
+    'administer dnd' => array(
+      'title' => 'Administer DnD',
+    ),
+  );
 }
 
 /**
@@ -31,10 +35,11 @@ function dnd_perm() {
  */
 function dnd_theme() {
   return array(
-    'dnd_library_wrapper' => array('arguments' => array('settings' => NULL, 'element' => NULL)),
+    'dnd_library_wrapper' => array(
+      'variables' => array('settings' => NULL, 'element' => NULL),
+    ),
   );
 }
-
 
 /**
  * Implementation of hook_element_info_alter().
@@ -43,7 +48,7 @@ function dnd_theme() {
  */
 function dnd_element_info_alter(&$types) {
   if (isset($types['textfield'])) {
-    $types['textfield']['#dnd-enabled'] = FALSE;
+    $types['textfield']['#dnd-enabled'] = TRUE;//@todo test
     $types['textfield']['#dnd-settings'] = NULL;
     $types['textfield']['#process'][] = 'dnd_process_textarea';
   }
@@ -177,8 +182,8 @@ function dnd_wysiwyg_plugin($editor, $version=0) {
 /**
  * Theme the markup that will surround a library loaded via JSON.
  */
-function theme_dnd_library_wrapper($settings, $element = NULL) {
-  return '<div id="'. $settings['library_id'] .'" class="dnd-library-wrapper"></div>';
+function theme_dnd_library_wrapper($variables) {
+  return '<div id="'. $variables['settings']['library_id'] .'" class="dnd-library-wrapper"></div>';
 }
 
 /**
@@ -211,3 +216,4 @@ function dnd_get_library() {
   }
   return $library;
 }
+
