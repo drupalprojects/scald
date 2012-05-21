@@ -3,5 +3,6 @@ package = CCK
 description = A configurable CCK content type that provides a textarea and drag and drop media library.
 dependencies[] = content
 dependencies[] = dnd
+dependencies[] = wysiwyg
 core = 6.x
 
