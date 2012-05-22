@@ -113,9 +113,9 @@ function scald_dnd_library_library() {
     $library_items[$sid] = scald_render($sid, 'sdl_library_item');
   }
   $library['library'] =
-    theme('sdl_header', $page, $count, drupal_get_form('scald_dnd_library_form', $types))
-    . theme('sdl_library', $page, $library_items)
-    . theme('sdl_footer', $page, $count, $pager);
+    theme('sdl_header', array('page' => $page, 'count' => $count, 'form' => drupal_get_form('scald_dnd_library_form', $types)))
+    . theme('sdl_library', array('page' => $page, 'library_items' => $library_items))
+    . theme('sdl_footer', array('page' => $page, 'count' => $count, 'pager' => $pager));
 
   // Use standard Drupal pager variables
   // &page=X
@@ -132,7 +132,7 @@ function scald_dnd_library_add_item(&$library, $sid) {
     'meta' => array(
       'title' => $atom->title,
       'type' => $atom->type,
-      'legend' => theme('sdl_editor_legend', $atom),
+      'legend' => theme('sdl_editor_legend', array('atom' => $atom)),
       'action' => $atom->base_entity->license->action_fin
     ),
     'editor' => scald_render($atom, 'sdl_editor_representation'),
@@ -185,11 +185,10 @@ function template_preprocess_sdl_library(&$variables) {
 }
 
 /**
- * Implements hook_scald_provider.
+ * Implements hook_scald_contexts.
  */
-function scald_dnd_library_scald_provider() {
+function scald_dnd_library_scald_contexts() {
   return array(
-  'contexts' => array(
     'sdl_editor_representation' => array(
       'title' => t('Editor Representation'),
       'description' => t('The Editor Rep'),
@@ -220,7 +219,6 @@ function scald_dnd_library_scald_provider() {
         'audio' => array('wav', 'ogg', 'mp3', 'passthrough'),
       ),
     )
-  )
   );
 }
 
@@ -264,13 +262,13 @@ function scald_dnd_library_scald_render($atom, $context, $options = array()) {
   $image = "<img src='$path' alt='' ". drupal_attributes($attributes) . ' />';
   switch ($context) {
     case 'sdl_preview':
-      $render = theme('sdl_preview_item', $atom, $image);
+      $render = theme('sdl_preview_item', array('atom' => $atom, 'image' => $image));
       break;
     case 'sdl_library_item':
-      $render = theme('sdl_library_item', $atom, $image);
+      $render = theme('sdl_library_item', array('atom' => $atom, 'image' => $image));
       break;
     default:
-      $render = theme('sdl_editor_item', $atom->rendered, $image);
+      $render = theme('sdl_editor_item', array('informations' => $atom->rendered, 'image' => $image));
   }
 
   return $render;
@@ -279,7 +277,9 @@ function scald_dnd_library_scald_render($atom, $context, $options = array()) {
 /**
  * Returns HTML for an atom rendered in the "Library Item" context.
  */
-function theme_sdl_library_item($atom, $image) {
+function theme_sdl_library_item($variables) {
+  $atom = $variables['atom'];
+  $image = $variables['image'];
   $informations = $atom->rendered;
   if (is_object($atom->base_entity) && is_numeric($atom->base_entity->nid)) {
     $view = l(t('View'), 'node/'. $atom->base_entity->nid, array('attributes' => array('target' => '_blank')));
@@ -347,7 +347,7 @@ function theme_sdl_preview_item($variables) {
   $image = $variables['image'];
   $resource_label = t('Resource');
   $informations_label = t('Informations');
-  $resource = theme('sdl_editor_item', $atom->rendered, $image);
+  $resource = theme('sdl_editor_item', array('informations' => $atom->rendered, 'image' => $image));
   $title_label = t('Title');
   $title_value = $atom->rendered->title;
   $author_label = t('Author');

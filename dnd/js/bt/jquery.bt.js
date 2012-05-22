@@ -69,6 +69,7 @@
  * For more/better documentation and lots of examples, visit the demo page included with the distribution
  *
  */
+(function($) {
 jQuery.fn.bt = function(content, options) {
 
   if (typeof content != 'string') {
@@ -1032,7 +1033,7 @@ jQuery.bt.defaults = {
                     }
                                                
 }; // </ jQuery.bt.defaults >
-
+})(jQuery);
 
 // @todo
 // use larger canvas (extend to edge of page when windowMargin is active)
