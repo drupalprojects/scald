@@ -7,9 +7,9 @@ class scald_views_handler_filter_atom_type extends views_handler_filter_in_opera
     if (!isset($this->value_options)) {
       $this->value_title = t('Atom type');
       //$types = node_get_types();
-      $types = _scald_types();
+      $types = scald_types();
       foreach ($types as $type => $info) {
-        $options[$type] = t($info['title']);
+        $options[$type] = t($info->title);
       }
       $this->value_options = $options;
     }
