@@ -63,6 +63,7 @@ function scald_image_scald_fetch($atom, $type) {
     $file = file_load($atom->base_id);
     $atom->base_entity = $file;
     $atom->file_source = $file->uri;
+    $atom->thumbnail_source = $file->uri;
   }
 }
 
