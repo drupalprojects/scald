@@ -145,7 +145,7 @@ function scald_dailymotion_register($video) {
   $atom->base_id   = $infos->id;
   $atom->publisher = $user->uid;
   $atom->title     = $infos->title;
-  $aid = scald_author_get_id(array('name' => $infos->author));
+  $aid = scald_author_get_id(array('name' => $infos->author, 'url' => 'dailymotion://user/'. $info->author));
   $atom->authors   = array($aid);
   // And save it
   $atom_sid = scald_register_atom((array)$atom);
