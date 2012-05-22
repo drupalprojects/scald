@@ -7,7 +7,7 @@ class scald_views_handler_filter_atom_provider extends views_handler_filter_in_o
     if (!isset($this->value_options)) {
       $this->value_title = t('Atom provider');
       $providers = array();
-      $types = _scald_types();
+      $types = scald_types();
       foreach ($types as $type) {
         foreach ($type['atom_providers'] as $provider) {
           if (!isset($providers[$provider])) {

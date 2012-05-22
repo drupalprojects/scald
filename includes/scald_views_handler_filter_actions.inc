@@ -23,8 +23,8 @@ class scald_views_handler_filter_actions extends views_handler_filter {
   function value_form(&$form, &$form_state) {
     $defaults = array();
     foreach (scald_actions() as $slug => $action) {
-      $options[$slug] = $action->title;
-      $defaults[$slug] = ($this->options['value'] & $action->bitmask) ? $slug : '';
+      $options[$slug] = $action['title'];
+      $defaults[$slug] = ($this->options['value'] & $action['bitmask']) ? $slug : '';
     }
     // And now, we just need to add our select item with the values
     // we've prepared above.
@@ -44,7 +44,7 @@ class scald_views_handler_filter_actions extends views_handler_filter {
     $mask = 0;
     foreach ($form_state['values']['options']['value'] as $value) {
       if (!empty($value)) {
-        $mask += $actions[$value]->bitmask;
+        $mask += $actions[$value]['bitmask'];
       }
     }
     $form_state['values']['options']['value'] = $mask;
