@@ -1772,6 +1772,13 @@ function scald_menu() {
     'file'              => 'scald.admin.inc',
     'type'              => MENU_LOCAL_TASK,
   );
+  $items['atoms/add'] = array(
+    'title' => 'Create Atom',
+    'page callback' => 'scald_atom_add',
+    'access arguments' => array('administer scald'),
+    'file' => 'scald.pages.inc'
+
+  );
   $items['atoms/add/%scald_type'] = array(
     'title' => 'Create Atom',
     'page callback' => 'drupal_get_form',

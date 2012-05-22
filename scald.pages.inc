@@ -5,6 +5,20 @@
  *   edition of the atoms entities.
  */
 
+function scald_atom_add() {
+  $types = scald_types();
+  $content = array();
+  foreach ($types as $name => $type) {
+    $content[] = array(
+      'title' => $type->title,
+      'href'  => 'atoms/add/' . $name,
+      'localized_options' => array(),
+      'description' => ''
+    );
+  }
+  return theme('node_add_list', array('content' => $content));
+}
+
 function scald_atom_add_form($form, $form_state, $type) {
   $form = array();
 

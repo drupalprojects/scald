@@ -173,48 +173,20 @@ function scald_admin_type_form_submit($form, &$form_state) {
  * The Scald Admin page for Scald Atoms.
  */
 function scald_admin_atoms() {
+  $count = db_query("SELECT COUNT(*) FROM {scald_atoms}")->fetchField();
   $content = t('
     <h3>Scald Atoms</h3>
 
-    <h4>Currently, there are ' . db_query("SELECT COUNT(*) FROM {scald_atoms}")->fetchCol() . ' Atoms registered with Scald Core.</h4>
+    <ul class="action-links">
+      <li>!add_link</li>
+    </ul>
+
+    <h4>Currently, there are @count Atoms registered with Scald Core.</h4>
 
     <p>Enable the Views module to get an handy paginated table with filters which will allow you to browse your atoms</p>
+  ', array('!add_link' => l('Add atom', 'atoms/add'), '@count' => $count)
+  );
 
-  ');
-
-  // @@@TODO: Turn this into a nice little table which gives totals by type and by provider as well as giving the base_description by provider.
-  $scald_config = variable_get('scald_config', 0);
-
-  $atoms_results = db_query("
-    SELECT
-      *
-    FROM
-      {scald_atom_providers}
-    ORDER BY
-      type
-  ");
-
-  $content .= '<ol>';
-  $first = TRUE;
-  $current = '';
-  while ($atom_raw = db_fetch_array($atoms_results)) {
-    if ($current != $atom_raw['type']) {
-      $current = $atom_raw['type'];
-      if (!$first) {
-        $content .= '</ul></li>';
-      }
-      else {
-        $first = FALSE;
-      }
-      $content .= '
-        <li>
-          <strong>' . $scald_config->types[$atom_raw['type']]['title'] . '</strong> Atoms are based on:
-          <ul>
-      ';
-    }
-    $content .= '<li>' . $atom_raw['base_description'] . ' (Provided by <code>' . $atom_raw['provider'] . '.module</code>)</li>';
-  }
-  $content .= '</ul></li></ol>';
 
   return $content;
 } // end scald_admin_atoms()
