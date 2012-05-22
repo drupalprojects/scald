@@ -193,7 +193,7 @@ function scald_dnd_library_views_default_views() {
     ),
     'actions' => array(
       'operator' => '&',
-      'value' => 5,
+      'value' => 10,
       'group' => '0',
       'exposed' => FALSE,
       'expose' => array(
