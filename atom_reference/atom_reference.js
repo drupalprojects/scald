@@ -48,7 +48,9 @@ Drupal.behaviors.atom_reference = {
             var placeholder = Drupal.t("You can't drop a resource of type %type in this field", {'%type': ret.type});
             $this.empty().append(placeholder);
           }
+          e.stopPropagation();
           e.preventDefault();
+          return false;
         })
         .closest('div.form-item')
         .find('input')
@@ -65,7 +67,7 @@ if (!Drupal.atom_reference) {
     var retVal = {'keepgoing': true, 'found': true};
     if (Drupal.dnd.Atoms[ressource_id]) {
       var type = Drupal.dnd.Atoms[ressource_id].meta.type;
-      var accept = $(field).parents('div.form-item').find('input:text').attr('atom:types').split(',');
+      var accept = $(field).closest('div.form-item').find('input:text').attr('data-types').split(',');
       if (accept.indexOf(type) == -1) {
         retVal.keepgoing = false;
       }
