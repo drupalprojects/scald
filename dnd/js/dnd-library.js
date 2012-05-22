@@ -114,10 +114,11 @@ renderLibrary: function(data, editor) {
   });
 
   var settings = Drupal.settings.dndDropAreas[editor.get(0).id];
-  var params = Drupal.wysiwyg.instances[editor.get(0).id];
-
-  editor.trigger('wysiwygDetach', params);
-  editor.trigger('wysiwygAttach', params);
+  if (Drupal.wysiwyg) {
+    var params = Drupal.wysiwyg.instances[editor.get(0).id];
+    editor.trigger('wysiwygDetach', params);
+    editor.trigger('wysiwygAttach', params);
+  }
 
   for (atom_id in data.atoms) {
     // Store the atom data in our object
