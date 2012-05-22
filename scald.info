@@ -2,3 +2,8 @@ name = Scald Core
 description = "Scald is Content, Attribution, Licensing, Distribution.  This is the core of the framework."
 package = Scald
 core = 7.x
+
+files[] = includes/scald_views_handler_field_representation.inc
+files[] = includes/scald_views_handler_filter_actions.inc
+files[] = includes/scald_views_handler_filter_atom_provider.inc
+files[] = includes/scald_views_handler_filter_atom_type.inc
