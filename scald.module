@@ -1684,6 +1684,25 @@ function scald_entity_info() {
   return $return;
 }
 
+/**
+ * Implements hook_field_extra_fields.
+ */
+function scald_field_extra_fields () {
+  $extra = array();
+  foreach (scald_types() as $slug => $type) {
+    $extra['scald_atom'][$slug] = array(
+      'form' => array(
+        'title' => array(
+          'label' => 'Title',
+          'description' => 'Atom title - Scald module element',
+          'weight' => -5,
+        )
+      )
+    );
+  }
+  return $extra;
+}
+
 
 /**
  * Implementation of hook_perm().
