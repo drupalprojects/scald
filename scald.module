@@ -1705,19 +1705,23 @@ function scald_field_extra_fields () {
 
 
 /**
- * Implementation of hook_perm().
+ * Implements hook_permission().
  *
  * NOTE: Scald Actions permissions are *not* assigned using the normal Drupal
  *  permissions interface.  Instead they are managed separately through the
  *  Scald Admin Interface.  Actions are assigned to Drupal User Roles there.
  */
-function scald_perm() {
+function scald_permission() {
   return array(
-    'administer scald',		// Grants access to the Scald Admin Interface
-    'debug scald',        // Grants access to the Scald Debugging Console
-    'use scald',          // Grants access to the basic functioning of Scald (registering Atoms, etc.)
+    'administer scald' => array(
+      'title' => t('Administer Scald'),
+      'description' => t('Access Atom fields configuration and permissions')
+    ),
+    'use scald' => array(
+      'title' => t('Use Scald'),
+      'description' => t('Grants access to the basic functioning of Scald (registering Atoms, etc.)')
   );
-} // end scald_perm()
+}
 
 
 /**
@@ -1731,7 +1735,7 @@ function scald_menu() {
     'page callback'    => 'scald_debug_console',
     'page arguments'   => array(2),
     'access callback'  => 'user_access',
-    'access arguments' => array('debug scald'),
+    'access arguments' => array('administer scald'),
     'file'             => 'scald.debug.inc',
     'type'             => MENU_NORMAL_ITEM,
   );
