@@ -63,18 +63,6 @@
 .dnd-library-wrapper .header form {
   font-size: 10px;
 }
-.dnd-library-wrapper .footer,
-.dnd-library-wrapper .item-list .pager {
-  margin: 0;
-  border-left: 1px solid #aaa;
-  border-right: 1px solid #aaa;
-  border-bottom: 1px solid #aaa;
-  background-color: #ccc;
-}
-.dnd-library-wrapper .pager {
-  font-weight: bold;
-  padding: 0 5px;
-}
 .dnd-library-wrapper .library {
   border: 1px solid #aaa;
   float: left;
@@ -475,6 +463,7 @@ body {
 .scald-library .pager {
   font-size: 13px;
   line-height: 15px;
+  margin-top: 15px;
 }
 .scald-library .pager-item,
 .scald-library .pager-current {
