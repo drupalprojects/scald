@@ -1720,6 +1720,7 @@ function scald_permission() {
     'use scald' => array(
       'title' => t('Use Scald'),
       'description' => t('Grants access to the basic functioning of Scald (registering Atoms, etc.)')
+    ),
   );
 }
 
