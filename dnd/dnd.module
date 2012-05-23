@@ -120,7 +120,6 @@ function dnd_add_library() {
     drupal_add_js('misc/jquery.form.js');
 
     // Drag and drop
-    drupal_add_js(drupal_get_path('module', 'dnd') .'/js/jquery.draganddrop.js');
     drupal_add_js(drupal_get_path('module', 'dnd') .'/js/dnd-library.js');
 
     // Contains the library theming

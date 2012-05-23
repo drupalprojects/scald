@@ -45,6 +45,23 @@ $.extend($.expr[":"], {
 });
 
 /**
+ * Default atom theme function
+ */
+Drupal.theme.prototype.scaldEmbed = function(atom) {
+  var output = '<div class="dnd-atom-wrapper"><div class="dnd-drop-wrapper">' + atom.editor + '</div>';
+  if (atom.meta.legend) {
+    output += '<div class="dnd-legend-wrapper">' + atom.meta.legend + '</div>';
+  }
+  output += '</div>';
+
+  // Trick: if not the image might come out and go into the current hovered
+  // paragraph.
+  output = '<p>&nbsp;</p>' + output;
+
+  return output;
+}
+
+/**
  * Initialize and load drag and drop library and pass off rendering and
  * behavior attachment.
  */
@@ -52,15 +69,6 @@ Drupal.behaviors.dndLibrary = {
 attach: function(context, settings) {
   if (!Drupal.settings.dndDropAreas || Drupal.settings.dnd.suppress) {
     return;
-  }
-
-  // Bind our functions to WYSIWYG attach / detach events
-  for (editor in Drupal.settings.dndDropAreas) {
-    var $editor = $('#' + editor, context);
-
-    // Bind Drag and Drop plugin invocation to events emanating from Wysiwyg
-    $editor.bind('wysiwygAttach', Drupal.behaviors.dndLibrary.attach_library);
-    $editor.bind('wysiwygDetach', Drupal.behaviors.dndLibrary.detach_library);
   }
 
   if ($(".node-form:not(.dnd-processed)").length) {
@@ -114,11 +122,6 @@ renderLibrary: function(data, editor) {
   });
 
   var settings = Drupal.settings.dndDropAreas[editor.get(0).id];
-  if (Drupal.wysiwyg) {
-    var params = Drupal.wysiwyg.instances[editor.get(0).id];
-    editor.trigger('wysiwygDetach', params);
-    editor.trigger('wysiwygAttach', params);
-  }
 
   for (atom_id in data.atoms) {
     // Store the atom data in our object
@@ -158,7 +161,7 @@ renderLibrary: function(data, editor) {
         var id = $.url.setUrl($img.attr('src')).param('dnd_id');
         dt.dropEffect = 'copy';
         dt.setData('Text', id);
-        dt.setData('text/html', "<img src='" + $img.attr('src') + "' class='drop' />");
+        dt.setData('text/html', Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[id]));
         return true;
       })
       .bind('dragend', function(e) {
@@ -261,212 +264,21 @@ renderLibrary: function(data, editor) {
   Drupal.attachBehaviors($this);
 },
 
-// Dynamically compose a callback based on the editor name
-attach_library: function(e, data) {
-  var settings = $.extend({idSelector: Drupal.behaviors.dndLibrary.idSelector}, Drupal.settings.dndDropAreas[data.field]);
-  var editor_fn = 'attach_' + data.editor;
-  if ($.isFunction(window.Drupal.behaviors.dndLibrary[editor_fn])) {
-    window.Drupal.behaviors.dndLibrary[editor_fn](data, settings);
-  }
-},
-
 // Do garbage collection on detach
 detach: function() {
 },
 
-// Basic textareas
-attach_none: function(data, settings) {
-  settings = $.extend({
-    targets: $('#'+ data.field),
-    processTextAreaClick: function(clicked, representation_id, e, data) {
-      var target = this, $target = $(target);
-
-      // Update element count
-      Drupal.behaviors.dndLibrary.countElements.call(target, representation_id);
-
-      var atom = Drupal.dnd.Atoms[representation_id];
-      var snippet = '<div class="dnd-drop-wrapper">' + atom.editor + '</div>';
-      if (atom.meta.legend) {
-        snippet += atom.meta.legend;
-      }
-      $target.replaceSelection(snippet, true);
-    }
-  }, settings);
-  $(settings.drop_selector).dnd(settings);
-},
-
-// Attach TinyMCE
-attach_tinymce: function(data, settings) {
-  var tiny_instance = tinyMCE.getInstanceById(data.field);
-
-  // If the Tiny instance exists, attach directly, otherwise wait until Tiny
-  // has registered a new instance.
-  if (tiny_instance) {
-    Drupal.behaviors.dndLibrary._attach_tinymce(data, settings, tiny_instance);
-  } else {
-    var t = setInterval(function() {
-      var tiny_instance = tinyMCE.getInstanceById(data.field);
-      if (tiny_instance) {
-        Drupal.behaviors.dndLibrary._attach_tinymce(data, settings, tiny_instance);
-        $('#'+ data.field +'-wrapper').trigger('dnd_attach_library');
-        clearInterval(t);
-      }
-    }, 100);
-  }
-},
-
-idSelector: function(element) {
+idSelector: function(element) {//@todo unused
   if ($(element).is('img')) {
     return $.url.setUrl(element.src).param('dnd_id');
   }
   return false;
-},
-
-// Really attach TinyMCE
-_attach_tinymce: function(data, settings, tiny_instance) {
-  var ed = tiny_instance, dom = ed.dom, s = ed.selection;
-
-  settings = $.extend({
-    targets: $('#'+ data.field +'-wrapper iframe'),
-    processTargets: function(targets) {
-      return targets.each(function() {
-        var target = this
-        // Decrement counter on delete
-        $(target).bind('dnd_delete', function(e, data) {
-          Drupal.behaviors.dndLibrary.countElements(target, $(data.node).attr('dnd_id'), true);
-        });
-        $('head', $(this).contents()).append('<style type="text/css">img.drop {width: 0; height: 0;} div.dnd-drop-wrapper {background: #efe; border: 1px #090 solid;}</style>');
-        $('body', $(this).contents()).addClass($('body').attr('class'));
-        return this;
-      });
-    },
-    processIframeDrop: function(drop, id_selector) {
-      var representation_id = id_selector.call(this, drop);
-      if (!Drupal.dnd.Atoms[representation_id]) return;
-      var representation = Drupal.dnd.Atoms[representation_id].editor;
-      var legend = Drupal.dnd.Atoms[representation_id].meta.legend;
-      var target = this, $target = $(target), $drop = $(drop), block;
-
-      // Update element count
-      Drupal.behaviors.dndLibrary.countElements(target, representation_id);
-
-      // Search through block level parents
-      $drop.parents().each(function() {
-        var $this = $(this);
-        if ($this.css('display') == 'block') {
-          block = this;
-          $block = $(block);
-          return false;
-        }
-        return true;
-      });
-
-      // Remove dropped item
-      $drop.remove();
-
-      // If the containing block is now empty after the removal of the dropped
-      // item, remove it and switch the containing block to its parent. The
-      // goal is to get rid of the <p> that are sometimes inserted around our
-      // dropped <img />
-      if (block.textContent == '') {
-        $tmp = $block.parent();
-        $block.remove();
-        $block = $tmp;
-        block = $block[0];
-      }
-
-      // Create an element to insert
-      var snippet = '<div class="dnd-drop-wrapper" id="dnd-inserted">' + representation + '</div>';
-      if (legend) {
-        snippet += legend;
-      }
-
-      // The no-parent case
-      if ($(block).is('body')) {
-        $(block).append(snippet);
-      }
-      else {
-        var old_id = block.id;
-        block.id = 'target-block';
-        $block = $('#target-block', $target.contents());
-
-        // Add our content after the block
-        $block.after(snippet);
-
-        // The active target block should be empty
-        if ($('#target-block:dnd_empty', $target.contents()).length > 0) {
-          $('#target-block', $target.contents()).remove();
-        } else if (old_id) {
-          block.id = old_id;
-        } else {
-          $block.removeAttr('id');
-        }
-      }
-
-      var $inserted = $('#dnd-inserted', $target.contents());
-      var inserted = $inserted.get(0);
-
-      // Look behind in the DOM
-      var previous = $inserted.prev().get(0);
-
-      // If the previous element is also an editor representation, we need to
-      // put a dummy paragraph between the elements to prevent editor errors.
-      if (previous ) {
-        $inserted.before('<p></p>');
-      }
-
-      // Look ahead in the DOM
-      var next = $inserted.next().get(0);
-
-      // If the next item exists and isn't an editor representation, drop the
-      // caret at the beginning of the element, otherwise make a new paragraph
-      // to advance the caret to.
-      if (next && !$(next).hasClass('dnd-drop-wrapper')) {
-        $(next).prepend('<span id="__caret">_</span>');
-      }
-      else if (!$(next).hasClass('dnd-drop-wrapper')) {
-        var after = dom.create('p', {}, '<span id="__caret">_</span>');
-        dom.insertAfter(after, 'dnd-inserted');
-      }
-
-      // Force selection to reset the caret
-      var c = dom.get('__caret');
-      if (c) {
-        s.select(c);
-        ed.execCommand('Delete', false, null);
-        dom.remove(c);
-      }
-
-      // Unset id for next drop and add special dnd attribute for counting
-      // purposes
-      $inserted
-        .removeAttr('id')
-        .attr('dnd_id', representation_id);
-
-    }
-  }, settings);
-
-  $(settings.drop_selector).dnd(settings);
-},
-
-// Keep a counter of times a representation ID has been used
-countElements: function(target, representation_id, decrement) {
-  var counter = $(target).data('dnd_representation_counter');
-  if (!counter) {
-    counter = {}
-    counter[representation_id] = 1;
-  } else if (counter && !counter[representation_id]) {
-    counter[representation_id] = 1;
-  } else {
-    counter[representation_id] = counter[representation_id] + ((decrement) ? -1 : 1);
-  }
-  $(target).data('dnd_representation_counter', counter);
-  return counter[representation_id];
 }
 }
 
 /**
  * Refresh the library.
+ * @todo unused
  */
 Drupal.dnd.refreshLibraries = function() {
   var settings = Drupal.settings.dndDropAreas;
@@ -479,3 +291,4 @@ Drupal.dnd.refreshLibraries = function() {
   }
 }
 }) (jQuery);
+
