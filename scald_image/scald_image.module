@@ -36,6 +36,7 @@ function scald_image_scald_add_form_fill(&$atom, $form, $form_state) {
   $file = file_load($form_state['values']['file']);
   $atom->title = $file->filename;
   $atom->base_id = $file->fid;
+  $atom->scald_thumbnail[LANGUAGE_NONE][0] = (array)$file;
 }
 
 /**

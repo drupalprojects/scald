@@ -14,6 +14,23 @@ function scald_quickstart_install() {
     ->execute();
   scald_types(TRUE);
 
+  // Create a few default fields on our entities
+  $field = array(
+    'field_name' => 'scald_thumbnail',
+    'type' => 'image',
+  );
+  field_create_field($field);
+  foreach (array('image', 'audio', 'video') as $bundle) {
+    $instance = array(
+      'field_name' => 'scald_thumbnail',
+       'entity_type' => 'scald_atom',
+       'bundle' => $bundle,
+       'label' => ($bundle == 'image') ? 'Image' : 'Thumbnail',
+       'required' => FALSE,
+    );
+    field_create_instance($instance);
+  }
+
   // Grant anoymous and authenticated user the right to see published atoms
   $actions = scald_actions();
   $standard = $actions['fetch']['bitmask'] + $actions['view']['bitmask'];
