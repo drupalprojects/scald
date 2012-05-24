@@ -170,7 +170,7 @@ function atom_reference_field_formatter_view($entity_type, $entity, $field, $ins
         break;
 
       case 'editor':
-        $element[$delta] = array('#markup' => scald_render($sid, 'editor'));
+        $element[$delta] = array('#markup' => scald_render($sid, 'sdl_editor_representation'));
         break;
     }
   }
@@ -202,7 +202,7 @@ function atom_reference_field_widget_form(&$form, &$form_state, $field, $instanc
   // Get the default value, and format the placeholder accordingly.
   $default = isset($items[$delta]) ? $items[$delta] : '';
   if ($default) {
-    $prefix = '<div class="atom_reference_drop_zone">' . scald_render($default, 'sdl_editor_representation') .'</div>';
+    $prefix = '<div class="atom_reference_drop_zone">' . scald_render($default['sid'], 'sdl_editor_representation') .'</div>';
   }
   else {
     $placeholder = t('Drop a resource here');
