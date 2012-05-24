@@ -77,11 +77,10 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
     $contexts = scald_contexts();
     $context_config = $contexts[$context]['type_format'][$atom->type];
     if (preg_match('/^style-(.*)$/', $context_config['transcoder'], $match)) {
-      $preset = imagecache_style_load($match[1]);
-      $dir = file_directory_path();
-      $path = str_replace($dir, $dir .'/styles/'. $preset['name'] . '/public', $atom->file_source);
+      $preset = image_style_load($match[1]);
+      $path = str_replace('public://', 'public://styles/'. $preset['name'] . '/public/', $atom->file_source);
       $atom->file_transcoded = $path;
-      $atom->rendered->file_transcoded_url = url($path);
+      $atom->rendered->file_transcoded_url = file_create_url($path);
     }
   }
 }
