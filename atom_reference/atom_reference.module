@@ -225,14 +225,14 @@ function atom_reference_field_widget_form(&$form, &$form_state, $field, $instanc
     array('%types' => implode(', ', $options))
   );
 
-  $element['sid'] = $element;
-  $element['sid']['#description'] .= $help;
+  $return['sid'] = $element;
+  $return['sid']['#description'] .= $help;
 
-  $element['sid']['#type'] = 'textfield';
-  $element['sid']['#field_prefix'] = $prefix;
-  $element['sid']['#attributes'] = array('data-types' => implode(',', array_keys($options)));
-  $element['sid']['#default_value'] = $default;
-  return $element;
+  $return['sid']['#type'] = 'textfield';
+  $return['sid']['#field_prefix'] = $prefix;
+  $return['sid']['#attributes'] = array('data-types' => implode(',', array_keys($options)));
+  $return['sid']['#default_value'] = $default;
+  return $return;
 }
 
 /**
