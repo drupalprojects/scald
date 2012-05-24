@@ -281,14 +281,24 @@ function theme_sdl_library_item($variables) {
   $atom = $variables['atom'];
   $image = $variables['image'];
   $informations = $atom->rendered;
-  if (is_object($atom->base_entity) && is_numeric($atom->base_entity->nid)) {
+  if (is_object($atom->base_entity) && isset($atom->base_entity->nid)) {
     $view = l(t('View'), 'node/'. $atom->base_entity->nid, array('attributes' => array('target' => '_blank')));
     $edit = l(t('Edit'), 'node/'. $atom->base_entity->nid .'/edit', array('attributes' => array('target' => '_blank')));
     $links = "<div class='links'>$view / $edit</div>";
   }
   else {
     $links = '';
+  }
 
+  if (!empty($informations->authors)) {
+    $author_links = array();
+    foreach ($informations->authors as $author) {
+      $author_links[] = $author['link'];
+    }
+    $authors = implode(', ', $author_links);
+  }
+  else {
+    $authors = '';
   }
   $return =  "
   <div class='image'>
@@ -304,7 +314,7 @@ function theme_sdl_library_item($variables) {
   <div class='meta'>
     <div class='type type-" . strtolower($informations->type) ."'></div>
     <div class='title'>{$informations->title}</div>
-    <div class='author'>{$informations->authors[0]['link']}</div>
+    <div class='author'>{$authors}</div>
     {$links}
   </div>
   <span class='clear' />
