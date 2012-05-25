@@ -196,18 +196,6 @@ function atom_reference_field_widget_info() {
 function atom_reference_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   dnd_add_library();
 
-  drupal_add_js(drupal_get_path('module', 'atom_reference') . '/atom_reference.js');
-  drupal_add_css(drupal_get_path('module', 'atom_reference') . '/atom_reference.css');
-
-  // Get the default value, and format the placeholder accordingly.
-  $default = isset($items[$delta]) ? $items[$delta] : '';
-  if ($default) {
-    $prefix = '<div class="atom_reference_drop_zone">' . scald_render($default['sid'], 'sdl_editor_representation') .'</div>';
-  }
-  else {
-    $placeholder = t('Drop a resource here');
-    $prefix = '<div class="atom_reference_drop_zone"><em>' . $placeholder . '</em></div>';
-  }
 
   $types = $instance['settings']['referencable_types'];
   $all = scald_types();
@@ -229,10 +217,40 @@ function atom_reference_field_widget_form(&$form, &$form_state, $field, $instanc
   $return['sid']['#description'] .= $help;
 
   $return['sid']['#type'] = 'textfield';
-  $return['sid']['#field_prefix'] = $prefix;
   $return['sid']['#attributes'] = array('data-types' => implode(',', array_keys($options)));
-  $return['sid']['#default_value'] = $default;
+  $return['sid']['#default_value'] = isset($items[$delta]) ? $items[$delta]['sid'] : '';
+
+  $return['sid']['#process'][] = 'atom_reference_field_widget_form_process';
+
+  // Attach our JS and CSS to the element
+  $path = drupal_get_path('module', 'atom_reference');
+  $return['sid']['#attached'] = array(
+    'css' => array($path . '/atom_reference.css'),
+    'js'  => array($path . '/atom_reference.js')
+  );
+
   return $return;
+}
+
+/**
+ * Process the Atom Reference widget element.
+ *
+ * Add either the atom reference representation or the placeholder
+ * on the fly, depending on the field being filled.
+ */
+function atom_reference_field_widget_form_process(&$element) {
+  // Get the default value, and format the placeholder accordingly.
+  $default = $element['#value'];
+  if ($default) {
+    $prefix = '<div class="atom_reference_drop_zone">' . scald_render($default['sid'], 'sdl_editor_representation') .'</div>';
+  }
+  else {
+    $placeholder = t('Drop a resource here');
+    $prefix = '<div class="atom_reference_drop_zone"><em>' . $placeholder . '</em></div>';
+  }
+  $element['#field_prefix'] = $prefix;
+  return $element;
+
 }
 
 /**
