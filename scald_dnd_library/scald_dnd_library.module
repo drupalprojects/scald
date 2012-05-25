@@ -340,8 +340,13 @@ function theme_sdl_editor_item($variables) {
 function theme_sdl_editor_legend($variables) {
   $atom = $variables['atom'];
   $informations = $atom->rendered;
+  if (empty($informations)) {
+    $clone = clone $atom;
+    scald_prerender($clone, 'sdl_editor_representation');
+    $informations = $clone->rendered;
+  }
   $by = isset($informations->authors[0]['link']) ? $informations->authors[0]['link'] : $informations->publisher['link'];
-  $by = t('by %name', array('%name' => $by));
+  $by = t('by !name', array('!name' => $by));
   return "
   <div class='meta'>
     <!--copyright={$sid}-->{$informations->title}, {$by}<!--END copyright={$sid}-->
