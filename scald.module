@@ -286,9 +286,6 @@ function scald_atom_save(&$atom) {
   if (!isset($atom->title)) {
     $atom->title = '';
   }
-  if (!isset($atom->authors)) {
-    $atom->authors = array();
-  }
 
   $op = empty($atom->sid) ? 'insert' : 'update';
   $hook = ($op == 'insert') ? 'scald_register_atom' : 'scald_update_atom';
@@ -335,19 +332,6 @@ function scald_atom_save(&$atom) {
 
   if (!$written) {
     return FALSE;
-  }
-
-  // Handle a common error in the $values array.
-
-  // Authors
-  if (count($atom->authors)) {
-    $authors = db_insert('scald_atom_authors')->fields(array('sid', 'aid', 'weight'));
-
-    foreach ($atom->authors as $weight => $author_id) {
-      $authors->values(array($atom->sid, $author_id, $weight));
-    }
-
-    $authors->execute();
   }
 
   $function = 'field_attach_' . $op;
@@ -500,10 +484,12 @@ function scald_is_registered($sid, $rebuild = FALSE) {
  */
 function scald_fetch($sid, $rebuild = FALSE) {
   // Verify the SID is legit and fetch basic info about the Atom
-  $atom = scald_is_registered($sid, $rebuild);
-  if (!$atom) {
+  $atoms = entity_load('scald_atom', array($sid), array(), $rebuild);
+  if (!$atoms) {
     return FALSE;
   }
+
+  $atom = reset($atoms);
 
 
   // Verify that the current user is allowed to fetch this Atom
@@ -527,13 +513,6 @@ function scald_fetch($sid, $rebuild = FALSE) {
   $types = scald_types();
 
   module_invoke($types[$atom->type]->provider, 'scald_fetch', $atom, 'type');
-
-  $atom->authors = db_select('scald_atom_authors', 'saa')
-    ->fields('saa', array('weight', 'aid'))
-    ->condition('saa.sid', $atom->sid)
-    ->orderBy('saa.weight')
-    ->execute()
-    ->fetchAllAssoc('weight');
 
   $atom->base_entity = NULL;
 
@@ -692,252 +671,6 @@ function scald_search($query = array(), $fuzzy = FALSE, $singular = FALSE) {
 
   return $sids;
 } // end scald_search()
-
-
-
-
-
-
-/*******************************************************************************
- * SCALD AUTHORS
- ******************************************************************************/
-
-/**
- * Get an Author ID from Scald Core.
- * This will first check if an author matching the $data passed as an argument
- * exists, and return it if it does. If it doesn't, then it will try to create
- * a new author from this data.
- *
- * @param $data
- *  A keyed array with the following possible keys:
- *   'name', the full name; no first/last/etc. distinction. (required)
- *   'uid', A Drupal User ID. (optional)
- *   'url', A URL by which to find out more about the Author. (optional)
- *    NOTE: If this element is omitted for an array which has 'uid' set, the
- *     path 'user/<uid>' is assumed and supplied.  Set 'url' to an empty string
- *     to avoid this behavior.
- * @return
- *  The Author ID upon success.
- *  FALSE upon failure
- */
-function scald_author_get_id($data = array()) {
-  // Validate arguments
-  if (empty($data) || empty($data['name'])) {
-    return FALSE;
-  }
-
-  // Build SQL conditions
-  $sets = array();
-  $sql_data = array();
-  foreach ($data as $field => $value) {
-    switch ($field) {
-      case 'name':
-        $sets[] = 'name = \'%s\'';
-        $sql_data[] = $value;
-        break; // end 'name'
-
-      case 'uid':
-        $sets[] = 'uid = %d';
-        $sql_data[] = $value;
-        if (!isset($data['url'])) {
-          $sets[] = 'url = \'' . url('user') . '/%d\'';
-          $sql_data[] = $value;
-        }
-        break; // end 'uid'
-
-      case 'url':
-        $sets[] = 'url = \'%s\'';
-        $sql_data[] = $value;
-        break; // end 'url'
-
-      default:
-        continue;
-    }
-  }
-
-  // Look for an existing author in the database.
-  $aid = db_result(db_query(
-    "
-      SELECT aid FROM
-        {scald_authors}
-      WHERE "
-        . implode(' AND ', $sets),
-    $sql_data
-  ));
-  if ($aid) {
-    return $aid;
-  }
-
-  // If no author matched those criteria, then, try to insert a new one.
-  if (!db_query(
-    "
-      INSERT INTO
-        {scald_authors}
-      SET "
-        . implode(', ', $sets),
-    $sql_data
-  )) {
-    return FALSE;
-  }
-
-  return db_last_insert_id('scald_authors', 'aid');
-} // end scald_author_get_id()
-
-/**
- * Register an Author with Scald Core.
- *
- * @param $data
- *  A keyed array with the following possible keys:
- *   'name', the full name; no first/last/etc. distinction. (required)
- *   'uid', A Drupal User ID. (optional)
- *   'url', A URL by which to find out more about the Author. (optional)
- *    NOTE: If this element is omitted for an array which has 'uid' set, the
- *     path 'user/<uid>' is assumed and supplied.  Set 'url' to an empty string
- *     to avoid this behavior.
- * @return
- *  The Author ID upon success.
- *  FALSE upon failure
- */
-function scald_register_author($data = array()) {
-  // Validate arguments
-  if (empty($data) || empty($data['name'])) {
-    return FALSE;
-  }
-
-  // Prefill the URL if we have and uid and no url
-  if (empty($data['url']) && !empty($data['uid'])) {
-    $data['url'] = 'user/' . $data['uid'];
-  }
-
-  return db_insert('scald_authors')
-    ->fields($data)
-    ->execute();
-} // end scald_register_author()
-
-
-
-/**
- * Updates an Author's details.
- *
- * @param $aid
- *  The Author ID of the Author whose information is being updated.
- * @param $data
- *  A keyed array with the same elements as the $data parameter from
- *   scald_register_author().  Any elements not present will not be updated.
- * @return
- *  A boolean indicating success or failure
- */
-function scald_update_author($aid, $data = array()) {
-  // Validate arguments
-  if (empty($aid) || !is_numeric($aid) || empty($data)) {
-    return FALSE;
-  }
-
-  $sets = array();
-  $sql_data = array();
-  foreach ($data as $field => $value) {
-    switch ($field) {
-      case 'name':
-        $sets[] = 'name = \'%s\'';
-        $sql_data[] = $value;
-        break; // end 'name'
-
-      case 'uid':
-        $sets[] = 'uid = %d';
-        $sql_data[] = $value;
-        if (!isset($data['url'])) {
-          $sets[] = 'url = \'' . url('user') . '/%d\'';
-          $sql_data[] = $value;
-        }
-        break; // end 'uid'
-
-      case 'url':
-        $sets[] = 'url = \'%s\'';
-        $sql_data[] = $value;
-        break; // end 'url'
-
-      default:
-        continue;
-    }
-  }
-  $sql_data[] = $aid;
-
-  if (!db_query(
-    "
-      UPDATE
-        {scald_authors}
-      SET "
-        . implode(', ', $sets) . "
-      WHERE
-        aid = %d
-    ",
-    $sql_data
-  )) {
-    return FALSE;
-  }
-
-} // end scald_update_author()
-
-
-
-/**
- * Unregister an Author with Scald Core.
- *
- * @param $aid
- *  The Author ID of the Author to remove.
- * @return
- *  Boolean representing the success or failure of the unregistration.
- */
-function scald_unregister_author($aid = NULL) {
-  if (!is_numeric($aid)) {
-    return FALSE;
-  }
-
-  db_query("DELETE FROM {scald_authors} WHERE aid = %d", $aid);
-  db_query("DELETE FROM {scald_atom_authors} WHERE aid = %d", $aid);
-
-  return TRUE;
-} // end scald_unregister_author()
-
-
-
-/**
- * Determine the User that corresponds to an Author ID.
- *
- * @param $aid
- *  The Scald Author ID of the Author in question
- * @param
- *  The Drupal User ID of the user who is registered as the Author with $aid.
- *  FALSE upon failure.
- */
-function scald_aid_to_uid($aid) {
-  return db_result(db_query("SELECT uid FROM {scald_authors} WHERE aid = %d", $aid));
-} // end scald_aid_to_uid()
-
-
-
-/**
- * Determine the Author ID that corresponds to a User ID.
- *
- * @param $uid
- *  The Drupal User ID of the user in question.  Defaults to the UID of the
- *   current user.
- * @return
- *  The Scald Author ID of the Author record that corresponds to the Drupal
- *  user in question.  FALSE upon failure.
- */
-function scald_uid_to_aid($uid = NULL) {
-  if (is_null($uid)) {
-    global $user;
-    $uid = $user->uid;
-  }
-  return db_result(db_query("SELECT aid FROM {scald_authors} WHERE uid = %d", $uid));
-} // end scald_uid_to_aid()
-
-
-
-
-
 
 /*******************************************************************************
  * SCALD CONVERSION UTILITIES
@@ -1237,21 +970,21 @@ function scald_prerender(&$atom, $context, $options = NULL) {
 
   // Authors
   $atom->rendered->authors = array();
-  if (!empty($atom->authors)) {
-    $authors_details = db_select('scald_authors', 'sa')
-      ->fields('sa', array('aid', 'name', 'uid', 'url'))
-      ->condition('sa.aid', $atom->authors)
-      ->execute()
-      ->fetchAllAssoc('aid');
-    foreach ($atom->authors as $weight => $aid) {
-      $author = $authors_details[$aid];
-      if ($author['url']) {
-        $author['link'] = l($author['name'], $author['url']);
+  $items = field_get_items('scald_atom', $atom, 'scald_authors');
+  if (!empty($items)) {
+    foreach ($items as $delta => $term) {
+      $tids[$delta] = $term['tid'];
+    }
+    $authors = taxonomy_term_load_multiple($tids);
+    foreach ($authors as $author) {
+      $url = field_get_items('taxonomy_term', $author, 'scald_author_url');
+      if (!empty($url)) {
+        $author->link = l($author->name, $url[0]['value']);
       }
       else {
-        $author['link'] = check_plain($author['name']);
+        $author->link = check_plain($author->name);
       }
-      $atom->rendered->authors[$weight] = $author;
+      $atom->rendered->authors[] = $author;
     }
   }
 
@@ -1927,31 +1660,12 @@ function scald_filter_tips($delta, $format, $long = FALSE) {
  */
 function scald_user($op, &$edit, &$account, $category = NULL) {
   switch ($op) {
-    case 'delete':
-      $aid = scald_uid_to_aid($account->uid);
-      if ($aid) {
-        scald_unregister_author($aid);
-      }
-      break;
     case 'load':
       // See scald_actions() for handling of defaults for scald_actions and an
       //  explanation of why such handling is not done here.
       break;
     case 'insert':
     case 'update':
-      // All Drupal users need to registered as Scald Authors
-      $aid = scald_uid_to_aid($account->uid);
-      $author_data = array(
-        'name'  => $account->name,
-        'uid'   => $account->uid,
-      );
-      if ($aid) {
-        scald_update_author($aid, $author_data);
-      }
-      else {
-        scald_register_author($author_data);
-      }
-
       // Fetch action bitstring components by User Role and then combine in
       //  in preparation for saving to db.
       $edit['scald_actions'] = 0;
@@ -1968,9 +1682,6 @@ function scald_user($op, &$edit, &$account, $category = NULL) {
       while ($actions_raw = db_fetch_array($actions_results)) {
         $edit['scald_actions'] = $edit['scald_actions'] | $actions_raw['actions'];
       }
-      break;
-    case 'view':
-      // @@@TODO: Display Scald Actions abilities to user?  Admin only?
       break;
     default:
       break;

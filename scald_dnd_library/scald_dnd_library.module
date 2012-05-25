@@ -291,11 +291,10 @@ function theme_sdl_library_item($variables) {
   }
 
   if (!empty($informations->authors)) {
-    $author_links = array();
     foreach ($informations->authors as $author) {
-      $author_links[] = $author['link'];
+      $author_names[] = check_plain($author->name);
     }
-    $authors = implode(', ', $author_links);
+    $authors = implode(', ', $author_names);
   }
   else {
     $authors = '';
@@ -345,7 +344,15 @@ function theme_sdl_editor_legend($variables) {
     scald_prerender($clone, 'sdl_editor_representation');
     $informations = $clone->rendered;
   }
-  $by = isset($informations->authors[0]['link']) ? $informations->authors[0]['link'] : $informations->publisher['link'];
+  if (!empty($atom->rendered->authors)) {
+    foreach ($atom->rendered->authors as $author) {
+      $links[] = $author->link;
+    }
+    $by = implode(', ', $links);
+  }
+  else {
+    $by = $informations->publisher['link'];
+  }
   $by = t('by !name', array('!name' => $by));
   return "
   <div class='meta'>
@@ -365,8 +372,17 @@ function theme_sdl_preview_item($variables) {
   $resource = theme('sdl_editor_item', array('informations' => $atom->rendered, 'image' => $image));
   $title_label = t('Title');
   $title_value = $atom->rendered->title;
-  $author_label = t('Author');
-  $author_name = $atom->rendered->authors[0]['link'];
+  if (!empty($atom->rendered->authors)) {
+    $author_label = t('Author');
+    foreach ($atom->rendered->authors as $author) {
+      $names[] = $author->link;
+    }
+    $author_name = implode(', ', $names);
+    $author = "<dt>$author_label</dt><dd>$author_name</dd>";
+  }
+  else {
+    $author = "";
+  }
   return "
 <div class='sdl-preview-item'>
   <h3>$resource_label</h3>
@@ -375,8 +391,7 @@ function theme_sdl_preview_item($variables) {
   <dl>
     <dt>$title_label</dt>
     <dd>$title_value</dd>
-    <dt>$author_label</dt>
-    <dd>$author_name</dt>
+    $author
   </dl>
 </div>
   ";

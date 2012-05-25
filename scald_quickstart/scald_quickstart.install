@@ -29,6 +29,18 @@ function scald_quickstart_install() {
        'required' => FALSE,
     );
     field_create_instance($instance);
+
+    $instance = array(
+      'field_name' => 'scald_authors',
+      'entity_type' => 'scald_atom',
+      'bundle' => $bundle,
+      'label' => 'Authors',
+      'required' => FALSE,
+      'widget' => array(
+        'type' => 'taxonomy_autocomplete',
+      ),
+    );
+    field_create_instance($instance);
   }
 
   // Grant anoymous and authenticated user the right to see published atoms

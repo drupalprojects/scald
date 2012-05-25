@@ -95,79 +95,6 @@ function scald_schema() {
     ),
   );
 
-  // Scald Author Registry
-  $schema['scald_authors'] = array(
-    'description' => t('The Scald Author registry.'),
-    'fields'      => array(
-      'aid'  => array(
-        'description' => t('The Author ID.'),
-        'type'        => 'serial',
-        'size'        => 'big',
-        'unsigned'    => TRUE,
-        'not null'    => TRUE,
-      ),
-      'name' => array(
-        'description' => t('The name of the Author -- no first & last, just a single string.'),
-        'type'        => 'varchar',
-        'length'      => 255,
-        'not null'    => TRUE,
-        'default'     => '',
-      ),
-      'uid'  => array(
-        'description' => t('The Drupal User ID of the Author, *if* they are a user of the site.  A null value implies the author is not a Drupal user.  FK {users}.uid'),
-        'type'        => 'int',
-        'size'        => 'big',
-        'unsigned'    => TRUE,
-        'default'     => NULL,
-      ),
-      'url'  => array(
-        'description' => t('A URL at which the Author can be reached.  Preferred to an email address for privacy.'),
-        'type'        => 'varchar',
-        'length'      => 255,
-        'default'     => NULL,
-      ),
-    ),
-    'primary key' => array('aid'),
-    'indexes'     => array(
-      'i_aid_uid'      => array('aid', 'uid'),
-      'i_uid_aid'      => array('uid', 'aid'),
-      'i_aid_name_url' => array('aid', array('name', 64), array('url', 64)),
-    ),
-  );
-
-  $schema['scald_atom_authors'] = array(
-    'description' => t('Mapping between Scald Atoms and the Authors of those Atoms.'),
-    'fields'      => array(
-      'sid'     => array(
-        'description' => t('The Atom ID.  FK {scald_atoms}.sid'),
-        'type'        => 'int',
-        'size'        => 'big',
-        'unsigned'    => TRUE,
-        'not null'    => TRUE,
-        'default'     => 0,
-      ),
-      'aid'     => array(
-        'description' => t('The Author ID of an author of the Atom.  FK {scald_authors}.aid'),
-        'type'        => 'int',
-        'size'        => 'big',
-        'unsigned'    => TRUE,
-        'not null'    => TRUE,
-        'default'     => 0,
-      ),
-      'weight'  => array(
-        'description' => t('Used for determining the order of the Authors for an Atom.'),
-        'type'        => 'int',
-        'size'        => 'big',
-        'unsigned'    => TRUE,
-        'default'     => NULL,
-      ),
-    ),
-    'primary key' => array('sid', 'aid'),
-    'unique keys' => array(
-      'k_sid_weight' => array('sid', 'weight'),
-    ),
-  );
-
   // Scald Unified Type Registry
   $schema['scald_types'] = array(
     'description' => t('The Scald Unified Type registry.'),
@@ -340,25 +267,7 @@ function scald_uninstall() {
 function scald_enable() {
   variable_set('scald_context_fallbacks', array('@default' => array('title')));
 
-  // Register all existing Users as Scald Authors
-  // Determine wether we can run it straight, or need to switch to batch processing,
-  // depending on the number of users account that need to be registered.
-  $count = db_query("SELECT COUNT(uid) FROM {users} WHERE uid > 0")->fetchField();
-  if ($count < SCALD_ENABLE_BATCH_LIMIT) {
-    $context = array();
-    scald_enable_batch($context);
-  }
-  else {
-    batch_set(array(
-      'title'             => t('Registering all Users as potential Scald Authors'),
-      'operations'        => array(
-        array('scald_enable_batch', array()),
-      ),
-      'progress_message'  => '',  // No message because the batch function provides its own
-      'file'              => drupal_get_path('module', 'scald') . '/scald.install',
-    ));
-    batch_process('admin/build/modules');
-  }
+  _scald_create_author_vocabulary();
 }
 
 
@@ -373,48 +282,10 @@ function scald_enable() {
 function scald_disable() {
 }
 
-
-
-/**
- * Batch addition of all Users as Scald Authors.
- */
-function scald_enable_batch(&$context) {
-  if (!isset($context['sandbox']['last_uid'])) {
-    $context['sandbox']['progress']   = 0;
-    $context['sandbox']['last_uid']   = 0;
-    $context['sandbox']['total']      = db_query("
-      SELECT
-        COUNT(uid)
-      FROM
-        {users}
-      WHERE
-        uid > 0
-      ORDER BY
-        uid
-    ")->fetchField();
-  }
-
-  $users_results = db_select('users', 'u')
-    ->fields('u', array('uid', 'name'))
-    ->condition('u.uid', 0, '>')
-    ->orderBy('u.uid')
-    ->range($context['sandbox']['progress'], SCALD_ENABLE_BATCH_LIMIT)
-    ->execute();
-  while ($user_raw = $users_results->fetchAssoc()) {
-    scald_register_author($user_raw);
-    $context['sandbox']['last_uid'] = $user_raw['uid'];
-    $context['sandbox']['progress']++;
-  }
-
-  $context['message']   = t('Updated @current of @total users.', array('@current' => $context['sandbox']['progress'], '@total' => $context['sandbox']['total']));
-  $context['finished']  = $context['sandbox']['progress'] / $context['sandbox']['total'];
-}
-
 /**
  * Updates the schema from the 6.x version
  */
 function scald_update_7000() {
-  // TODO: Find what's needed here.
   // Drop the table that were just storing the results of info hooks
   db_drop_table('scald_actions');
   db_drop_table('scald_atom_providers');
@@ -445,5 +316,76 @@ function scald_update_7000() {
       $new_defaults[$name] = (object)$default;
     }
     variable_set('scald_atom_defaults', $new_defaults);
+  }
+
+  // TODO: Convert all the authors from the old scald_authors table
+  // to new taxonomy terms of the scald_authors vocabulary.
+  db_drop_table('scald_authors');
+  db_drop_table('scald_atom_authors');
+}
+
+/**
+ * Create a vocabulary for storing Scald Authors, and the matching fields.
+ */
+function _scald_create_author_vocabulary() {
+  field_associate_fields('taxonomy');
+
+  // Create the atom vocabulary if it does not exist.
+  $vocabulary = taxonomy_vocabulary_load(variable_get('scald_author_vocabulary', 0));
+  if (!$vocabulary) {
+    $edit = array(
+      'name' => t('Authors'),
+      'machine_name' => 'scald_authors',
+      'description' => t('Scald authors vocabulary'),
+      'hierachy' => 0,
+      'module' => 'scald',
+      'weight' => -5,
+    );
+    $vocabulary = (object)$edit;
+    taxonomy_vocabulary_save($vocabulary);
+    variable_set('scald_author_vocabulary', $vocabulary->vid);
+
+    // Create a URL field on the taxonomy terms of the Scald Authors
+    // bundle.
+
+    $field = array(
+      'field_name' => 'scald_author_url',
+      'type' => 'text',
+      'label' => t('URL'),
+      'locked' => TRUE,
+    );
+    field_create_field($field);
+    $instance = array(
+      'field_name' => 'scald_author_url',
+      'label' => t('URL'),
+      'entity_type' => 'taxonomy_term',
+      'bundle' => 'scald_authors',
+      'required' => FALSE,
+      'description' => 'Homepage of the Author',
+    );
+    field_create_instance($instance);
+  }
+
+  // Create the scald_authors field
+  if (!field_info_field('scald_authors')) {
+    $field = array(
+      'title' => t('Authors'),
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+      'field_name' => 'scald_authors',
+      'type' => 'taxonomy_term_reference',
+      'settings' => array(
+        'allowed_values' => array(
+          'vocabulary' => array(
+            'vocabulary' => $vocabulary->machine_name,
+            'parent' => 0,
+          ),
+          'parent' => array(
+            'vocabulary' => $vocabulary->machine_name,
+            'parent' => 0,
+          ),
+        )
+      ),
+    );
+    field_create_field($field);
   }
 }
