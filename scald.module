@@ -1448,7 +1448,8 @@ function scald_permission() {
   return array(
     'administer scald' => array(
       'title' => t('Administer Scald'),
-      'description' => t('Access Atom fields configuration and permissions')
+      'description' => t('Access Atom fields configuration and permissions'),
+      'restrict access' => TRUE,
     ),
     'use scald' => array(
       'title' => t('Use Scald'),
