@@ -2134,7 +2134,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
   // Populate default rendered members & validate other rendered members.
   $atom->rendered->title = check_plain($atom->rendered->title); // @@@TODO: Determine if it makes sense to *always* do this or make it dependant on Context render language.
   $atom->rendered->description = check_markup($atom->rendered->description, FILTER_FORMAT_DEFAULT, FALSE); // @@@TODO: Determine if this is reasonable or if it should be left to Providers
-  $atom->rendered->type = $scald_config->types[$atom->type]['title'];
+  $atom->rendered->type = check_plain($scald_config->types[$atom->type]['title']);
 
   // Actions
   $atom->rendered->actions = array();
