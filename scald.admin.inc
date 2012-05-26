@@ -92,7 +92,7 @@ function scald_admin_types_form() {
   while ($type_raw = db_fetch_array($types_results)) {
     $form[$type_raw['type']] = array(
       '#type'         => 'fieldset',
-      '#title'        => $type_raw['title'],
+      '#title'        => check_plain($type_raw['title']),
       '#description'  => $type_raw['description'] . '<br>' . t('Provided by <code>@module.module</code>', array('@module' => $type_raw['provider'])),
       '#collapsible'  => TRUE,
       '#collapsed'    => TRUE,
