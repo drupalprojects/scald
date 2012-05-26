@@ -40,7 +40,7 @@ function scald_admin_dashboard() {
 
   foreach ($types as $type) {
     $table['rows'][] = array(
-      $type->title,
+      check_plain($type->title),
       l(t('edit'), 'admin/structure/scald/' . $type->type),
       l(t('manage fields'), 'admin/structure/scald/' . $type->type . '/fields'),
       l(t('manage display'), 'admin/structure/scald/' . $type->type . '/display'),
