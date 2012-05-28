@@ -1,9 +1,16 @@
 <?php
 /**
  * @file
- *   Bla
+ *   Scald Quickstart Installation
+ *   
+ *   Add some basics elements for a first use of ScalD module
+ *   
+ * @ingroup scald
  */
 
+/**
+ * Implements hook_install().
+ */
 function scald_quickstart_install() {
   // Create a few default types
   db_insert('scald_types')
