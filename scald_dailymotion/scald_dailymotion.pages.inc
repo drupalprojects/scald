@@ -123,11 +123,24 @@ function scald_dailymotion_search_form_submit($form, &$form_state) {
   unset($form_state['storage']);
   $form_state['rebuild'] = FALSE;
   
+  // Redirect user to the import form (special page) 
+  $form_state['redirect'] = array(
+    'atoms/dailymotion/import',
+    array(
+      'query' => array(
+        'dm-id' => $identifier
+      )
+    )
+  ); 
+  
+/*
+  // Import video immediately (no UI)
   $sid = scald_dailymotion_register($identifier);
   if($sid) {
     $video = scald_fetch($sid);
     drupal_set_message(t('Created video %title', array('%title' => $video->title)));
   }
+*/
 }
 
 /**
