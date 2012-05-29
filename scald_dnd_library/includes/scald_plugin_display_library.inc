@@ -116,12 +116,12 @@ class scald_plugin_display_library extends views_plugin_display_page {
       $sid = $result->sid;
       scald_dnd_library_add_item($library, $sid);
     }
-    $atom_types = module_invoke_all('scald_atom_quickadd');
-    $buttons = array();
+    $atom_types = scald_types();
+    $buttons = array('type' => 'ul', 'title' => NULL, 'attributes' => array());
     foreach ($atom_types as $type) {
-      $buttons[] = array(
-        'data' => l(t($type['type']), $type['addpath'], array('attributes' => array('class' => $type['class']))),
-        'class' => 'add-' . strtolower($type['type']),
+      $buttons['items'][] = array(
+        'data' => l(t($type->type), 'atoms/add/' . $type->type),
+        'class' => array('add-' . strtolower($type->type)),
       );
     }
     $library['menu'] = '<div class="scald-menu"><div class="add-buttons">'. theme_item_list($buttons) .'</div></div>';
