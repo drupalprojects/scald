@@ -16,7 +16,7 @@ function scald_dailymotion_imports_form() {
        '#type' => 'fieldset',
        '#title' => t('Current imports'),
        '#tree' => TRUE,
-       '#theme' => 'scald_dailymotion_imports_table'
+       '#theme' => 'scald_dailymotion_imports_table',
      );
     foreach ($imports as $key => $import) {
       $form['imports'][$key] = array(
@@ -24,7 +24,7 @@ function scald_dailymotion_imports_form() {
           '#type' => 'select',
           '#title' => t('Type'),
           '#options' => array('delete' => t('<Delete>')) + $types,
-          '#default_value' => $import['type']
+          '#default_value' => $import['type'],
         ),
         'value' => array(
           '#type' => 'textfield',
@@ -34,6 +34,13 @@ function scald_dailymotion_imports_form() {
       );
     }
   }
+
+  $form['imports']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save configuration')
+  );
+
+
   $form['add'] = array(
     '#type' => 'fieldset',
     '#title' => t('Add import'),
@@ -57,11 +64,6 @@ function scald_dailymotion_imports_form() {
     '#type' => 'submit',
     '#value' => t('Add this import'),
     '#submit' => array('scald_dailymotion_imports_form_add')
-  );
-
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save configuration')
   );
   return $form;
 }
@@ -95,18 +97,19 @@ function scald_dailymotion_imports_form_submit($form, &$form_state) {
 /**
  * Themes the current imports form.
  */
-function theme_scald_dailymotion_imports_table($form) {
-  $headers = array(t('Type'), t('Identifier'));
+function theme_scald_dailymotion_imports_table($variables) {
+  $form = $variables['form'];
+  $header = array(t('Type'), t('Identifier'));
   $rows = array();
   foreach (element_children($form) as $key) {
-    // Unset per widget titles, they're already in the column title
-    $form[$key]['type']['#title'] = $form[$key]['value']['#title'] = '';
-    // Render our row
-    $row = array();
-    $row[] = drupal_render($form[$key]['type']);
-    $row[] = drupal_render($form[$key]['value']);
-    // And add it to the list of table rows.
-    $rows[] = $row;
+    $rows[] = array(
+      'data' => array(
+        drupal_render($form[$key]['type']),
+        drupal_render($form[$key]['value']),
+      ),
+    );
   }
-  return theme('table', $headers, $rows);
+  $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'scald-dailymotion-imports')));
+  $output .= drupal_render_children($form);
+  return $output;
 }

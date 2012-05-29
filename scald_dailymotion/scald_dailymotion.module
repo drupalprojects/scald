@@ -3,42 +3,79 @@
  * @file
  *   Defines a DailyMotion provider for Scald.
  */
-define('DAILYMOTION_RSS', 'http://www.dailymotion.com/rss/');
-define('DAILYMOTION_WEB', 'http://www.dailymotion.com/video/');
-define('DAILYMOTION_OEMBED', 'http://www.dailymotion.com/services/oembed');
-define('NS_MEDIA',              'http://search.yahoo.com/mrss');
-define('NS_DM',                 'http://www.dailymotion.com/dmrss');
+define('DAILYMOTION_RSS',     'http://www.dailymotion.com/rss/');
+define('DAILYMOTION_WEB',     'http://www.dailymotion.com/video/');
+define('DAILYMOTION_OEMBED',  'http://www.dailymotion.com/services/oembed');
+define('NS_MEDIA',            'http://search.yahoo.com/mrss');
+define('NS_DM',               'http://www.dailymotion.com/dmrss');
 
 /**
- * Implements hook_scald_providers.
+ * Implements hook_scald_atom_providers.
  * Tell Scald that we'll be providing some video atoms.
  */
-function scald_dailymotion_scald_provider() {
+function scald_dailymotion_scald_atom_providers() {
   return array(
-    'atoms' => array(
-      'video' => array('A video hosted on DailyMotion')
-    )
+    'video' => 'Video hosted on DailyMotion'
   );
+}
+
+/**
+ * Implements hook_scald_add_form.
+ */
+function scald_dailymotion_scald_add_form(&$form, &$form_state) {
+  $form['identifier'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Video identifier'),
+    '#element_validate' => array('scald_dailymotion_validate_id')
+  );
+  
+  $form['search'] = array(
+    '#type' => 'item',
+    '#markup' => l(t('Search on DailyMotion'), 'admin/dailymotion/search'),
+  );
+  
+}
+
+/**
+   * Implements hook_scald_add_form_fill.
+ */
+function scald_dailymotion_scald_add_form_fill(&$atom, $form, $form_state) {
+  $identifier = $form_state['values']['identifier'];
+  $video = scald_dailymotion_parse_id($identifier);
+  
+  $atom->base_id = $identifier;
+  $atom->title = $video->title;
+  
+  // Prefill the author
+  $atom->scald_authors[LANGUAGE_NONE][0] = array(
+    'tid' => 0,
+    'taxonomy_term' => (object)(array('name' => $video->author))
+  );  
+/*
+  $file = file_load($form_state['values']['file']);
+  $atom->title = $file->filename;
+  $atom->base_id = $file->fid;
+  $atom->scald_thumbnail[LANGUAGE_NONE][0] = (array)$file;
+*/
 }
 
 /**
  * Implements hook_scald_fetch.
  */
-function scald_dailymotion_scald_fetch(&$atom, $type) {
-  $file = file_directory_path() . '/dailymotion/'. $atom->base_id .'.jpg';
+function scald_dailymotion_scald_fetch($atom, $type) {
+  $file = 'public://dailymotion/'. $atom->base_id .'.jpg';
   if (file_exists($file)) {
-    $atom->thumbnail_source = $file;
-    $atom->file_source = $atom->thumbnail_source;
+    $atom->file_source = $atom->thumbnail_source = $file;
   }
 }
 
 /**
  * Implements hook_scald_prerender.
  */
-function scald_dailymotion_scald_prerender(&$atom, $context, $options, $type) {
-  if ($type == 'atom') {
+function scald_dailymotion_scald_prerender($atom, $context, $options, $mode) {
+  if ($mode == 'atom') {
     if ($context != 'sdl_library_item') {
-      $atom->rendered->player = theme('scald_dailymotion_player', $atom->base_id, $atom->thumbnail_source);
+      $atom->rendered->player = theme('scald_dailymotion_player', array('video' => $atom->base_id, 'thumbnail' => $atom->thumbnail_source));
     }
   }
 }
@@ -49,15 +86,15 @@ function scald_dailymotion_scald_prerender(&$atom, $context, $options, $type) {
 function scald_dailymotion_theme() {
   return array(
     'scald_dailymotion_player' => array(
-      'arguments' => array('video' => NULL, 'thumbnail' => NULL),
+      'variables' => array('video' => NULL, 'thumbnail' => NULL),
       'template' => 'scald_dailymotion_player'
     ),
     'scald_dailymotion_imports_table' => array(
-      'arguments' => array('form' => NULL),
+      'render element' => 'form',
       'file' => 'scald_dailymotion.admin.inc'
     ),
     'scald_dailymotion_search_results_table' => array(
-      'arguments' => array('form' => NULL),
+      'render element' => 'form',
       'file' => 'scald_dailymotion.pages.inc'
     )
   );
@@ -88,7 +125,7 @@ function scald_dailymotion_cron() {
  */
 function scald_dailymotion_menu() {
   $items = array();
-  $items['admin/settings/scald_dailymotion'] = array(
+  $items['admin/config/media/scald_dailymotion'] = array(
     'title' => 'DailyMotion imports',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('scald_dailymotion_imports_form'),
@@ -96,14 +133,17 @@ function scald_dailymotion_menu() {
     'description' => 'Configure the videos that should be automatically imported from DailyMotion',
     'file' => 'scald_dailymotion.admin.inc'
   );
-  $items['dailymotion/search'] = array(
+
+  $items['admin/dailymotion/search'] = array(
     'title' => 'DailyMotion Video search',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('scald_dailymotion_search_form', 2),
     'access arguments' => array('import dailymotion videos'),
     'description' => 'Search for new videos to import into this site',
-    'file' => 'scald_dailymotion.pages.inc'
+    'file' => 'scald_dailymotion.pages.inc',
+    'type' => MENU_CALLBACK
   );
+
   return $items;
 }
 
@@ -125,32 +165,36 @@ function scald_dailymotion_register($video) {
   else {
     $infos = scald_dailymotion_video($video);
   }
-  // Check if the video has already been imported to prevent duplicated
+  
+  // Check if the video has already been imported to prevent duplicate
   $old = scald_dailymotion_already_imported($infos->id);
   if ($old) {
-    return $old;
+    return FALSE;
   }
+
   // Download a copy of the video thumbnail. This makes it possible
-  // to do interesting things when used with ImageCache for example.
+  // to do interesting manipulation with image styles presets.
   $thumb = drupal_http_request($infos->thumbnail['src']);
-  $dir = file_directory_path() . '/dailymotion';
-  if ($thumb->code == 200 && file_check_directory($dir, FILE_CREATE_DIRECTORY)) {
+  $dir = 'public://dailymotion';
+  if ($thumb->code == 200 && file_prepare_directory($dir, FILE_CREATE_DIRECTORY)) {
     $dest = $dir . '/' . $infos->id . '.jpg';
     $file = file_save_data($thumb->data, $dest);
   }
+
+  // @@@TODO: Import dailymotion author into taxonomy vocabulary and link it
+  
   // Create an atom
-  $atom = new stdClass;
-  $atom->type      = 'video';
-  $atom->provider  = 'scald_dailymotion';
-  $atom->base_id   = $infos->id;
-  $atom->publisher = $user->uid;
-  $atom->title     = $infos->title;
-  $aid = scald_author_get_id(array('name' => $infos->author, 'url' => 'dailymotion://user/'. $info->author));
-  $atom->authors   = array($aid);
+  $atom = new stdClass();
+  $atom->type       = 'video';
+  $atom->provider   = 'scald_dailymotion';
+  $atom->base_id    = $infos->id;
+  $atom->publisher  = $user->uid;
+  $atom->title      = $infos->title;
+  
   // And save it
-  $atom_sid = scald_register_atom((array)$atom);
+  $atom_sid = scald_atom_save($atom);
   // Finally, return this id
-  return $atom_sid;
+  return $atom_sid; 
 }
 
 /**
@@ -158,7 +202,7 @@ function scald_dailymotion_register($video) {
  * items in an easy to manipulate objects containing the informations we're
  * interested in.
  * @param $type
- *   DailyMotion RSS feed type. Examples include 'user', 'video', 'tag'...
+ *   DailyMotion RSS feed type. Examples include 'user', 'video', 'tag', 'search', ...
  * @param $id
  *   The identifier, related to the type mentionned above. If you're requestion
  *   a user feed, then, its the username...
@@ -246,4 +290,23 @@ function scald_dailymotion_video($id) {
 function scald_dailymotion_already_imported($id) {
   $query = array('provider' => 'scald_dailymotion', 'base_id' => $id);
   return scald_search($query, FALSE, TRUE);
+}
+
+/**
+ * Form element validation handler for DailyMotion identifier
+ *
+ */
+function scald_dailymotion_validate_id($element, &$form_state) {
+  $video = scald_dailymotion_parse_id($form_state['values']['identifier']);
+  if(!$video) {
+    form_error($element, t('Invalid DailyMotion video identifier.'));
+  }
+}
+
+function scald_dailymotion_parse_id($identifier) {
+  $items = scald_dailymotion_feed('video', $identifier);
+  if(count($items)) {
+    return $items[0];
+  }
+  return FALSE;
 }
