@@ -52,7 +52,7 @@ function scald_dailymotion_scald_add_form(&$form, &$form_state) {
 function scald_dailymotion_scald_add_form_fill(&$atom, $form, $form_state) {
 
   // Get the DM identifier
-  $identifier = $form_state['values']['identifier'];
+  $identifier = scald_dailymotion_parse_id($form_state['values']['identifier'], TRUE);
 
   // Get video info
   $infos = scald_dailymotion_video($identifier);
@@ -348,20 +348,28 @@ function scald_dailymotion_validate_id($element, &$form_state) {
  */
 function scald_dailymotion_parse_id($string, $check) {
   $id = NULL;
+  $string = trim($string);
   if (!preg_match('/^[a-zA-Z0-9]+$/', $string)) {
-    // The ID is not easy to parse, let's try to extract it (potentially from the URL)
+    // The string ID is not easy to parse, let's try to analyze it
     if (preg_match('#^'. DAILYMOTION_WEB .'([a-zA-Z0-9]+)(_.*)?$#', $string, $m)) {
+      // This string os a full dailymotion URL
       $id = $m[1];
+    }
+    else if(preg_match("/^http/", $string)) {
+      // This string is a URL, most likely a shortened one. (http://dai.ly, http://bit.ly, etc...)
+      $response = drupal_http_request($string);
+      if($response->code == 200 && isset($response->redirect_code) &&  ($response->redirect_code == 301 || $response->redirect_code == 302)) {
+        return scald_dailymotion_parse_id($response->redirect_url, $check);
+      }
     }
   }
   else {
     $id = $string;
   }
 
-  // On vérifie maintenant que cette video existe sur DailyMotion
-  if($check) {
-    $infos = scald_dailymotion_video($id);
-    if(!$infos) {
+  if($id && $check) {
+    // Last check to confirm this video really exists on DailyMotion
+    if(!scald_dailymotion_video($id)) {
       $id = FALSE;
     }
   }
