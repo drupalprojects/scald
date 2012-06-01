@@ -28,38 +28,38 @@ function scald_schema() {
 
   // Scald Atom Registry
   $schema['scald_atoms'] = array(
-    'description' => t('The Scald Atom registry.'),
+    'description' => 'The Scald Atom registry.',
     'fields'      => array(
       'sid'       => array(
-        'description' => t('The Scald Identifier, a unique integer ID for a given Scald Atom.'),
+        'description' => 'The Scald Identifier, a unique integer ID for a given Scald Atom.',
         'type'        => 'serial',
         'size'        => 'big',
         'unsigned'    => TRUE,
         'not null'    => TRUE,
       ),
       'provider'  => array(
-        'description' => t('The name of the module which provides this Atom.  The Provider module should implement the Scald Provider API for Atoms.  FK {system}.name'),
+        'description' => 'The name of the module which provides this Atom.  The Provider module should implement the Scald Provider API for Atoms.  FK {system}.name',
         'type'        => 'varchar',
         'length'      => 255,
         'not null'    => TRUE,
         'default'     => 'scald',
       ),
       'type'      => array(
-        'description' => t('The Scald Unified Type slug for this Atom\'s type.  FK {scald_types}.type'),
+        'description' => 'The Scald Unified Type slug for this Atom\'s type.  FK {scald_types}.type',
         'type'        => 'varchar',
         'length'      => SCALD_SLUG_MAX_LENGTH,
         'not null'    => TRUE,
         'default'     => 'composite',
       ),
       'base_id'   => array(
-        'description' => t('The identifier used by the Scald Atom Provider that registered Atom to determine additional properties (e.g. a Drupal NID or a YouTube ID).  FK'),
+        'description' => 'The identifier used by the Scald Atom Provider that registered Atom to determine additional properties (e.g. a Drupal NID or a YouTube ID).  FK',
         'type'        => 'varchar',
         'length'      => 255,
         'not null'    => FALSE,
         'default'     => NULL,
       ),
       'publisher' => array(
-        'description' => t('The Drupal User ID of the user who *registered* this Atom.  Makes no implications about the Authorship.  FK {users}.uid'),
+        'description' => 'The Drupal User ID of the user who *registered* this Atom.  Makes no implications about the Authorship.  FK {users}.uid',
         'type'        => 'int',
         'size'        => 'big',
         'unsigned'    => TRUE,
@@ -67,7 +67,7 @@ function scald_schema() {
         'default'     => 0,
       ),
       'actions'   => array(
-        'description' => t('The Scald Actions bitstring for this Atom.'),
+        'description' => 'The Scald Actions bitstring for this Atom.',
         'type'        => 'int',
         'size'        => 'big',
         'unsigned'    => TRUE,
@@ -75,12 +75,19 @@ function scald_schema() {
         'default'     => 0,
       ),
       'title'     => array(
-        'description' => t('The title of this Scald Atom.'),
+        'description' => 'The title of this Scald Atom.',
         'type'        => 'varchar',
         'length'      => 255,
         'not null'    => TRUE,
         'default'     => '',
       ),
+      'data'      => array(
+        'description' => 'A serialized array of atom and provider specific additionnal data.',
+        'type'        => 'blob',
+        'size'        => 'big',
+        'not null'    => TRUE,
+        'serialize'   => TRUE,
+      ),      
     ),
     'primary key' => array('sid'),
     'unique keys' => array(
@@ -97,31 +104,31 @@ function scald_schema() {
 
   // Scald Unified Type Registry
   $schema['scald_types'] = array(
-    'description' => t('The Scald Unified Type registry.'),
+    'description' => 'The Scald Unified Type registry.',
     'fields'      => array(
       'type'         => array(
-        'description' => t('The Scald Unified Type slug, used to uniquely identify the Type'),
+        'description' => 'The Scald Unified Type slug, used to uniquely identify the Type',
         'type'        => 'varchar',
         'length'      => SCALD_SLUG_MAX_LENGTH,
         'not null'    => TRUE,
         'default'     => 'composite',
       ),
       'provider'         => array(
-        'description' => t('The name of the module which provides this Type.  The Provider module should implement the Scald Provider API for Types.  FK {system}.name'),
+        'description' => 'The name of the module which provides this Type.  The Provider module should implement the Scald Provider API for Types.  FK {system}.name',
         'type'        => 'varchar',
         'length'      => 255,
         'not null'    => TRUE,
         'default'     => 'scald',
       ),
       'title'       => array(
-        'description' => t('The human-readable title of this Type.  Publicly Viewable'),
+        'description' => 'The human-readable title of this Type.  Publicly Viewable',
         'type'        => 'varchar',
         'length'      => 255,
         'not null'    => TRUE,
-        'default'     => t('Scald Composite'),
+        'default'     => 'Scald Composite',
       ),
       'description' => array(
-        'description' => t('A description of the Type for the benefit of Admins and Devs.'),
+        'description' => 'A description of the Type for the benefit of Admins and Devs.',
         'type'        => 'text',
         'size'        => 'medium',
       ),
@@ -130,31 +137,31 @@ function scald_schema() {
   );
 
   $schema['scald_context_type_transcoder'] = array(
-    'description' => t('A mapping between Types, Contexts, file formats, and Transcoders'),
+    'description' => 'A mapping between Types, Contexts, file formats, and Transcoders',
     'fields'      => array(
       'context'    => array(
-        'description' => t('The Scald Context slug for a Scald Context.  Fk {scald_contexts}.context'),
+        'description' => 'The Scald Context slug for a Scald Context.  Fk {scald_contexts}.context',
         'type'        => 'varchar',
         'length'      => SCALD_SLUG_MAX_LENGTH,
         'not null'    => TRUE,
         'default'     => 'title',
       ),
       'type'       => array(
-        'description' => t('The Scald Unified Type slug for a Scald Unified Type.  FK {scald_types}.type'),
+        'description' => 'The Scald Unified Type slug for a Scald Unified Type.  FK {scald_types}.type',
         'type'        => 'varchar',
         'length'      => SCALD_SLUG_MAX_LENGTH,
         'not null'    => TRUE,
         'default'     => 'composite',
       ),
       'file_format'     => array(
-        'description' => t('A file format slug.  Could be just about anything, but this is supposed to coincide with the format specifiers used by Scald Transcoders.'),
+        'description' => 'A file format slug.  Could be just about anything, but this is supposed to coincide with the format specifiers used by Scald Transcoders.',
         'type'        => 'varchar',
         'length'      => SCALD_SLUG_MAX_LENGTH,
         'not null'    => TRUE,
         'default'     => 'passthrough',
       ),
       'transcoder' => array(
-        'description' => t('The Scald Transcoder slug for a Scald Transcoder.  FK {scald_transcoders}.transcoder'),
+        'description' => 'The Scald Transcoder slug for a Scald Transcoder.  FK {scald_transcoders}.transcoder',
         'type'        => 'varchar',
         'length'      => SCALD_SLUG_MAX_LENGTH,
         'not null'    => TRUE,
@@ -165,10 +172,10 @@ function scald_schema() {
   );
 
   $schema['scald_role_actions'] = array(
-    'description' => t('The mapping of various Actions to Drupal user roles.'),
+    'description' => 'The mapping of various Actions to Drupal user roles.',
     'fields'      => array(
       'rid'     => array(
-        'description' => t('A Drupal user role ID.  FK {role}.rid'),
+        'description' => 'A Drupal user role ID.  FK {role}.rid',
         'type'        => 'int',
         'size'        => 'big',
         'unsigned'    => TRUE,
@@ -176,7 +183,7 @@ function scald_schema() {
         'default'     => 0,
       ),
       'actions' => array(
-        'description' => t('The Scald Action bitstring for this role.'),
+        'description' => 'The Scald Action bitstring for this role.',
         'type'        => 'int',
         'size'        => 'big',
         'unsigned'    => TRUE,
@@ -188,29 +195,29 @@ function scald_schema() {
   );
 
   $schema['scald_licenses'] = array(
-    'description' => t('Definitions of Licenses as sets of permitted Scald Actions'),
+    'description' => 'Definitions of Licenses as sets of permitted Scald Actions',
     'fields'      => array(
       'lid'         => array(
-        'description' => t('The License ID; an arbitrarily defined identifier for the license.'),
+        'description' => 'The License ID; an arbitrarily defined identifier for the license.',
         'type'        => 'serial',
         'size'        => 'big',
         'unsigned'    => TRUE,
         'not null'    => TRUE,
       ),
       'title'       => array(
-        'description' => t('The human-readable name of this License (often presented as an alternative for users).'),
+        'description' => 'The human-readable name of this License (often presented as an alternative for users).',
         'type'        => 'varchar',
         'length'      => 255,
         'not null'    => TRUE,
-        'default'     => t('Scald License Default Title'),
+        'default'     => 'Scald License Default Title',
       ),
       'description' => array(
-        'description' => t('A description of a given License for public consumption.'),
+        'description' => 'A description of a given License for public consumption.',
         'type'        => 'text',
         'size'        => 'medium',
       ),
       'actions'     => array(
-        'description' => t('The Scald Action bitstring for this License.'),
+        'description' => 'The Scald Action bitstring for this License.',
         'type'        => 'int',
         'size'        => 'big',
         'unsigned'    => TRUE,
@@ -389,3 +396,20 @@ function _scald_create_author_vocabulary() {
     field_create_field($field);
   }
 }
+
+
+/**
+ * Add the data column
+ * "A serialized array of atom and provider specific additionnal data"
+ */
+function scald_update_7001() {
+  $new_field = array(
+    'description' => 'A serialized array of atom and provider specific additionnal data.',
+    'type'        => 'blob',
+    'size'        => 'big',
+    'not null'    => TRUE,
+    'serialize'   => TRUE,
+  );
+  db_add_field('scald_atoms', 'data', $new_field);
+}
+

@@ -286,6 +286,9 @@ function scald_atom_save(&$atom) {
   if (!isset($atom->title)) {
     $atom->title = '';
   }
+  if (!isset($atom->data)) {
+    $atom->data = array();
+  }
 
   $op = empty($atom->sid) ? 'insert' : 'update';
   $hook = ($op == 'insert') ? 'scald_register_atom' : 'scald_update_atom';
