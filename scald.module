@@ -1383,6 +1383,7 @@ function scald_entity_info() {
   $return = array(
     'scald_atom' => array(
       'label' => t('Atoms'),
+      'controller class' => 'ScaldAtomController',
       'base table' => 'scald_atoms',
       'uri callback' => 'scald_atom_uri',
       'fieldable' => TRUE,

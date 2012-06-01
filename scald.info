@@ -9,3 +9,4 @@ files[] = includes/scald_views_handler_field_representation.inc
 files[] = includes/scald_views_handler_filter_actions.inc
 files[] = includes/scald_views_handler_filter_atom_provider.inc
 files[] = includes/scald_views_handler_filter_atom_type.inc
+files[] = includes/ScaldAtomController.inc
