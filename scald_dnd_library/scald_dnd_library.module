@@ -133,7 +133,6 @@ function scald_dnd_library_add_item(&$library, $sid) {
       'title' => $atom->title,
       'type' => $atom->type,
       'legend' => theme('sdl_editor_legend', array('atom' => $atom)),
-      'action' => $atom->base_entity->license->action_fin
     ),
     'editor' => scald_render($atom, 'sdl_editor_representation'),
     'preview' => scald_render($atom, 'sdl_preview'),
@@ -338,11 +337,14 @@ function theme_sdl_editor_item($variables) {
  */
 function theme_sdl_editor_legend($variables) {
   $atom = $variables['atom'];
-  $informations = $atom->rendered;
-  if (empty($informations)) {
+  $sid = $atom->sid;
+  if (empty($atom->rendered)) {
     $clone = clone $atom;
     scald_prerender($clone, 'sdl_editor_representation');
     $informations = $clone->rendered;
+  }
+  else {
+    $informations = $atom->rendered;
   }
   if (!empty($atom->rendered->authors)) {
     foreach ($atom->rendered->authors as $author) {

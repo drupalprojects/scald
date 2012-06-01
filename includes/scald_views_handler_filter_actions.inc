@@ -39,7 +39,7 @@ class scald_views_handler_filter_actions extends views_handler_filter {
   /**
    * Overrides value_submit: translate the checkboxes to a bitmask.
    */
-  function value_submit(&$form, &$form_state) {
+  function value_submit($form, &$form_state) {
     $actions = scald_actions();
     $mask = 0;
     foreach ($form_state['values']['options']['value'] as $value) {
