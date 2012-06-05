@@ -16,10 +16,7 @@ define('SCALD_SLUG_MATCH_PATTERN',        '/^[\w-]+$/');
 // There are dozens of issues with integer values and variables in PHP.  All
 //  integer values are unsigned and so the highest bit which is truly safe to
 //  use in the way that Scald does is the 31st bit.
-define('SCALD_ACTIONS_ADMIN_BIT',         0x00000001);
-define('SCALD_ACTIONS_FETCH',             0x00000002);
-// This is the max power which can live in the db, since the Admin Bit is set
-//  elsewhere.
+// This is the max power which can live in the db
 define('SCALD_ACTIONS_MAX_POWER',         30);
 
 define('SCALD_SAS_MATCH_PATTERN',         '/\[\s*scald=(\d+)(?(?=:):([\w-]+))(?(?=\s+)\s+([^\]]*))\s*\]/');

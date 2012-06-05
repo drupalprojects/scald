@@ -140,7 +140,7 @@ function scald_actions($reset = FALSE) {
  * Assigns each actions an unique bitmask.
  */
 function scald_scald_actions_alter(&$actions) {
-  $powers = variable_get('scald_actions_powers', array('@admin' => 0));
+  $powers = variable_get('scald_actions_powers', array());
   $max_power = empty($powers) ? 0 : max($powers);
   $new_power = FALSE;
   foreach ($actions as $name => $action) {
@@ -494,12 +494,10 @@ function scald_fetch($sid, $rebuild = FALSE) {
 
   $atom = reset($atoms);
 
-
   // Verify that the current user is allowed to fetch this Atom
   if (!scald_action_permitted($atom, 'fetch')) {
     return FALSE;
   }
-
 
   // Check the memory cache for the Atom
   static $scald_atoms;
@@ -873,15 +871,11 @@ function scald_user_actions($atom, $account = NULL) {
     $account->scald_actions = $account->scald_actions | variable_get('scald_actions_publisher', 0);
   }
 
-  // Check for the "admin bit" being set in *either* the Atom or the User Action
-  //  bitstring and if it is set, OR the two rather than ANDing them.
-  return
-    (
-      $atom->actions & SCALD_ACTIONS_ADMIN_BIT
-      || $account->scald_actions & SCALD_ACTIONS_ADMIN_BIT
-    )
-    ? $atom->actions | $account->scald_actions
-    : $atom->actions & $account->scald_actions;
+  // Check for the "bypass atom access restrictions" permission for this user
+  //  if it is set, OR the  "Atom" and the "User Action" rather than ANDing them.
+  return user_access('bypass atom access restrictions') 
+    ? ($atom->actions | $account->scald_actions) 
+    : ($atom->actions & $account->scald_actions);
 } // end scald_actions()
 
 
@@ -963,7 +957,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
 
   // Actions
   $atom->rendered->actions = array();
-  $current_actions = scald_actions($atom) & ~SCALD_ACTIONS_ADMIN_BIT; // Remove the Admin bit as it is irrelevant for rendering purposes
+  $current_actions = scald_actions($atom);
   foreach ($actions as $slug => $details) {
     if ($current_actions & $details['bitmask']) {
       $atom->rendered->actions[] = array(
@@ -1241,11 +1235,6 @@ function scald_scald_transcoders() {
  */
 function scald_scald_actions() {
   return array(
-    // @admin is *always* the highest bit
-    '@admin' => Array(
-      'title'       => t('Admin Mode'),
-      'description' => t('<see scald.admin.inc>'),
-    ),
     'fetch' => array(
       'title'       => t('Fetch'),
       'description' => t('<see scald.admin.inc>'),
@@ -1447,9 +1436,10 @@ function scald_field_extra_fields () {
 /**
  * Implements hook_permission().
  *
+ * Actions are assigned to Drupal User Roles there.
  * NOTE: Scald Actions permissions are *not* assigned using the normal Drupal
  *  permissions interface.  Instead they are managed separately through the
- *  Scald Admin Interface.  Actions are assigned to Drupal User Roles there.
+ *  Scald Admin Interface.  
  */
 function scald_permission() {
   return array(
@@ -1458,9 +1448,14 @@ function scald_permission() {
       'description' => t('Access Atom fields configuration and permissions'),
       'restrict access' => TRUE,
     ),
+    'bypass atom access restrictions' => array(
+      'title' => t('Bypass atom access restrictions'),
+      'description' => t('Grants access to all atoms.'),
+      'restrict access' => TRUE,
+    ),
     'use scald' => array(
       'title' => t('Use Scald'),
-      'description' => t('Grants access to the basic functioning of Scald (registering Atoms, etc.)')
+      'description' => t('Grants access to the basic functioning of Scald (registering Atoms, etc.)'),
     ),
   );
 }
