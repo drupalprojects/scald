@@ -241,11 +241,11 @@ function scald_admin_atoms() {
       }
       $content .= '
         <li>
-          <strong>' . $scald_config->types[$atom_raw['type']]['title'] . '</strong> Atoms are based on:
+          <strong>' . check_plain($scald_config->types[$atom_raw['type']]['title']) . '</strong> Atoms are based on:
           <ul>
       ';
     }
-    $content .= '<li>' . $atom_raw['base_description'] . ' (Provided by <code>' . $atom_raw['provider'] . '.module</code>)</li>';
+    $content .= '<li>' . check_plain($atom_raw['base_description']) . ' (Provided by <code>' . $atom_raw['provider'] . '.module</code>)</li>';
   }
   $content .= '</ul></li></ol>';
 
