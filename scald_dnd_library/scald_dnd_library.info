@@ -4,3 +4,4 @@ package = Scald
 core = 6.x
 dependencies[] = scald
 dependencies[] = dnd
+dependencies[] = views
