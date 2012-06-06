@@ -5,22 +5,6 @@
  * Scald DnD Library
  */
 
-// CONSTANTS
-define('SCALD_DND_LIBRARY_PAGE_SIZE', 5);
-
-/**
- * Implementation of hook_menu().
- */
-function scald_dnd_library_menu() {
-  return array(
-    'sdl-library/library' => array(
-      'page callback' => 'scald_dnd_library_library',
-      'access arguments' => array('access scald dnd library'),
-      'type' => MENU_CALLBACK
-    ),
-  );
-}
-
 /**
  * Implementation of hook_permission().
  */
@@ -72,55 +56,7 @@ function scald_dnd_library_dnd_libraries_info() {
   if (module_exists('views')) {
     $return['scald/library_dnd'] = t('Scald Library');
   }
-  $return['sdl-library/library'] = t('Scald Library (Basic)');
   return $return;
-}
-
-/**
- * Return a JSON representation of a Library Page.
- */
-function scald_dnd_library_library() {
-  // Parse querystring
-  $search_query_title = ($_GET['filter-title']) ? $_GET['filter-title'] : NULL;
-
-  $types = ($_GET['type']) ? $_GET['type'] : array(
-    'image' => 'image',
-    'video' => 'video'
-  );
-
-  $page = ($_GET['page']) ? $_GET['page'] : 1;
-
-  $library = array(
-    'library' => '',
-    'editor_representations' => array(),
-    'library_previews' => array(),
-  );
-
-  $library_items = array();
-  $type_placeholders = db_placeholders($types, 'text');
-
-  $args = array($search_query_title) + $types;
-
-  $result = pager_query("SELECT s.sid FROM {scald_atoms} s WHERE s.title LIKE '%%%s%%' AND type IN($type_placeholders) AND actions > 1 ORDER BY s.sid DESC", SCALD_DND_LIBRARY_PAGE_SIZE, 0, NULL, $args);
-  // Get back the total number of element that pager_query fetched.
-  global $pager_total_items;
-  $count = $pager_total_items[0];
-  $pager = theme('pager');
-
-  // Run search & build array
-  while($sid = db_result($result)) {
-    scald_dnd_library_add_item($library, $sid);
-    $library_items[$sid] = scald_render($sid, 'sdl_library_item');
-  }
-  $library['library'] =
-    theme('sdl_header', array('page' => $page, 'count' => $count, 'form' => drupal_get_form('scald_dnd_library_form', $types)))
-    . theme('sdl_library', array('page' => $page, 'library_items' => $library_items))
-    . theme('sdl_footer', array('page' => $page, 'count' => $count, 'pager' => $pager));
-
-  // Use standard Drupal pager variables
-  // &page=X
-  // Assemble array
-  return drupal_json($library);
 }
 
 /**
@@ -138,32 +74,6 @@ function scald_dnd_library_add_item(&$library, $sid) {
     'preview' => scald_render($atom, 'sdl_preview'),
     'library' => scald_render($atom, 'sdl_library_item')
   );
-}
-
-function scald_dnd_library_form($form_state, $currentTypes) {
-  $form = array();
-  $form['filter-title'] = array(
-    '#type'  => 'textfield',
-    '#title' => t('Title'),
-    '#default_value' => $_GET['filter-title']
-  );
-  $options = array();
-  $types = _scald_types();
-  foreach($types as $name => $type) {
-    $options[$name] = $type['title'];
-  }
-  $form['type'] = array(
-    '#type' => 'checkboxes',
-    '#options' => $options,
-    '#title' => t('Type'),
-    '#default_value' => $currentTypes
-  );
-  $form['filter-submit'] = array(
-    '#type'  => 'submit',
-    '#value' => t('Filter')
-  );
-  $form['#method'] = 'GET';
-  return $form;
 }
 
 /**

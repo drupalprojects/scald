@@ -4,6 +4,7 @@ package = Scald
 core = 7.x
 dependencies[] = scald
 dependencies[] = dnd
+dependencies[] = views
 
 files[] = includes/scald_dnd_library.views.inc
 files[] = includes/scald_plugin_display_library.inc

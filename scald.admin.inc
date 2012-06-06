@@ -187,7 +187,6 @@ function scald_admin_atoms() {
   ', array('!add_link' => l('Add atom', 'atoms/add'), '@count' => $count)
   );
 
-
   return $content;
 } // end scald_admin_atoms()
 
