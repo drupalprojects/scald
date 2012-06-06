@@ -1,8 +1,12 @@
-Drupal.behaviors.mee = function(context) {
-  for (editor in Drupal.settings.dndDropAreas) {
-    var $editor = $('#' + editor);
-    $editor.bind('wysiwygAttach', Drupal.mee.attach);
-    $editor.bind('wysiwygDetach', Drupal.mee.detach);
+(function($) {
+
+Drupal.behaviors.mee = {
+  attach: function(context, settings) {
+    for (editor in Drupal.settings.dndDropAreas) {
+      var $editor = $('#' + editor);
+      $editor.bind('wysiwygAttach', Drupal.mee.attach);
+      $editor.bind('wysiwygDetach', Drupal.mee.detach);
+    }
   }
 }
 
@@ -78,3 +82,5 @@ Drupal.mee = {
     return $tr;
   }
 }
+
+})(jQuery);

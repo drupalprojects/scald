@@ -1,8 +1,8 @@
 name = Multimedia Editorial Element
-package = CCK
-description = A configurable CCK content type that provides a textarea and drag and drop media library.
-dependencies[] = content
+package = Scald
+description = A configurable field that provides a textarea and drag and drop media library.
+dependencies[] = field
+dependencies[] = text
 dependencies[] = dnd
-dependencies[] = wysiwyg
-core = 6.x
-
+core = 7.x
+; @todo americanize the 'mee_ressources' table name?
