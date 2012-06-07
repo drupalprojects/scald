@@ -141,12 +141,12 @@ function scald_actions($reset = FALSE) {
  */
 function scald_scald_actions_alter(&$actions) {
   $powers = variable_get('scald_actions_powers', array());
-  $max_power = empty($powers) ? 0 : max($powers);
+  $max_power = empty($powers) ? 0 : (max($powers) + 1);
   $new_power = FALSE;
   foreach ($actions as $name => $action) {
     if (!isset($powers[$name])) {
       $new_power = TRUE;
-      $powers[$name] = ++$max_power;
+      $powers[$name] = $max_power++;
     }
 
     $actions[$name]['bitmask'] = pow(2, $powers[$name]);
@@ -824,39 +824,17 @@ function scald_rendered_to_sas($string, $render_language = 'XHTML') {
  *   FALSE if the Atom is invalid
  */
 function scald_user_actions($atom, $account = NULL) {
-  global $user;
 
   // Argument validation
   if (is_null($account)) {
+  	global $user;
     $account = $user;
   }
 
-  // Default to Anonymous perms if no action bitstring is set.  Also handle the
-  //  special subcase of the Anonymous user.
-  //
-  // NOTE: This is necessary because $user is *not* the result of a user_load()
-  //  and so defaults must be defined at first use. Testing for the member's
-  //  existance and then modifying the $user object directly (as appropriate)
-  //  ensures that the cost of a query is saved the next time an access check is
-  //  executed for the current user during this session.
+  // Combine the account scald_actions if they do not exists
+  // May happen to UID = 1 which does not go through hook_user_load()
   if (!isset($account->scald_actions)) {
-    // Note that db_result() will conveniently fail to FALSE which will prohibit
-    //  the user from completing *any* Actions.  Since the Admin interface only
-    //  shows Roles which have the "use scald" permission (and therefore the
-    //  {scald_role_actions} table only contains Roles which have that
-    //  permission), checking for said permission is not necessary (thus saving
-    //  a fairly expensive check).
-    $account->scald_actions = db_query("
-      SELECT
-        actions
-      FROM
-        {scald_role_actions}
-      WHERE
-        rid = :rid",
-      array(':rid' => DRUPAL_ANONYMOUS_RID))->fetchCol();
-    if ($account->uid == $user->uid) {
-      $user->scald_actions = $account->scald_actions;
-    }
+    $account->scald_actions = _scald_user_combine_actions($account);
   }
 
   // NOTE: Not using scald_is_fetched here because Action validation can (and
@@ -867,15 +845,13 @@ function scald_user_actions($atom, $account = NULL) {
   }
 
   // The Account in question belongs to the Scald Publisher of this Atom
-  if ($atom->publisher == $account->uid) {
-    $account->scald_actions = $account->scald_actions | variable_get('scald_actions_publisher', 0);
-  }
+  $actions_key = ($atom->publisher == $account->uid) ? 'own' : 'any';
 
   // Check for the "bypass atom access restrictions" permission for this user
   //  if it is set, OR the  "Atom" and the "User Action" rather than ANDing them.
   return user_access('bypass atom access restrictions') 
-    ? ($atom->actions | $account->scald_actions) 
-    : ($atom->actions & $account->scald_actions);
+    ? ($atom->actions | $account->scald_actions[$actions_key]) 
+    : ($atom->actions & $account->scald_actions[$actions_key]);
 } // end scald_actions()
 
 
@@ -906,6 +882,45 @@ function scald_action_permitted($atom, $action = 'fetch', $account = NULL) {
 } // end scald_action_permitted()
 
 
+
+/**
+ * Implementation of hook_user_load().
+ */
+function scald_user_load($users) {
+  // For each loaded user get combined scald_actions
+  foreach($users as $uid => $account) {
+    $account->scald_actions = _scald_user_combine_actions($account);
+  }
+} // end scald_user_load()
+
+
+/**
+ * Implementation of hook_user_load().
+ * Fetch action bitstring components by User Role and combine
+ */
+function _scald_user_combine_actions($account) {
+  $scald_actions = array(
+    'own' => 0,
+    'any' => 0,
+  );  
+  
+  // Fetch action bitstring components by User Role and combine
+  foreach($account->roles as $rid => $role_name) {
+    $cache = cache_get('scald_actions_bitstring_for_rid_' . $rid, 'cache_scald');
+    if(empty($cache)) {
+      // cache miss
+      $role_actions = scald_compute_role_actions(array($rid => $role_name));      
+    }
+    else {
+      $role_actions = $cache->data;
+    }
+  
+    $scald_actions['own'] |= $role_actions['own'];
+    $scald_actions['any'] |= $role_actions['any'];
+  }
+  
+  return $scald_actions;
+}
 
 
 
@@ -1442,7 +1457,7 @@ function scald_field_extra_fields () {
  *  Scald Admin Interface.  
  */
 function scald_permission() {
-  return array(
+  $permissions = array(
     'administer scald' => array(
       'title' => t('Administer Scald'),
       'description' => t('Access Atom fields configuration and permissions'),
@@ -1453,13 +1468,35 @@ function scald_permission() {
       'description' => t('Grants access to all atoms.'),
       'restrict access' => TRUE,
     ),
-    'use scald' => array(
-      'title' => t('Use Scald'),
-      'description' => t('Grants access to the basic functioning of Scald (registering Atoms, etc.)'),
+    'create atom of any type' => array(
+      'title' => t('Create atom of any type'),
+      'description' => t('Create atom of any type'),
     ),
   );
-}
+    
+  // "Create" action for each types
+  foreach(scald_types() as $type) {
+    $permissions['create atom of ' . $type->type . ' type'] = array(
+      'title' => t('Create atom of %type type', array('%type' => $type->type)),
+      'description' => t('Create atom of %type type', array('%type' => $type->type)),
+    );
+  }
 
+  // Other actions (Fetch, Edit, View, Delete, ....))
+  foreach (scald_actions() as $key => $action) {
+    $permissions[$key . ' own atom'] = array(
+      'title' => t('%action own atom', array('%action' => $action['title'])),
+      'description' => t('%action own atom', array('%action' => $action['title'])),
+    );
+    
+    $permissions[$key . ' any atom'] = array(
+      'title' => t('%action any atom marked as %actionable', array('%action' => $action['title'], '%actionable' => $action['title'] . 'able')),
+      'description' => t('%action any atom marked as %actionable', array('%action' => $action['title'], '%actionable' => $action['title'] . 'able')),
+    );
+  }
+  
+  return $permissions;
+}
 
 /**
  * Implementation of hook_menu().
@@ -1659,39 +1696,6 @@ function scald_filter_tips($delta, $format, $long = FALSE) {
 
 
 /**
- * Implementation of hook_user().
- */
-function scald_user($op, &$edit, &$account, $category = NULL) {
-  switch ($op) {
-    case 'load':
-      // See scald_actions() for handling of defaults for scald_actions and an
-      //  explanation of why such handling is not done here.
-      break;
-    case 'insert':
-    case 'update':
-      // Fetch action bitstring components by User Role and then combine in
-      //  in preparation for saving to db.
-      $edit['scald_actions'] = 0;
-      $roles = isset($edit['roles']) ? $edit['roles'] : $account->roles;
-      $roles += array(DRUPAL_AUTHENTICATED_RID => DRUPAL_AUTHENTICATED_RID);
-      $actions_results = db_query("
-        SELECT
-          actions
-        FROM
-          {scald_role_actions}
-        WHERE
-          rid IN (" . implode(', ', array_keys($roles)) . ")
-      ");
-      while ($actions_raw = db_fetch_array($actions_results)) {
-        $edit['scald_actions'] = $edit['scald_actions'] | $actions_raw['actions'];
-      }
-      break;
-    default:
-      break;
-  }
-} // end scald_user()
-
-/**
  * Implementation of hook_views_api()
  */
 function scald_views_api() {
@@ -1711,3 +1715,68 @@ function scald_flush_caches() {
 function theme_scald_render_error($context, $message){
 	return '<h3>'.$message.'</h3>';
 }
+
+
+
+
+
+
+
+/**
+ * Compute actions bitsting for a single role
+ * return the result and store them to cache
+ */
+function scald_compute_role_actions($role) {
+  // Get permissions for the specified role
+  $permissions = user_role_permissions($role);
+  
+  // Get all Scald actions
+  $scald_actions = scald_actions();
+  
+  // Get rid
+  $rid = key($role);
+
+  // Prepare empty bit strings
+  $role_actions = array(
+    'own' => 0,
+    'any' => 0,
+  );
+
+  // Get enabled permissions for this role
+  $role_permissions = $permissions[$rid];
+
+  // Foreach action
+  foreach($scald_actions as $key => $action) {
+    // Foreach permission
+    foreach($role_permissions as $perm => $enabled) {
+      if(!strcmp($perm, $key . ' own atom')) {
+        $role_actions['own'] |= $action['bitmask'];
+      }
+      else if(!strcmp($perm, $key . ' any atom')) {
+        $role_actions['any'] |= $action['bitmask'];
+      }
+    }
+  }
+  
+  cache_set('scald_actions_bitstring_for_rid_' . $rid, $role_actions, 'cache_scald', CACHE_TEMPORARY);
+  return $role_actions;
+}
+
+
+
+
+/**
+ * Implementation of hook_form_FORM_ID_alter()
+ * Hook into the permissions submit form to compute our bitstrings
+ */
+function scald_form_user_admin_permissions_alter(&$form, &$form_state, $form_id) {
+  // Add our custom submit handler.
+  $form['#submit'][] = 'scald_permissions_submit';
+}
+function scald_permissions_submit($form, &$form_state) {
+  // Recompute actions bitstrings for all Drupal roles
+  foreach(user_roles() as $rid => $role_name) {
+    scald_compute_role_actions(array($rid => $role_name));
+  }
+}
+
