@@ -972,7 +972,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
 
   // Actions
   $atom->rendered->actions = array();
-  $current_actions = scald_actions($atom);
+  $current_actions = scald_user_actions($atom);
   foreach ($actions as $slug => $details) {
     if ($current_actions & $details['bitmask']) {
       $atom->rendered->actions[] = array(
@@ -1089,7 +1089,7 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
   // Check the cache unless explicitly rebuilding the rendering of the Atom
   $cache_id = $sid
 	    . ':' . $context
-	    . ':' . scald_actions($atom)
+	    . ':' . scald_user_actions($atom)
 	    . (is_null($options) ? '' : ':' . $options);
   if (!$rebuild && !variable_get('scald_always_rebuild', FALSE)) {
     $cache = cache_get($cache_id, 'cache_scald');
