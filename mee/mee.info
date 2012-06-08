@@ -5,4 +5,4 @@ dependencies[] = field
 dependencies[] = text
 dependencies[] = dnd
 core = 7.x
-; @todo americanize the 'mee_ressources' table name?
+; @todo Define a default context?

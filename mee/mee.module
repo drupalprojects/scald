@@ -8,96 +8,86 @@
 define('MEE_RENDERED_COPYRIGHT_PATTERN', '/<!--\s*copyright=(\d+)\s*-->(.*)<!--\s*END copyright=\1\s*-->/sU');
 
 /**
- * Implements hook_field_info().
+ * Implements hook_init().
  */
-function mee_field_info() {
-  return array(
-    'multimedia_editorial_element' => array(
-      'label' => t('Multimedia Editorial Element (MEE)'),
-      'description' => t('MEE combines Scald, DnD, and optionally WYSIWYG, to create a multimedia enabled text field.'),
-      'instance_settings' => array('text_processing' => 1, 'context' => ''),
-      'default_widget' => '@todo',
-      'default_formatter' => '@todo',
-    ),
-  );
+function mee_init() {
+  // @todo add support for SAS and remote this hack
+  $GLOBALS['conf']['mee_store_sas'] = FALSE;
 }
 
 /**
- * Implements hook_field_instance_settings_form().
+ * Implements hook_field_info_alter().
  */
-function mee_field_instance_settings_form($field, $instance, $has_data) {
-  $settings = $instance['settings'];
-  $form = array();
+function mee_field_info_alter(&$info) {
+  $info['text_with_summary']['instance_settings']['mee_enabled'] = 0;
+  $info['text_with_summary']['instance_settings']['context'] = '';
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Normally this should go in a hook_field_instance_settings_form() if the field
+ * belongs to the module. But it is not the case, so we implement in a form
+ * alter.
+ */
+function mee_form_alter(&$form, &$form_state, $form_id) {
+  // Verify if we are in the instance settings form.
+  if ($form_id !== 'field_ui_field_edit_form' || $form['#field']['type'] !== 'text_with_summary') {
+    return;
+  }
+
+  // MEE currently supports only node.
+  if (!isset($form['#field']['bundles']['node'])) {
+    return;
+  }
+
+  $settings = $form['#instance']['settings'];
 
   $context_options = array();
   foreach (scald_contexts() as $name => $context) {
-    $context_options[$name] = $context['name'];
+    $context_options[$name] = $context['title'];
   }
 
-  $form['text_processing'] = array(
-    '#type' => 'radios',
-    '#title' => t('Text processing'),
-    '#default_value' => $setting['text_processing'],
-    '#options' => array(
-      t('Plain text'),
-      t('Filtered text (user selects input format)'),
-    ),
-    '#description' => t('Filtered text, with a WYSIWYG editor defined on one or more input formats, is strongly recommended.'),
+  $form['instance']['settings']['mee_enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('MEE Enabled'),
+    '#description' => t('Enable MEE for this field give you advance resource management. MEE automatically link embedded resource with field so that you have more control over fields, e.g. unpublish linked nodes when a principle resource is unpublished.'),
+    '#default_value' => $settings['mee_enabled'],
   );
-  $form['context'] = array(
+  $form['instance']['settings']['context'] = array(
     '#type' => 'select',
     '#title' => t('Scald Editor Context'),
     '#description' => t('Choose a Scald Context to use for displaying Scald Atoms included in the textarea during editing.'),
     '#default_value' => $settings['context'],
     '#options' => $context_options,
   );
-
-  return $form;
 }
 
 /**
- * Implements hook_field_load().
+ * Implements hook_field_presave() on behalf of Text module.
  *
- * Where possible, generate the sanitized version of each field early so that
- * it is cached in the field cache. This avoids looking up from the filter cache
- * separately.
+ * @todo Find a better approach to avoid possible collision with other "tricky"
+ * modules. However we should be safe with Drupal 7 core.
  */
-function mee_field_load($entity_type, $entities, $field, $instances, $langcode, &$items) {
-  foreach ($entities as $id => $entity) {
-    foreach ($items[$id] as $delta => $item) {
-      // Only process items with a cacheable format, the rest will be handled
-      // by formatters if needed.
-      if (empty($instances[$id]['settings']['text_processing']) || filter_format_allowcache($item['format'])) {
-        $items[$id][$delta]['safe_value'] = isset($item['value']) ? _text_sanitize($instances[$id], $langcode, $item, 'value') : '';
-        $items[$id][$delta]['safe_short'] = isset($item['short']) ? _text_sanitize($instances[$id], $langcode, $item, 'short') : '';
-      }
-    }
+function text_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  // Convert rendered atom back to SAS for on the fly render if required
+  if (!variable_get('mee_store_sas', TRUE)) {
+    return;
   }
-}
 
-
-/**
- * Implements hook_field_presave().
- */
-function mee_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
   foreach ($items as $delta => &$item) {
-    // Put everything in the ['mee'] namespace back into the array.
-    // This let CCK store the value and short fields natively.
-    if (is_array($item['mee'])) {
-      foreach ($item['mee'] as $k => $v) {
-        $items[$delta][$k] = $v;
-      }
-    }
-    if (!empty($item['value']) && variable_get('mee_store_sas', TRUE)) {
+    if (!empty($item['value'])) {
       $item['value'] = scald_rendered_to_sas($item['value']);
     }
   }
 }
 
 /**
- * Implements hook_field_insert().
+ * Implements hook_field_insert() on behalf of Text module.
+ *
+ * @see text_field_presave()
  */
-function mee_field_insert($entity_type, $entity, $field, $instance, $langcode, &$items) {
+function text_field_insert($entity_type, $entity, $field, $instance, $langcode, &$items) {
   if ($entity_type !== 'node') {
     // @todo support entities other than nodes.
     return;
@@ -112,16 +102,16 @@ function mee_field_insert($entity_type, $entity, $field, $instance, $langcode, &
     // Parse copyright informations
     $copyrights = mee_extract_copyrights($item['value']);
 
-    // Ressource manager associations
-    if (empty($item['ressource_manager'])) {
-      _mee_load_ressources($node, $field, $item);
+    // resource manager associations
+    if (empty($item['resource_manager'])) {
+      _mee_load_resources($entity, $field, $item);
     }
-    $separator = $item['ressource_manager'][0]['weight'];
+    $separator = $item['resource_manager'][0]['weight'];
     foreach ($sids as $sid) {
-      $ressource = $item['ressource_manager'][$sid];
-      $weight = $ressource['weight'] - $separator;
-      $required = $ressource['required'];
-      db_insert('mee_ressources')
+      $resource = $item['resource_manager'][$sid];
+      $weight = $resource['weight'] - $separator;
+      $required = $resource['required'];
+      db_insert('mee_resource')
           ->fields(array(
             'content_nid' => $entity->nid,
             'atom_sid' => $sid,
@@ -135,9 +125,11 @@ function mee_field_insert($entity_type, $entity, $field, $instance, $langcode, &
 }
 
 /**
- * Implements hook_field_update().
+ * Implements hook_field_update() on behalf of Text module.
+ *
+ * @see text_field_presave()
  */
-function mee_field_insert($entity_type, $entity, $field, $instance, $langcode, &$items) {
+function text_field_update($entity_type, $entity, $field, $instance, $langcode, &$items) {
   if ($entity_type !== 'node') {
     // @todo support entities other than nodes.
     return;
@@ -152,25 +144,25 @@ function mee_field_insert($entity_type, $entity, $field, $instance, $langcode, &
     // Parse copyright informations
     $copyrights = mee_extract_copyrights($item['value']);
 
-    // Update ressources weight
+    // Update resource weight
     // In fact, we'll delete all the associations and recreate afterwards
-    // the needed one, to be sure that new ressources are correctly
+    // the needed one, to be sure that new resources are correctly
     // registered, and that no longer used one are removed.
-    if (!is_array($item['ressource_manager'])) {
-      _mee_load_ressources($node, $field, $item);
+    if (empty($item['resource_manager']) || !is_array($item['resource_manager'])) {
+      _mee_load_resources($entity, $field, $item);
     }
-    db_delete('mee_ressources')
+    db_delete('mee_resource')
         ->condition('content_nid', $entity->nid)
         ->condition('field', $field['field_name'])
         ->execute();
 
     // We'll normalize the weight, putting our separator at 0.
-    $separator = $item['ressource_manager'][0]['weight'];
+    $separator = $item['resource_manager'][0]['weight'];
     foreach ($sids as $sid) {
-      $ressource = $item['ressource_manager'][$sid];
-      $required = $ressource['required'];
-      $weight = $ressource['weight'] - $separator;
-      db_insert('mee_ressources')
+      $resource = $item['resource_manager'][$sid];
+      $required = $resource['required'];
+      $weight = $resource['weight'] - $separator;
+      db_insert('mee_resource')
           ->fields(array(
             'content_nid' => $entity->nid,
             'atom_sid' => $sid,
@@ -184,9 +176,11 @@ function mee_field_insert($entity_type, $entity, $field, $instance, $langcode, &
 }
 
 /**
- * Implements hook_field_delete().
+ * Implements hook_field_delete() on behalf of Text module.
+ *
+ * @see text_field_presave()
  */
-function mee_field_delete($entity_type, $entity, $field, $instance, $langcode, &$items) {
+function text_field_delete($entity_type, $entity, $field, $instance, $langcode, &$items) {
   if ($entity_type !== 'node') {
     // @todo support entities other than nodes.
     return;
@@ -196,275 +190,63 @@ function mee_field_delete($entity_type, $entity, $field, $instance, $langcode, &
     scald_unregister_atom(scald_search(array('base_id' => $entity->nid . ':' . $delta), FALSE, TRUE));
   }
 
-  // Delete all ressources associations for this field
-  db_delete('mee_ressources')
+  // Delete all resource associations for this field
+  db_delete('mee_resource')
       ->condition('content_nid', $entity->nid)
       ->condition('field', $field['field_name'])
       ->execute();
 }
 
 /**
- * Implements hook_field_is_empty().
+ * Implements hook_field_widget_form_alter().
  */
-function mee_field_is_empty($item, $field) {
-  if (empty($item['value']) && (string) $item['value'] !== '0') {
-    return TRUE;
+function mee_field_widget_form_alter(&$element, &$form_state, $context) {
+  // Add our custom form element into te text's textarea_with_summary widget.
+  if ($context['instance']['widget']['type'] !== 'text_textarea_with_summary') {
+    return;
   }
-  return FALSE;
-}
 
-/**
- * Implements hook_field_formatter_info().
- */
-function mee_field_formatter_info() {
-  return array(
-    'default' => array(
-      'label' => t('Filtered text'),
-      'field types' => array('multimedia_editorial_element'),
-    ),
-    'plain' => array(
-      'label' => t('Plain text'),
-      'field types' => array('multimedia_editorial_element'),
-    ),
-    'short' => array(
-      'label' => t('Short content'),
-      'field types' => array('multimedia_editorial_element'),
-    ),
-  );
-}
-
-/**
- * Implements hook_field_formatter_view().
- * @todo we should implement hook_field_formatter_(settings|summary), too, to
- * add the settings for context.
- */
-function text_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
-  $element = array();
-
-  switch ($display['type']) {
-    case 'default':
-  }
-}
-
-/**
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
- */
-function theme_mee_formatter_default($variables) {
-  $element = $variables['element'];
-  // What's stored is exactly what the user entered, and not the SAS
-  // representation. In general, that's that we want to output, *but*
-  // we should also check that the atom is still available... And replace
-  // it if it isn't.
-  if (!variable_get('mee_store_sas', TRUE)) {
-    $sas = scald_rendered_to_sas($element['#item']['value']);
-    $included = scald_included($sas);
-    $altered = FALSE;
-    foreach ($included as $sid) {
-      $atom = scald_fetch($sid);
-      if (!scald_action_permitted($atom, 'view')) {
-        $altered = TRUE;
-        $replace = scald_scald_render($atom, 'no-access');
-        $element['#item']['value'] = preg_replace(
-          "/<!--(\s*)scald=$sid(.*)END scald=$sid(\s*)-->/sU",
-          scald_scald_render($atom, 'no-access'),
-          $element['#item']['value']
-        );
-      }
-    }
-    if ($altered) {
-      $format = $element['#item']['format'];
-      $element['#item']['safe'] = check_markup($element['#item']['value'], $format, $langcode = '' /* TODO Set this variable. */, FALSE);
-    }
-  }
-  // Calling scald_sas_to_rendered here allows us to make the configuration
-  // a bit easier, as the input format doesn't have to be tweaked to include
-  // the SAS filter.
-  return scald_sas_to_rendered($element['#item']['safe']);
-}
-
-/**
- * Theme function for 'plain' text field formatter.
- */
-function theme_mee_formatter_plain($variables) {
-  $element = $variables['element'];
-  return strip_tags(scald_sas_to_rendered($element['#item']['safe'], 'title', TRUE));
-}
-
-/**
- * Theme function for 'short' text field formatter.
- */
-function theme_mee_formatter_short($variables) {
-  $element = $variables['element'];
-  $value = $element['#item']['short'];
-  return empty($value) ? $value : check_markup($value);
-}
-
-//function theme_mee_context_formatter($element) {
-//  return 'foo';
-//}
-
-/**
- * Implements hook_widget_info().
- */
-function mee_widget_info() {
-  return array(
-    'mee_textarea' => array(
-      'label' => t('MEE Textarea'),
-      'field types' => array('multimedia_editorial_element'),
-      'multiple values' => CONTENT_HANDLE_CORE,
-    ),
-  );
-}
-
-/**
- * Implements hook_element_info().
- *
- * Any FAPI callbacks needed for individual widgets can be declared here,
- * and the element will be passed to those callbacks for processing.
- *
- * Drupal will automatically theme the element using a theme with
- * the same name as the hook_element_info key.
- */
-function mee_element_info() {
-  return array(
-    'mee_textarea' => array(
-      '#input' => TRUE,
-      '#columns' => array('value', 'format'),
-      '#delta' => 0,
-      '#process' => array('mee_textarea_process', 'dnd_process_textarea'),
-      '#filter_value' => FILTER_FORMAT_DEFAULT,
-    ),
-  );
-}
-
-/**
- * Implements hook_widget_settings().
- */
-function mee_widget_settings($op, $widget) {
-  switch ($op) {
-    case 'form':
-      $form = array();
-      $rows = (isset($widget['rows']) && is_numeric($widget['rows'])) ? $widget['rows'] : 60;
-      $form['rows'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Rows'),
-        '#default_value' => $rows,
-        '#element_validate' => array('_mee_widget_settings_row_validate'),
-        '#required' => TRUE,
-      );
-      return $form;
-
-    case 'save':
-      return array('rows');
-  }
-}
-
-function _mee_widget_settings_row_validate($element, &$form_state) {
-  $value = $form_state['values']['rows'];
-  if (!is_numeric($value) || intval($value) != $value || $value <= 0) {
-    form_error($element, t('"Rows" must be a positive integer.'));
-  }
-}
-
-function _mee_widget_settings_size_validate($element, &$form_state) {
-  $value = $form_state['values']['size'];
-  if (!is_numeric($value) || intval($value) != $value || $value <= 0) {
-    form_error($element, t('"Size" must be a positive integer.'));
-  }
-}
-
-/**
- * Implements hook_widget().
- *
- * Attach a single form element to the form. It will be built out and
- * validated in the callback(s) listed in hook_elements. We build it
- * out in the callbacks rather than here in hook_widget so it can be
- * plugged into any module that can provide it with valid
- * $field information.
- *
- * Content module will set the weight, field name and delta values
- * for each form element. This is a change from earlier CCK versions
- * where the widget managed its own multiple values.
- *
- * If there are multiple values for this field, the content module will
- * call this function as many times as needed.
- *
- * @param $form
- *   the entire form array, $form['#node'] holds node information
- * @param $form_state
- *   the form_state, $form_state['values'][$field['field_name']]
- *   holds the field's form values.
- * @param $field
- *   the field array
- * @param $items
- *   array of default values for this field
- * @param $delta
- *   the order of this item in the array of subelements (0, 1, 2, etc)
- *
- * @return
- *   the form item for a single element for this field
- */
-function mee_widget(&$form, &$form_state, $field, $items, $delta = 0) {
-  if (isset($items[$delta]['value'])) {
-    $items[$delta]['value'] =  scald_sas_to_rendered($items[$delta]['value'], $field['mee_scald_editor_context'], TRUE);
-  }
-  $element = array(
-    '#type' => $field['widget']['type'],
-    '#default_value' => isset($items[$delta]) ? $items[$delta] : '',
-  );
-
-  return $element;
-}
-
-/**
- * Process an individual element.
- *
- * Build the form element. When creating a form using FAPI #process,
- * note that $element['#value'] is already set.
- *
- * The $fields array is in $form['#field_info'][$element['#field_name']].
- */
-function mee_textarea_process($element, $edit, $form_state, $form) {
-  drupal_add_css(drupal_get_path('module', 'mee') . '/css/mee.css');
-  drupal_add_js(drupal_get_path('module', 'mee')  . '/mee.js');
+  //dsm($element);dsm($form_state);dsm($context);
   $element['mee'] = array(
-    '#type' => 'markup',
     '#prefix' => '<div class="mee-wrap-editor-library">',
     '#suffix' => '</div>',
+    '#attached' => array(
+      'css' => array(drupal_get_path('module', 'mee') . '/css/mee.css'),
+      'js' => array(drupal_get_path('module', 'mee')  . '/mee.js'),
+    ),
+    'resource_manager' => array(
+      '#type' => 'markup',
+      '#weight' => 0.5,
+      '#theme' => 'mee_resource_manager',
+    ),
   );
 
-  $field = $form['#field_info'][$element['#field_name']];
-  $field_key   = $element['#columns'][0];
-  $element['mee']['ressource_manager'] = array(
-    '#type' => 'markup',
-    '#weight' => 0.5,
-    '#theme' => 'mee_ressource_manager',
-  );
-
-
-  if (!isset($element['#value']['mee']['ressource_manager'])) {
-    $element['#value']['mee']['ressource_manager'] = array();
-    // Restore/Generate the associated ressources in a proper order
-    $query = "SELECT * FROM {mee_ressources} WHERE content_nid=%d AND field='%s' ORDER BY weight ASC";
-    $result = db_query("SELECT * FROM {mee_ressources} WHERE content_nid = :content_nid AND field = :field ORDER BY weight ASC", array(':content_nid' => $form['nid']['#value'], ':field' => $element['#field_name']));
-    while ($item = db_fetch_object($result)) {
-      $element['#value']['mee']['ressource_manager'][$item->atom_sid] = (array) $item;
+  if (isset($form_state['values'])) {
+    $resource_manager = $form_state['values']['mee'];
+  }
+  else {
+    $result = db_select('mee_resource', 'r')
+        ->fields('r', array('atom_sid', 'weight', 'required'))
+        ->condition('content_nid', $element['#entity']->nid)
+        ->condition('field', $context['field']['field_name'])
+        ->orderBy('weight')
+        ->execute();
+    $resource_manager = array();
+    foreach ($result as $r) {
+      $resource_manager[$r->atom_sid] = (array) $r;
     }
-    $element['#value']['mee']['ressource_manager'][0] = array('weight' => 0);
   }
 
-  foreach ($element['#value']['mee']['ressource_manager'] as $sid => $item) {
+  foreach ($resource_manager as $sid => $item) {
     $atom = scald_fetch($sid);
     if (!is_object($atom)) {
       continue;
     }
     $title = $atom->title;
 
-    $element['mee']['ressource_manager'][$sid] = array(
+    $element['mee']['resource_manager'][$sid] = array(
       'title' => array(
-        '#type' => 'markup',
-        '#value' => $title,
+        '#markup' => $title,
       ),
       'required' => array(
         '#type' => 'select',
@@ -480,96 +262,33 @@ function mee_textarea_process($element, $edit, $form_state, $form) {
   }
 
   // And now we add the separator
-  $element['mee']['ressource_manager'][0] = array(
+  $element['mee']['resource_manager'][0] = array(
     'title' => array(
-      '#type' => 'markup',
-      '#value' => t('< Primary / Secondary >'),
+      '#markup' => t('< Primary / Secondary >'),
     ),
     'required' => array(
-      '#type' => 'markup',
-      '#value' => '-',
+      '#markup' => '-',
     ),
     'weight' => array(
       '#type' => 'weight',
       '#prefix' => '<div class="mee-rm-separator">',
       '#suffix' => '</div>',
     ),
-    '#weight' => $element['#value']['mee']['ressource_manager'][0]['weight'],
+    '#weight' => isset($resource_manager[0]['weight']) ? $resource_manager[0]['weight'] : 0,
   );
-  if (isset($element['#value'][$field_key])) {
-    $element['#value']['mee'][$field_key] = $element['#value'][$field_key];
-  }
-  $element['mee'][$field_key] = array(
-    '#type' => 'textarea',
-    '#default_value' => isset($element['#value']['mee'][$field_key]) ? $element['#value']['mee'][$field_key] : NULL,
-    '#rows' => !empty($field['widget']['rows']) ? $field['widget']['rows'] : 60,
-    '#weight' => 0,
-    // The following values were set by the content module and need
-    // to be passed down to the nested element.
-    '#title' => $element['#title'],
-    '#description' => $element['#description'],
-    '#required' => $element['#required'],
-    '#field_name' => $element['#field_name'],
-    '#type_name' => $element['#type_name'],
-    '#delta' => $element['#delta'],
-    '#columns' => $element['#columns'],
+
+  $element += array(
     '#dnd-enabled' => TRUE,
     '#dnd-settings' => array(
-      'drop_selector' => '#' . $element['#id'] . ' .drop',
+      'drop_selector' => '#' . $element['#id'] . ' .drop',// @todo check #id
     ),
   );
-
-  if (!empty($field['mee_processing'])) {
-    $filter_key  = (count($element['#columns']) == 2) ? $element['#columns'][1] : 'format';
-    $format = isset($element['#value'][$filter_key]) ? $element['#value'][$filter_key] : FILTER_FORMAT_DEFAULT;
-    $parents = array_merge($element['#parents'], array($filter_key));
-    $element['mee'][$filter_key] = filter_form($format, 1, $parents);
-    $element['mee'][$filter_key]['#prefix'] = '<div class="mee-filter-form">';
-    $element['mee'][$filter_key]['#suffix'] = '</div>';
-  }
-
-  // Used so that hook_field('validate') knows where to flag an error.
-  $element['_error_element'] = array(
-    '#type' => 'value',
-    '#value' => implode('][', array_merge($element['#parents'], array($field_key))),
-  );
-  $short = isset($element['#value']['short']) ? $element['#value']['short'] : $element['#value']['mee']['short'];
-  $element['mee']['short'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Short content'),
-    '#rows' => 5,
-    '#weight' => -100,
-    '#default_value' => $short,
-  );
-
-
-  return $element;
 }
 
-/**
- * FAPI theme for an individual text elements.
- *
- * The textfield or textarea is already rendered by the
- * textfield or textarea themes and the html output
- * lives in $element['#children']. Override this theme to
- * make custom changes to the output.
- *
- * $element['#field_name'] contains the field name
- * $element['#delta]  is the position of this element in the group
- */
-function theme_mee_textarea($variables) {
-  $element = $variables['element'];
-  return $element['#children'];
-}
-
-/**
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
- */
-function theme_mee_ressource_manager($variables) {
+function theme_mee_resource_manager($variables) {
   $form = $variables['element'];
   static $count = 0;
-  $id = 'mee-ressource-manager-' . $count;
+  $id = 'mee-resource-manager-' . $count;
   drupal_add_tabledrag($id, 'order', 'sibling', 'mee-rm-weight');
   $count++;
   $header = array('', t('Title'), t('Required'), t('Weight'));
@@ -588,89 +307,24 @@ function theme_mee_ressource_manager($variables) {
   }
   $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array(
       'id' => $id,
-      'class' => 'mee-ressource-manager',
-    ), 'caption' => t('Ressource Manager')));
+      'class' => 'mee-resource-manager',
+    ), 'caption' => t('Resource Manager')));
   $output .= drupal_render_children($form);
   return $output;
 }
 
-function _mee_load_ressources($node, $field, &$item) {
-  $results = db_query("
-      SELECT atom_sid, weight
-      FROM {mee_ressources}
-      WHERE content_nid=%d AND field='%s'", array(
-    ':nid' => $node->nid,
-    ':field' => $field['field_name'],
-  ));
-  $item['ressource_manager'] = array();
-  while ($r = db_fetch_object($results)) {
-    $item['ressource_manager'][$r->atom_sid] = array('weight' => $r->weight);
+function _mee_load_resources($node, $field, &$item) {
+  $result = db_select('mee_resource', 'r')
+      ->fields('r', array('atom_sid', 'weight'))
+      ->condition('content_nid', $node->nid)
+      ->condition('field', $field['field_name'])
+      ->execute();
+  $item['resource_manager'] = array();
+  foreach ($result as $r) {
+    $item['resource_manager'][$r->atom_sid] = array('weight' => $r->weight);
   }
-  $item['ressource_manager'][0] = array('weight' => 0);
+  $item['resource_manager'][0] = array('weight' => 0);
 }
-
-
-/*******************************************************************************
- * SCALD HOOK IMPLEMENTATIONS
- ******************************************************************************/
-
-/**
- * Implements hook_scald_provider().
- */
-function mee_scald_provider() {
-  return array(
-    'atoms' => array(
-      'composite' => array(
-        t('The MEE CCK field.'),
-      ),
-    ),
-  );
-}
-
-
-
-/**
- * Implements hook_scald_register_atom().
- */
-function mee_scald_register_atom($atom, $mode) {
-
-} // end mee_scald_register_atom()
-
-
-
-/**
- * Implements hook_scald_update_atom().
- */
-function mee_scald_update_atom($atom, $mode) {
-
-} // end mee_scald_update_atom()
-
-
-
-/**
- * Implements hook_scald_unregister_atom().
- */
-function mee_scald_unregister_atom($atom, $mode) {
-
-} // end mee_scald_unregister_atom()
-
-
-
-/**
- * Implements hook_scald_fetch().
- */
-function mee_scald_fetch(&$atom) {
-  $atom->thumbnail_source = drupal_get_path('module', 'scald_composites') . '/assets/thumbnail_composite.png';
-} // end mee_scald_fetch()
-
-
-
-/**
- * Implements hook_scald_prerender().
- */
-function mee_scald_prerender(&$atom, $mode) {
-
-} // end mee_scald_prerender()
 
 /**
  * Extract all copyright informations from a string.
@@ -684,3 +338,4 @@ function mee_extract_copyrights($string) {
   }
   return $copyrights;
 }
+

@@ -5,67 +5,10 @@
  */
 
 /**
- * Implements hook_install().
- */
-function mee_install() {
-  // @internal in D6 we used content_notify().
-}
-
-/**
- * Implements hook_uninstall().
- */
-function mee_uninstall() {
-  // @internal in D6 we used content_notify().
-}
-
-/**
- * Implements hook_disable().
- */
-function mee_disable() {
-  // @internal in D6 we used content_notify().
-}
-
-/**
- * Implements hook_field_schema().
- */
-function mee_field_schema($field) {
-  $columns['value'] = array(
-    'type' => 'text',
-    'size' => 'big',
-    'not null' => FALSE,
-  );
-
-  $columns['short'] = array(
-    'type' => 'text',
-    'size' => 'big',
-    'not null' => FALSE,
-  );
-
-  $columns['format'] => array(
-    'type' => 'varchar',
-    'length' => 255,
-    'not null' => FALSE,
-  );
-
-  return array(
-    'columns' => $columns,
-    'indexes' => array(
-      'format' => array('format'),
-    ),
-    'foreign keys' => array(
-      'format' => array(
-        'table' => 'filter_format',
-        'columns' => array('format' => 'format'),
-      ),
-    ),
-  );
-}
-
-/**
  * Implements hook_schema().
  */
 function mee_schema() {
-  $schema['mee_ressources'] = array(
+  $schema['mee_resource'] = array(
     'fields' => array(
       'content_nid' => array(
         'type' => 'int',
@@ -107,6 +50,8 @@ function mee_schema() {
  * Upgrade MEE module to 7.x.
  */
 function mee_update_7000() {
-  // Nothing changed between 6.x and 7.x.
+  db_rename_table('mee_ressources', 'mee_resource');
+
+  // @todo Migrate MEE CCK fields to text_with_summary
 }
 
