@@ -50,12 +50,33 @@ function scald_quickstart_install() {
     field_create_instance($instance);
   }
 
-  // Grant anoymous and authenticated user the right to see published atoms
-  $actions = scald_actions();
-  $standard = $actions['fetch']['bitmask'] + $actions['view']['bitmask'];
-  db_insert('scald_role_actions')
-    ->fields(array('rid', 'actions'))
-    ->values(array(0, $standard))
-    ->values(array(1, $standard))
-    ->execute();
+  /**
+   * Grant anoymous and authenticated user the rights to see published atoms
+   */
+  $rids = array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID);
+  foreach($rids as $rid) {
+    user_role_change_permissions($rid, 
+      array(
+        'fetch any atom' => TRUE,
+        'view any atom' => TRUE,
+      )
+    );
+    cache_clear_all('scald_actions_bitstring_for_rid_' . $rid, 'cache_scald');    
+  }
+}
+
+/**
+ * Grant anoymous and authenticated user the rights to see published atoms
+ */
+function scald_quickstart_update_7001() {
+  $rids = array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID);
+  foreach($rids as $rid) {
+    user_role_change_permissions($rid, 
+      array(
+        'fetch any atom' => TRUE,
+        'view any atom' => TRUE,
+      )
+    );    
+    cache_clear_all('scald_actions_bitstring_for_rid_' . $rid, 'cache_scald');  
+  }
 }

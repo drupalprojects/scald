@@ -171,29 +171,6 @@ function scald_schema() {
     'primary key' => array('type', 'context'),
   );
 
-  $schema['scald_role_actions'] = array(
-    'description' => 'The mapping of various Actions to Drupal user roles.',
-    'fields'      => array(
-      'rid'     => array(
-        'description' => 'A Drupal user role ID.  FK {role}.rid',
-        'type'        => 'int',
-        'size'        => 'big',
-        'unsigned'    => TRUE,
-        'not null'    => TRUE,
-        'default'     => 0,
-      ),
-      'actions' => array(
-        'description' => 'The Scald Action bitstring for this role.',
-        'type'        => 'int',
-        'size'        => 'big',
-        'unsigned'    => TRUE,
-        'not null'    => TRUE,
-        'default'     => 0,
-      ),
-    ),
-    'primary key' => array('rid'),
-  );
-
   $schema['scald_licenses'] = array(
     'description' => 'Definitions of Licenses as sets of permitted Scald Actions',
     'fields'      => array(
@@ -411,5 +388,14 @@ function scald_update_7001() {
     'serialize'   => TRUE,
   );
   db_add_field('scald_atoms', 'data', $new_field);
+}
+
+/**
+ * Delete the no longer necessary {scald_role_actions} table
+ * Delete no longer necessary publisher(owner) variable
+ */
+function scald_update_7002() {
+  db_drop_table('scald_role_actions');
+  variable_del('scald_actions_publisher');
 }
 
