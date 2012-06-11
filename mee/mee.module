@@ -16,6 +16,17 @@ function mee_init() {
 }
 
 /**
+ * Implements hook_theme().
+ */
+function mee_theme($existing, $type, $theme, $path) {
+  return array(
+    'mee_resource_manager' => array(
+      'render element' => 'resource_manager',
+    ),
+  );
+}
+
+/**
  * Implements hook_field_info_alter().
  */
 function mee_field_info_alter(&$info) {
@@ -88,38 +99,28 @@ function text_field_presave($entity_type, $entity, $field, $instance, $langcode,
  * @see text_field_presave()
  */
 function text_field_insert($entity_type, $entity, $field, $instance, $langcode, &$items) {
-  if ($entity_type !== 'node') {
-    // @todo support entities other than nodes.
+  if (!_mee_field_instance_enabled($instance)) {
     return;
   }
 
   foreach ($items as $delta => $item) {
-    // Process the value and generate an atom
-    $sas = scald_rendered_to_sas($item['value']);
-    $scald_included = scald_included($sas);
-    $sids = array_unique($scald_included);
+    list($sids, $copyrights) = _mee_process_item_value($item);
 
-    // Parse copyright informations
-    $copyrights = mee_extract_copyrights($item['value']);
+    // Normalize the weight, putting our separator at 0.
+    $separator = $item['mee']['resource_manager'][0]['weight'];
 
-    // resource manager associations
-    if (empty($item['resource_manager'])) {
-      _mee_load_resources($entity, $field, $item);
-    }
-    $separator = $item['resource_manager'][0]['weight'];
     foreach ($sids as $sid) {
-      $resource = $item['resource_manager'][$sid];
-      $weight = $resource['weight'] - $separator;
-      $required = $resource['required'];
+      $resource = $item['mee']['resource_manager'][$sid];
       db_insert('mee_resource')
           ->fields(array(
             'content_nid' => $entity->nid,
             'atom_sid' => $sid,
             'field' => $field['field_name'],
-            'weight' => $weight,
-            'required' => $required,
-            'copyright' => $copyrights[$sid],
-          ));
+            'weight' => $resource['weight'] - $separator,
+            'required' => (int) $resource['required'],
+            'copyright' => isset($copyrights[$sid]) ? $copyrights[$sid] : '',
+          ))
+          ->execute();
     }
   }
 }
@@ -130,47 +131,36 @@ function text_field_insert($entity_type, $entity, $field, $instance, $langcode, 
  * @see text_field_presave()
  */
 function text_field_update($entity_type, $entity, $field, $instance, $langcode, &$items) {
-  if ($entity_type !== 'node') {
-    // @todo support entities other than nodes.
+  if (!_mee_field_instance_enabled($instance)) {
     return;
   }
 
   foreach ($items as $delta => $item) {
-    // Process the value
-    $sas = scald_rendered_to_sas($item['value']);
-    $scald_included = scald_included($sas);
-    $sids = array_unique($scald_included);
+    list($sids, $copyrights) = _mee_process_item_value($item);
 
-    // Parse copyright informations
-    $copyrights = mee_extract_copyrights($item['value']);
-
-    // Update resource weight
     // In fact, we'll delete all the associations and recreate afterwards
     // the needed one, to be sure that new resources are correctly
     // registered, and that no longer used one are removed.
-    if (empty($item['resource_manager']) || !is_array($item['resource_manager'])) {
-      _mee_load_resources($entity, $field, $item);
-    }
     db_delete('mee_resource')
         ->condition('content_nid', $entity->nid)
         ->condition('field', $field['field_name'])
         ->execute();
 
-    // We'll normalize the weight, putting our separator at 0.
-    $separator = $item['resource_manager'][0]['weight'];
+    // Normalize the weight, putting our separator at 0.
+    $separator = $item['mee']['resource_manager'][0]['weight'];
+
     foreach ($sids as $sid) {
-      $resource = $item['resource_manager'][$sid];
-      $required = $resource['required'];
-      $weight = $resource['weight'] - $separator;
+      $resource = $item['mee']['resource_manager'][$sid];
       db_insert('mee_resource')
           ->fields(array(
             'content_nid' => $entity->nid,
             'atom_sid' => $sid,
             'field' => $field['field_name'],
-            'weight' => $weight,
-            'required' => $required,
-            'copyright' => $copyrights[$sid],
-          ));
+            'weight' => $resource['weight'] - $separator,
+            'required' => (int) $resource['required'],
+            'copyright' => isset($copyrights[$sid]) ? $copyrights[$sid] : '',
+          ))
+          ->execute();
     }
   }
 }
@@ -181,8 +171,7 @@ function text_field_update($entity_type, $entity, $field, $instance, $langcode, 
  * @see text_field_presave()
  */
 function text_field_delete($entity_type, $entity, $field, $instance, $langcode, &$items) {
-  if ($entity_type !== 'node') {
-    // @todo support entities other than nodes.
+  if (!_mee_field_instance_enabled($instance)) {
     return;
   }
 
@@ -201,12 +190,11 @@ function text_field_delete($entity_type, $entity, $field, $instance, $langcode, 
  * Implements hook_field_widget_form_alter().
  */
 function mee_field_widget_form_alter(&$element, &$form_state, $context) {
-  // Add our custom form element into te text's textarea_with_summary widget.
-  if ($context['instance']['widget']['type'] !== 'text_textarea_with_summary') {
+  // Add our custom form element into MEE enabled textarea only.
+  if (empty($context['instance']['settings']['mee_enabled'])) {
     return;
   }
 
-  //dsm($element);dsm($form_state);dsm($context);
   $element['mee'] = array(
     '#prefix' => '<div class="mee-wrap-editor-library">',
     '#suffix' => '</div>',
@@ -214,24 +202,23 @@ function mee_field_widget_form_alter(&$element, &$form_state, $context) {
       'css' => array(drupal_get_path('module', 'mee') . '/css/mee.css'),
       'js' => array(drupal_get_path('module', 'mee')  . '/mee.js'),
     ),
+    '#weight' => 0.5,
     'resource_manager' => array(
-      '#type' => 'markup',
-      '#weight' => 0.5,
       '#theme' => 'mee_resource_manager',
     ),
   );
 
+  $resource_manager = array();
   if (isset($form_state['values'])) {
     $resource_manager = $form_state['values']['mee'];
   }
-  else {
+  elseif (isset($element['#entity']->nid)) {
     $result = db_select('mee_resource', 'r')
         ->fields('r', array('atom_sid', 'weight', 'required'))
         ->condition('content_nid', $element['#entity']->nid)
         ->condition('field', $context['field']['field_name'])
         ->orderBy('weight')
         ->execute();
-    $resource_manager = array();
     foreach ($result as $r) {
       $resource_manager[$r->atom_sid] = (array) $r;
     }
@@ -277,53 +264,117 @@ function mee_field_widget_form_alter(&$element, &$form_state, $context) {
     '#weight' => isset($resource_manager[0]['weight']) ? $resource_manager[0]['weight'] : 0,
   );
 
+  // Force an #id so that we can reference to it later
+  $element['#id'] = drupal_html_id('edit-' . $context['field']['field_name']);
+
   $element += array(
     '#dnd-enabled' => TRUE,
     '#dnd-settings' => array(
-      'drop_selector' => '#' . $element['#id'] . ' .drop',// @todo check #id
+      'drop_selector' => '#' . $element['#id'] . ' .drop',
     ),
   );
 }
 
+/**
+ * Returns HTML for the MEE resource list.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - resource_manager: A render element representing the MEE resource list.
+ */
 function theme_mee_resource_manager($variables) {
-  $form = $variables['element'];
+  $form = $variables['resource_manager'];
   static $count = 0;
   $id = 'mee-resource-manager-' . $count;
   drupal_add_tabledrag($id, 'order', 'sibling', 'mee-rm-weight');
+
   $count++;
-  $header = array('', t('Title'), t('Required'), t('Weight'));
+  $header = array(t('Title'), t('Required'), t('Weight'));
   $rows = array();
   foreach (element_children($form) as $key) {
-    $form[$key]['weight']['#attributes']['class'] = 'mee-rm-weight';
-
-    $row = array('');
+    $form[$key]['weight']['#attributes']['class'] = array('mee-rm-weight');
+    $row = array();
     $row[] = drupal_render($form[$key]['title']);
     $row[] = drupal_render($form[$key]['required']);
     $row[] = drupal_render($form[$key]['weight']);
-    $rows[] = array(
-      'data' => $row,
-      'class' => 'draggable',
-    );
+    $rows[] = array('data' => $row, 'class' => array('draggable'));
   }
-  $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array(
+
+  $output = theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'attributes' => array(
       'id' => $id,
-      'class' => 'mee-resource-manager',
-    ), 'caption' => t('Resource Manager')));
+      'class' => array('mee-resource-manager'),
+    ),
+    'caption' => t('Resource Manager'),
+  ));
   $output .= drupal_render_children($form);
+
   return $output;
 }
 
+/**
+ * Tests if MEE is supported and enabled for this field instance.
+ */
+function _mee_field_instance_enabled($instance) {
+  if ($instance['entity_type'] !== 'node') {
+    // @todo support entities other than nodes.
+    return FALSE;
+  }
+
+  // If MEE is not enabled on this field, there is nothing to do.
+  if (empty($instance['settings']['mee_enabled'])) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * Extracts sids and copyright from $item. Updates $item if necessary.
+ */
+function _mee_process_item_value(&$item) {
+  // $sids contients the list of atom sid actually used in the item.
+  $sas = scald_rendered_to_sas($item['value']);
+  $scald_included = scald_included($sas);
+  $sids = array_unique($scald_included);
+
+  // Parse copyright informations
+  $copyrights = mee_extract_copyrights($item['value']);
+
+  // If $item['mee'] does not hold anything, load default data into it.
+  if (empty($item['mee']) || !is_array($item['mee']['resource_manager'])) {
+    _mee_load_resources($entity, $field, $item);
+  }
+
+  // Finally, if there was unknown client-side problem, we might not have new
+  // inserted resources. We set default value for them.
+  foreach ($sids as $sid) {
+    if (!isset($item['mee']['resource_manager'][$sid])) {
+      $item['mee']['resource_manager'][$sid] = array('required' => FALSE, 'weight' => 0);
+    }
+  }
+
+  return array($sids, $copyrights);
+}
+
+/**
+ * Load used resource in a node into an array.
+ *
+ * @param $item renderable array to render the field
+ */
 function _mee_load_resources($node, $field, &$item) {
   $result = db_select('mee_resource', 'r')
       ->fields('r', array('atom_sid', 'weight'))
       ->condition('content_nid', $node->nid)
       ->condition('field', $field['field_name'])
       ->execute();
-  $item['resource_manager'] = array();
+  $item['mee']['resource_manager'] = array();
   foreach ($result as $r) {
-    $item['resource_manager'][$r->atom_sid] = array('weight' => $r->weight);
+    $item['mee']['resource_manager'][$r->atom_sid] = array('weight' => $r->weight);
   }
-  $item['resource_manager'][0] = array('weight' => 0);
+  $item['mee']['resource_manager'][0] = array('weight' => 0);
 }
 
 /**
