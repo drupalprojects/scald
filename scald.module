@@ -1559,15 +1559,14 @@ function scald_menu() {
     'file'              => 'scald.admin.inc',
     'type'              => MENU_LOCAL_TASK,
   );
-  $items['admin/structure/scald/settings'] = array(
-    'title'             => 'Settings',
+  $items['admin/config/content/scald'] = array(
+    'title'             => 'Scald',
     'weight'            => 20,
     'page callback'     => 'drupal_get_form',
     'page arguments'    => array('scald_settings_form'),
     'access callback'   => 'user_access',
     'access arguments'  => array('administer scald'),
     'file'              => 'scald.admin.inc',
-    'type'              => MENU_LOCAL_TASK,
   );
   $items['atoms/add'] = array(
     'title' => 'Create Atom',
