@@ -47,10 +47,8 @@ function dnd_theme() {
  * Add a process to all textareas.
  */
 function dnd_element_info_alter(&$types) {
-  if (isset($types['textfield'])) {
-    $types['textfield']['#dnd-enabled'] = TRUE;//@todo test
-    $types['textfield']['#dnd-settings'] = NULL;
-    $types['textfield']['#process'][] = 'dnd_process_textarea';
+  if (isset($types['textarea'])) {
+    $types['textarea']['#process'][] = 'dnd_process_textarea';
   }
 }
 
@@ -74,7 +72,7 @@ function dnd_element_info_alter(&$types) {
  *   callback should be smart about attachment and detachment
  */
 function dnd_process_textarea($element, $form_state) {
-  if (isset($element['#dnd-enabled']) && $element['#dnd-enabled']) {
+  if (!empty($element['#dnd-enabled'])) {
     dnd_add_library();
 
     $settings = array(
@@ -93,8 +91,6 @@ function dnd_process_textarea($element, $form_state) {
     drupal_add_js(array(
       'dndDropAreas' => array($element['#id'] => $settings),
     ), 'setting');
-
-
   }
 
   return $element;
