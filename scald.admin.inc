@@ -176,21 +176,20 @@ function scald_admin_atoms() {
   $count = db_query("SELECT COUNT(*) FROM {scald_atoms}")->fetchField();
   $content = t('
     <h3>Scald Atoms</h3>
-
     <ul class="action-links">
       <li>!add_link</li>
     </ul>
 
-    <h4>Currently, there are @count Atoms registered with Scald Core.</h4>
-
-    <p>Enable the Views module to get an handy paginated table with filters which will allow you to browse your atoms</p>
-  ', array('!add_link' => l('Add atom', 'atoms/add'), '@count' => $count)
+    <h4>Currently, there @count_atoms registered with Scald Core.</h4>
+    <p>Enable the Views module to get an handy paginated table with filters which will allow you to browse your atoms.</p>',
+    array(
+      '!add_link'     => l('Add atom', 'atoms/add'), 
+      '@count_atoms'  => format_plural($count, 'is 1 atom', 'are @count atoms')
+    )
   );
 
   return $content;
 } // end scald_admin_atoms()
-
-
 
 /**
  * The Scald Admin page for Scald Contexts.
