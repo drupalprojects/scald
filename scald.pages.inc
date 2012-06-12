@@ -138,6 +138,8 @@ function scald_atom_add_form_submit($form, &$form_state) {
 
       $atom = $form_state['storage']['atom'];
 
+      $op = empty($atom->sid) ? 'created' : 'updated';
+
       // Let entity add its properties to the atom
       entity_form_submit_build_entity('scald_atom', $atom, $form, $form_state);
 
@@ -145,9 +147,10 @@ function scald_atom_add_form_submit($form, &$form_state) {
       scald_atom_save($atom);
 
       // Add a message confirming the creation
-      drupal_set_message(t('Atom %title, of type %type has been created', array(
+      drupal_set_message(t('Atom %title, of type %type has been %op', array(
         '%title' => $atom->title,
         '%type'  => $atom->type,
+        '%op'    => $op,
       )));
 
       break;
