@@ -1725,7 +1725,7 @@ function scald_flush_caches() {
 }
 
 function theme_scald_render_error($context, $message){
-	return '<h3>'.$message.'</h3>';
+	return '<h3>' . $message . '</h3>';
 }
 
 
