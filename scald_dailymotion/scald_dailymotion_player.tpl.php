@@ -3,7 +3,7 @@
  */
 ?>
 <object width="<?php print $vars['video_width'] ?>" height="<?php print $vars['video_height'] ?>" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000">
-  <param name="movie" value="http://www.dailymotion.com/swf/<?php print $vars['video'] ?>&related=0"></param>
+  <param name="movie" value="http://www.dailymotion.com/swf/<?php print $vars['video_id'] ?>&related=0"></param>
   <param name="allowFullScreen" value="true"></param>
   <param name="allowScriptAccess" value="always"></param>
   <param name="wmode" value="transparent"></param>
