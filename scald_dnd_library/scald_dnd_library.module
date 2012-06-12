@@ -190,15 +190,21 @@ function theme_sdl_library_item($variables) {
   $atom = $variables['atom'];
   $image = $variables['image'];
   $informations = $atom->rendered;
-  if (is_object($atom->base_entity) && isset($atom->base_entity->nid)) {
-    $view = l(t('View'), 'node/'. $atom->base_entity->nid, array('attributes' => array('target' => '_blank')));
-    $edit = l(t('Edit'), 'node/'. $atom->base_entity->nid .'/edit', array('attributes' => array('target' => '_blank')));
-    $links = "<div class='links'>$view / $edit</div>";
+  
+  // Action links
+  $links = scald_atom_user_build_actions_links($atom, NULL);
+  // Force all links to open in a new window
+  foreach($links as $action => $link) {
+    $links[$action]['attributes']['target'] = '_blank';
   }
-  else {
-    $links = '';
-  }
+  $links_element = array(
+    '#theme' => 'links',
+    '#links' => $links,
+    '#attributes' => array('class' => array('links', 'inline')),
+  );
+  $rendered_links = drupal_render($links_element);
 
+  // Authors
   if (!empty($informations->authors)) {
     foreach ($informations->authors as $author) {
       $author_names[] = check_plain($author->name);
@@ -208,6 +214,7 @@ function theme_sdl_library_item($variables) {
   else {
     $authors = '';
   }
+  
   $return =  "
   <div class='image'>
     {$image}
@@ -223,7 +230,7 @@ function theme_sdl_library_item($variables) {
     <div class='type type-" . strtolower($informations->type) ."'></div>
     <div class='title'>{$informations->title}</div>
     <div class='author'>{$authors}</div>
-    {$links}
+    {$rendered_links}
   </div>
   <span class='clear' />
   ";

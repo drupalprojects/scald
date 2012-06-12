@@ -1001,17 +1001,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
   $atom->rendered->type = check_plain($types[$atom->type]->title);
 
   // Actions
-  $atom->rendered->actions = array();
-  $current_actions = scald_user_actions($atom);
-  foreach ($actions as $slug => $details) {
-    if ($current_actions & $details['bitmask']) {
-      $atom->rendered->actions[] = array(
-        'title' => $details['title'],
-        'path'  => 'scald/actions/' . $slug . '/' . $atom->sid,
-        'link'  => l($details['title'], 'scald/actions/' . $slug . '/' . $atom->sid),
-      );
-    }
-  }
+  $atom->rendered->actions = scald_atom_user_build_actions_links($atom);
 
   // Authors
   $atom->rendered->authors = array();
@@ -1831,5 +1821,30 @@ function scald_permissions_submit($form, &$form_state) {
   foreach(user_roles() as $rid => $role_name) {
     scald_compute_role_actions(array($rid => $role_name));
   }
+}
+
+/**
+ * Build an array of action links for a given atom
+ */
+function scald_atom_user_build_actions_links($atom, $query = NULL) {
+  $actions = scald_actions();
+  $supported_actions = array('view', 'edit');
+  $current_actions = scald_user_actions($atom);
+  
+  $links = array();
+  foreach ($actions as $action => $details) {
+    if(in_array($action, $supported_actions) && ($current_actions & $details['bitmask'])) {
+      $links[$action] = array(
+        'title' => $details['title'],
+        'href' => 'atoms/' . $action . '/' . $atom->sid,
+      );
+
+      if($query) {
+        $links[$action]['query'] = $query;
+      }
+    }
+  }
+
+  return $links;  
 }
 
