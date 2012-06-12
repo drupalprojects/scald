@@ -13,7 +13,7 @@ function scald_dnd_library_views_default_views() {
   // Library view
   $view = new view;
   $view->name = 'scald_library';
-  $view->description = 'Library provided by Scald to DnD, based on atoms.';
+  $view->description = 'Library view provided by Scald to access atoms.';
   $view->tag = '';
   $view->base_table = 'scald_atoms';
   $view->human_name = '';
@@ -23,7 +23,7 @@ function scald_dnd_library_views_default_views() {
   
   /* Display: Paramètres par défaut */
   $handler = $view->new_display('default', 'Paramètres par défaut', 'default');
-  $handler->display->display_options['title'] = 'Bibliothèque de contenu';
+  $handler->display->display_options['title'] = 'Atoms library';
   $handler->display->display_options['use_ajax'] = TRUE;
   $handler->display->display_options['access']['type'] = 'perm';
   $handler->display->display_options['access']['perm'] = 'administer scald';
@@ -144,6 +144,15 @@ function scald_dnd_library_views_default_views() {
   
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page_1');
+  $handler->display->display_options['defaults']['header'] = FALSE;
+  /* Header: Global: Text area */
+  $handler->display->display_options['header']['area']['id'] = 'area';
+  $handler->display->display_options['header']['area']['table'] = 'views';
+  $handler->display->display_options['header']['area']['field'] = 'area';
+  $handler->display->display_options['header']['area']['empty'] = FALSE;
+  $handler->display->display_options['header']['area']['content'] = '<ul class="action-links"><li>' . l('Add atom', 'atoms/add') . '</li></ul>';
+  $handler->display->display_options['header']['area']['format'] = 'filtered_html';
+  $handler->display->display_options['header']['area']['tokenize'] = 0;
   $handler->display->display_options['path'] = 'admin/content/atoms';
   $handler->display->display_options['menu']['type'] = 'tab';
   $handler->display->display_options['menu']['title'] = 'Atoms';
@@ -202,8 +211,7 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['fields']['sid']['hide_empty'] = 0;
   $handler->display->display_options['fields']['sid']['empty_zero'] = 0;
   $handler->display->display_options['path'] = 'scald/library_dnd';
-  
-  $views[$view->name] = $view;
 
+  $views[$view->name] = $view;
   return $views;
 }
