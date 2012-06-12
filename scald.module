@@ -52,17 +52,32 @@ function scald_types() {
     ->fetchAllAssoc('type');
 
   return $types;
+} // end scald_types()
 
 
-  // Ensure only a single entry is recorded for each type/provider mapping to
-  //  avoid unnecessary executions of hooks.
-  $providers_results = db_query('SELECT DISTINCT type, provider FROM {scald_atom_providers}');
-  while ($provider_raw = db_fetch_array($providers_results)) {
-    $scald_types[$provider_raw['type']]['atom_providers'][] = $provider_raw['provider'];
+/**
+ * Add a Scald unified type 
+ *
+ * This function create a new type if it does not already exist.
+ *
+ * @return
+ *   TRUE if the new type was added, FALSE if already exists.
+ */
+function scald_add_type($type, $title, $description) {
+  // Check if this type already exists
+  $types = scald_types();
+  if (!empty($types[$type])) {
+    return FALSE;
   }
-
-  return $scald_types;
-} // end _scald_types()
+  
+  // Create a new type
+  db_insert('scald_types')
+    ->fields(array('type', 'title', 'description', 'provider'))
+    ->values(array($type, $title, $description, 'scald'))
+    ->execute();
+    
+  return TRUE;
+} // end scald_add_type()
 
 
 

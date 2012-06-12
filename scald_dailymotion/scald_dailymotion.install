@@ -1,0 +1,25 @@
+<?php
+
+/**
+ * @file
+ * Scald DailymMotion Installation
+ */
+
+
+
+/**
+ * Implementation of hook_install().
+ */
+function scald_dailymotion_install() {
+  // @@@TODO: Pre-populate appropriate variables/configuration
+  scald_add_type('video', 'Video', 'Resource video');
+}
+
+
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function scald_dailymotion_uninstall() {
+  // @@@TODO: Delete all variables/configs/blocks/etc.
+}

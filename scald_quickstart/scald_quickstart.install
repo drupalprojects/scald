@@ -12,30 +12,27 @@
  * Implements hook_install().
  */
 function scald_quickstart_install() {
-  // Create a few default types
-  db_insert('scald_types')
-    ->fields(array('type', 'provider', 'title', 'description'))
-    ->values(array('audio', 'scald', 'Audio', 'Ressource audio'))
-    ->values(array('image', 'scald', 'Image', 'Ressource image'))
-    ->values(array('video', 'scald', 'Video', 'Ressource video'))
-    ->execute();
-  scald_types(TRUE);
 
   // Create a few default fields on our entities
   $field = array(
     'field_name' => 'scald_thumbnail',
     'type' => 'image',
   );
-  field_create_field($field);
+  if(!field_read_field($field['field_name'])) {
+    field_create_field($field);
+  }
+  
   foreach (array('image', 'audio', 'video') as $bundle) {
     $instance = array(
       'field_name' => 'scald_thumbnail',
-       'entity_type' => 'scald_atom',
-       'bundle' => $bundle,
-       'label' => ($bundle == 'image') ? 'Image' : 'Thumbnail',
-       'required' => FALSE,
+      'entity_type' => 'scald_atom',
+      'bundle' => $bundle,
+      'label' => ($bundle == 'image') ? 'Image' : 'Thumbnail',
+      'required' => FALSE,
     );
-    field_create_instance($instance);
+    if(!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
+      field_create_instance($instance);
+    }
 
     $instance = array(
       'field_name' => 'scald_authors',
@@ -47,7 +44,9 @@ function scald_quickstart_install() {
         'type' => 'taxonomy_autocomplete',
       ),
     );
-    field_create_instance($instance);
+    if(!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
+      field_create_instance($instance);
+    }
   }
 
   /**
@@ -64,6 +63,13 @@ function scald_quickstart_install() {
     cache_clear_all('scald_actions_bitstring_for_rid_' . $rid, 'cache_scald');    
   }
 }
+
+/**
+ * Implements hook_uninstall().
+ */
+function scald_quickstart_uninstall() {
+}
+
 
 /**
  * Grant anoymous and authenticated user the rights to see published atoms
