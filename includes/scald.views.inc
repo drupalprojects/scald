@@ -137,8 +137,8 @@ function scald_views_data() {
     'title' => t('Actions'),
     'help' => t("Possible interactions with this atom"),
     'field' => array(
-      'handler' => 'views_handler_field',
-      'click sortable' => TRUE,
+      'handler' => 'scald_views_handler_field_actions',
+      'click sortable' => FALSE,
      ),
     'filter' => array(
       'handler' => 'scald_views_handler_filter_actions',
@@ -167,6 +167,9 @@ function scald_views_handlers() {
         'parent' => 'views_handler_filter',
       ),
       'scald_views_handler_field_representation' => array(
+        'parent' => 'views_handler_field',
+      ),
+      'scald_views_handler_field_actions' => array(
         'parent' => 'views_handler_field',
       ),
     ),

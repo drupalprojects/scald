@@ -153,3 +153,58 @@ function scald_atom_add_form_submit($form, &$form_state) {
       break;
   }
 }
+
+/**
+ * Handles the view of an atom
+ */
+function scald_atom_view($form, &$form_state, $atom) {  
+  drupal_set_title('View "' . $atom->title . '"');  
+  
+  // Rendering content of atom
+  $view_mode = 'full';
+  field_attach_prepare_view('scald_atom', array($atom->sid => $atom), $view_mode);
+  entity_prepare_view('scald_atom', array($atom->sid => $atom));
+  $content = field_attach_view('scald_atom', $atom, $view_mode);
+
+  $form = array();
+  $form['view'] = array(
+    '#type' => 'markup',
+    '#markup' => drupal_render($content)
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Ok')
+  );
+  return $form;
+}
+
+/**
+ * Handles the editing of an existing atom
+ */
+function scald_atom_edit($form, &$form_state, $atom) {
+  drupal_set_title('Edit "' . $atom->title . '"');  
+
+  // Jump directly to the last step
+  $form_state['storage']['step'] = 2;
+  $form_state['storage']['atom'] = $atom;
+
+  // Form definition
+  $form = array();
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title'),
+    '#required' => TRUE,
+    '#default_value' => $atom->title,
+  );
+  field_attach_form('scald_atom', $atom, $form, $form_state);  
+
+  $form['actions'] = array(
+    '#type' => 'actions',
+  );
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save')
+  );
+  $form['actions']['submit']['#submit'][] = 'scald_atom_add_form_submit';
+  return $form;
+}

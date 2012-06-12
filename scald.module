@@ -268,6 +268,18 @@ function scald_atom_defaults($type) {
  ******************************************************************************/
 
 /**
+ * Load a Scald Atom
+ * @param $sid
+ *  The Scald ID being loaded.
+ * @return
+ *   The Scald atom
+ *   FALSE upon failure
+ */
+function scald_atom_load($sid) {
+  return scald_fetch($sid);
+}
+
+/**
  * Save changes to a Scald Atom, or create a new one
  *
  * @param $atom
@@ -344,7 +356,12 @@ function scald_atom_save(&$atom) {
   field_attach_presave('scald_atom', $atom);
 
   // Put the basic data in the Scald Atom Registry
-  $written = drupal_write_record('scald_atoms', $atom);
+  if($op == 'update') {
+    $written = drupal_write_record('scald_atoms', $atom, array('sid'));
+  }
+  else {
+    $written = drupal_write_record('scald_atoms', $atom);
+  }
 
   if (!$written) {
     return FALSE;
@@ -1238,6 +1255,13 @@ function scald_scald_contexts() {
       'parseable'       => FALSE,
       'formats'         => array(),
     ),
+    'full'      => array(
+      'title'           => t('Title'),
+      'description'     => t('Built-in Context used when pre-viewing an atom.'),
+      'render_language' => 'XHTML',
+      'parseable'       => FALSE,
+      'formats'         => array(),
+    ),
   );
 }
 
@@ -1595,6 +1619,23 @@ function scald_menu() {
     'access arguments' => array('administer scald'),
     'file' => 'scald.pages.inc',
     'type' => MENU_CALLBACK,
+  );
+
+  $items['atoms/view/%scald_atom'] = array(
+    'title' => 'View Atom',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('scald_atom_view', 2),
+    'access callback' => 'scald_action_permitted',
+    'access arguments' => array(2, 'view'),
+    'file' => 'scald.pages.inc'
+  );
+  $items['atoms/edit/%scald_atom'] = array(
+    'title' => 'Edit Atom',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('scald_atom_edit', 2),
+    'access callback' => 'scald_action_permitted',
+    'access arguments' => array(2, 'edit'),
+    'file' => 'scald.pages.inc'
   );
 
   return $items;
