@@ -21,10 +21,13 @@ class scald_views_handler_filter_actions extends views_handler_filter {
    * Overrides value_form: provides checkboxes for the defined actions.
    */
   function value_form(&$form, &$form_state) {
-    $defaults = array();
+    $old_default = !is_array($this->options['value']);
+    $defaults = $old_default ? array() : $this->options['value'];
     foreach (scald_actions() as $slug => $action) {
       $options[$slug] = $action['title'];
-      $defaults[$slug] = ($this->options['value'] & $action['bitmask']) ? $slug : '';
+      if ($old_default) {
+        $defaults[$slug] = ($this->options['value'] & $action['bitmask']) ? $slug : '';
+      }
     }
     // And now, we just need to add our select item with the values
     // we've prepared above.
@@ -37,24 +40,36 @@ class scald_views_handler_filter_actions extends views_handler_filter {
   }
 
   /**
-   * Overrides value_submit: translate the checkboxes to a bitmask.
-   */
-  function value_submit($form, &$form_state) {
-    $actions = scald_actions();
-    $mask = 0;
-    foreach ($form_state['values']['options']['value'] as $value) {
-      if (!empty($value)) {
-        $mask += $actions[$value]['bitmask'];
-      }
-    }
-    $form_state['values']['options']['value'] = $mask;
-  }
-
-  /**
    * Overrides query: change the operator before querying.
    */
   function query() {
-    $this->operator = ' & '. $this->options['value'] . ' = ';
+    if (is_array($this->options['value'])) {
+      $this->value = 0;
+      $actions = scald_actions();
+      foreach ($actions as $name => $action) {
+        if (!empty($this->options['value'][$name])) {
+          $this->value |= $action['bitmask'];
+        }
+      }
+    }
+    else {
+      $this->value = $this->options['value'];
+    }
+    $this->operator = ' & '. $this->value . ' = ';
     parent::query();
   }
+
+  /**
+   * Overrides admin_summary: display user friendly label.
+   */
+   function admin_summary() {
+     $actions = scald_actions();
+     $names = array();
+     foreach ($actions as $name => $action) {
+       if (!empty($this->options['value'][$name])) {
+         $names[] = $action['title'];
+       }
+     }
+     return implode(',', $names);
+   }
 }

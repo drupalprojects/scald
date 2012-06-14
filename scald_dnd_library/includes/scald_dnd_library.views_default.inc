@@ -138,7 +138,10 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['filters']['actions']['table'] = 'scald_atoms';
   $handler->display->display_options['filters']['actions']['field'] = 'actions';
   $handler->display->display_options['filters']['actions']['operator'] = '&';
-  $handler->display->display_options['filters']['actions']['value'] = 5;
+  $handler->display->display_options['filters']['actions']['value'] = array(
+    'fetch' => 'fetch',
+    'view' => 'view',
+  );
   $handler->display->display_options['filters']['actions']['group'] = '0';
   $handler->display->display_options['filters']['actions']['expose']['operator'] = FALSE;
   
