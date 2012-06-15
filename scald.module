@@ -2915,17 +2915,19 @@ function scald_user($op, &$edit, &$account, $category = NULL) {
       break;
     case 'insert':
     case 'update':
-      // All Drupal users need to registered as Scald Authors
-      $aid = scald_uid_to_aid($account->uid);
-      $author_data = array(
-        'name'  => $account->name,
-        'uid'   => $account->uid,
-      );
-      if ($aid) {
-        scald_update_author($aid, $author_data);
-      }
-      else {
-        scald_register_author($author_data);
+      if (variable_get('scald_register_users_as_authors', TRUE)) {
+        // All Drupal users need to registered as Scald Authors
+        $aid = scald_uid_to_aid($account->uid);
+        $author_data = array(
+          'name'  => $account->name,
+          'uid'   => $account->uid,
+        );
+        if ($aid) {
+          scald_update_author($aid, $author_data);
+        }
+        else {
+          scald_register_author($author_data);
+        }
       }
 
       // Fetch action bitstring components by User Role and then combine in
