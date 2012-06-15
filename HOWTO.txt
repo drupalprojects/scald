@@ -2,15 +2,13 @@ This is a quick'n'dirty guide, intended for developers, explaining
 how to setup a Scald enabled instance.
 
 I] Activate a bunch of modules that'll make the whole thing usable:
+ o  Views
  o  DnD
  o  MEE
  o  Scald
  o  Scald DnD Library
  o  Scald Dailymotion (will provide quickly a bunch of video atoms for
     testing purpose)
-
-Recommended but not mandatory:
- o Views
 
 II] Permissions:
   1 - Give every role that has the "access content" permission the
@@ -41,7 +39,7 @@ IV] Configure a Scald-enabled CCK Field
 
 V] Go to the node form, enjoy
 
-(Those instructions assume that you will be using Scald / MEE in a mode
+Those instructions assume that you will be using Scald / MEE in a mode
 where users can't edit the ressource options when its dragged into the
 RTE, which is the safe choice.
 *If* you're in a situation where you're sure that only trusted users will
@@ -50,5 +48,15 @@ change the ressource HTML output on a case by case basis, then you
 should instead set the "mee_store_sas" variable to FALSE, and edit the
 input filter to allow all the html tags that your atoms providers will
 output. In this case, Scald won't alter the output unless the user
-viewing the content doesn't have access to the included atom)
+viewing the content doesn't have access to the included atom
 
+By default, Scald assumes that all users should be registered as authors.
+This can be turned off in settings.php, using
+
+<code>
+  $conf['scald_register_users_as_authors'] = FALSE;
+</code>
+
+This option should be set before Scald is first enabled. Switching this
+option on or off after the module is first enabled can have unintended
+consquences.
