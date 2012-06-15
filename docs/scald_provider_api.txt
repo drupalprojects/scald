@@ -83,6 +83,9 @@ function hook_scald_unregister_atom($atom, $mode);
 function hook_scald_provider();
 function hook_scald_action(&$atom, $action, $mode);
 
+// Quick links
+function hook_scald_atom_quickadd();
+
 ?>
 
 
@@ -304,6 +307,18 @@ function hook_scald_action(&$atom, $action, $mode) {
 
 ?>
 
+
+/**
+ *
+ */
+function hook_scald_atom_quickadd() {
+  $type = array(
+    'type' => 'Image',
+    'addpath' => 'node/add/scald_example_content_type',
+    'class' => 'scald-child',
+  );
+  return array($type);
+} // end hook_scald_atom_quickadd
 
 
 
