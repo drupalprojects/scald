@@ -32,7 +32,7 @@ Drupal.mee = {
 
     Drupal.settings.mee.editors[id] = text;
     // @todo check the selector
-    var ResourceManagerId = obj.parents('.text-format-wrapper').find('.mee-resource-manager').attr('id');
+    var mee_rm_id = obj.parents('.text-format-wrapper').find('.mee-resource-manager').attr('id');
 
     // 1. Check if there are known atoms.
     // Known atoms are ones actually in the current library view and available
@@ -40,12 +40,19 @@ Drupal.mee = {
     // server side.
     for (atom in Drupal.dnd.Atoms) {
       if (this.atom_exists(text, atom)) {
-        Drupal.mee.generate(atom, ResourceManagerId);
+        Drupal.mee.generate(atom, mee_rm_id);
       }
     }
 
-    // @todo 2. Scan the resource manager table to clean up removed atoms.
-    Drupal.mee.cleanup(text, ResourceManagerId);
+    // 2. Scan the resource manager table to clean up removed atoms.
+    $('#' + mee_rm_id).find('tbody tr').each(function(i) {
+      // Get the atom id from the weight select's name
+      var atom_id = $(this).find('.mee-rm-weight').attr('name').replace(/^.*\[(\d+)\]\[weight\]$/, '$1');
+
+      if (atom_id > 0 && !Drupal.mee.atom_exists(text, atom_id)) {
+        $(this).remove();
+      }
+    });
   },
 
   /**
@@ -57,7 +64,7 @@ Drupal.mee = {
    */
   atom_exists: function(text, atom_id) {
      return text.indexOf('<!-- scald=' + atom_id + ':sdl_editor_representation -->') > -1;
-  }
+  },
 
   /**
    * Generate a new item in the MEE Resource Manager table. For the sake of
