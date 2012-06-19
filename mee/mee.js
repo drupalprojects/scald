@@ -23,8 +23,19 @@ Drupal.behaviors.mee = {
 
 Drupal.mee = {
   update: function(obj) {
-    var text = obj.val();
-    var id = obj.attr('id');
+    var id = obj.attr('id'), text, mee_rm_id;
+
+    // Update the real form element with value in the RTE. We don't use wysiwyg
+    // API because this kind of action is not handled. Currently only the two
+    // most popular RTE are supported.
+    if (typeof(tinymce) !== 'undefined' && tinymce.get(id)) {
+      tinymce.get(id).save();
+    }
+    else if (typeof(CKEDITOR) !== 'undefined' && CKEDITOR.instances[id]) {
+      CKEDITOR.instances[id].updateElement();
+    }
+
+    text = obj.val();
 
     if (text === Drupal.settings.mee.editors[id]) {
       return;
@@ -32,7 +43,7 @@ Drupal.mee = {
 
     Drupal.settings.mee.editors[id] = text;
     // @todo check the selector
-    var mee_rm_id = obj.parents('.text-format-wrapper').find('.mee-resource-manager').attr('id');
+    mee_rm_id = obj.parents('.text-format-wrapper').find('.mee-resource-manager').attr('id');
 
     // 1. Check if there are known atoms.
     // Known atoms are ones actually in the current library view and available
