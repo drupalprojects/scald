@@ -31,25 +31,35 @@ Drupal.mee = {
     }
 
     Drupal.settings.mee.editors[id] = text;
+    // @todo check the selector
+    var ResourceManagerId = obj.parents('.text-format-wrapper').find('.mee-resource-manager').attr('id');
 
     // 1. Check if there are known atoms.
     // Known atoms are ones actually in the current library view and available
     // for drag and drop. If library is unavailable, detection happens on the
     // server side.
     for (atom in Drupal.dnd.Atoms) {
-      // Theoretically we can search for Drupal.dnd.Atoms[atom].editor in the
-      // text, but we can, because RTE reformat the HTML source (eg. change
-      // class='image' into class="image" etc.).
-      if (text.indexOf('<!-- scald=' + atom + ':sdl_editor_representation -->') > -1) {
-        // @todo check the selector
-        Drupal.mee.generate(atom, obj.parents('.text-format-wrapper').find('.mee-resource-manager').attr('id'));
+      if (this.atom_exists(text, atom)) {
+        Drupal.mee.generate(atom, ResourceManagerId);
       }
     }
 
     // @todo 2. Scan the resource manager table to clean up removed atoms.
+    Drupal.mee.cleanup(text, ResourceManagerId);
   },
 
- /**
+  /**
+   * Searchs if an atom is present in the text.
+   *
+   * Theoretically we can search for Drupal.dnd.Atoms[atom].editor in the text,
+   * but we can, because RTE reformat the HTML source (eg. change class='image'
+   * into class="image" etc.).
+   */
+  atom_exists: function(text, atom_id) {
+     return text.indexOf('<!-- scald=' + atom_id + ':sdl_editor_representation -->') > -1;
+  }
+
+  /**
    * Generate a new item in the MEE Resource Manager table. For the sake of
    * simplicity and performance, we don't use AHAH.
    */
