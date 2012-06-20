@@ -11,6 +11,7 @@ function scald_dnd_library_views_default_views() {
   $views = array();
 
   // Library view
+  
   $view = new view;
   $view->name = 'scald_library';
   $view->description = 'Library view provided by Scald to access atoms.';
@@ -152,7 +153,7 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['header']['area']['id'] = 'area';
   $handler->display->display_options['header']['area']['table'] = 'views';
   $handler->display->display_options['header']['area']['field'] = 'area';
-  $handler->display->display_options['header']['area']['empty'] = FALSE;
+  $handler->display->display_options['header']['area']['empty'] = TRUE;
   $handler->display->display_options['header']['area']['content'] = '<ul class="action-links"><li>' . l('Add atom', 'atoms/add') . '</li></ul>';
   $handler->display->display_options['header']['area']['format'] = 'filtered_html';
   $handler->display->display_options['header']['area']['tokenize'] = 0;
@@ -214,7 +215,8 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['fields']['sid']['hide_empty'] = 0;
   $handler->display->display_options['fields']['sid']['empty_zero'] = 0;
   $handler->display->display_options['path'] = 'scald/library_dnd';
-
+  
+  
   $views[$view->name] = $view;
   return $views;
 }
