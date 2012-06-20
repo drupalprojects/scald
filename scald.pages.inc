@@ -7,6 +7,10 @@
 
 function scald_atom_add() {
   $types = scald_types();
+  if(empty($types)) {
+    return '<p>' . t('You have not installed any Scald providers yet. Go to the <a href="@admin-modules">modules administration page</a> to install a Scald provider.', array('@admin-modules' => url('admin/modules'))) . '</p>';
+  }
+
   $content = array();
   foreach ($types as $name => $type) {
     $content[] = array(
