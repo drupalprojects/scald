@@ -302,6 +302,7 @@ function scald_dailymotion_feed($type, $id) {
         $info->author = $item->getElementsByTagNameNS(NS_DM, 'author')->item(0)->nodeValue;
         // ... and the publication date
         $info->pubDate = date('c', strtotime($item->getElementsByTagName('pubDate')->item(0)->nodeValue));
+        $info->license = 'DM';
         $items[] = $info;
       }
     }
@@ -334,6 +335,7 @@ function scald_dailymotion_video($id) {
         'height' => $data->thumbnail_height
       );
       $item->author = $data->author_name;
+      $item->license = 'DM';
       return $item;
     }
   }

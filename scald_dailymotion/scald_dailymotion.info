@@ -2,5 +2,5 @@ name = Scald Dailymotion
 core = 7.x
 php = 5.x
 package = Scald
-description = Provider: Provides Video atoms linked to DailyMotion videos
+description = Provider: Provides Video atoms linked to Dailymotion videos
 dependencies[] = scald
