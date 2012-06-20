@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- *   Defines a DailyMotion provider for Scald.
+ *   Defines a Dailymotion provider for Scald.
  */
 define('DAILYMOTION_RSS',     'http://www.dailymotion.com/rss/');
 define('DAILYMOTION_WEB',     'http://www.dailymotion.com/video/');
@@ -15,7 +15,7 @@ define('NS_DM',               'http://www.dailymotion.com/dmrss');
  */
 function scald_dailymotion_scald_atom_providers() {
   return array(
-    'video' => 'Video hosted on DailyMotion'
+    'video' => 'Video hosted on Dailymotion'
   );
 }
 
@@ -40,7 +40,7 @@ function scald_dailymotion_scald_add_form(&$form, &$form_state) {
   if(!$identifier) {
     $form['search'] = array(
       '#type' => 'item',
-      '#markup' => l(t('Search on DailyMotion'), 'atoms/dailymotion/search'),
+      '#markup' => l(t('Search on Dailymotion'), 'atoms/dailymotion/search'),
     );
   }
   
@@ -167,16 +167,16 @@ function scald_dailymotion_cron() {
 function scald_dailymotion_menu() {
   $items = array();
   $items['admin/config/media/scald_dailymotion'] = array(
-    'title' => 'DailyMotion imports',
+    'title' => 'Dailymotion imports',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('scald_dailymotion_imports_form'),
     'access arguments' => array('administer dailymotion imports'),
-    'description' => 'Configure the videos that should be automatically imported from DailyMotion',
+    'description' => 'Configure the videos that should be automatically imported from Dailymotion',
     'file' => 'scald_dailymotion.admin.inc'
   );
 
   $items['atoms/dailymotion/search'] = array(
-    'title' => 'DailyMotion Video search',
+    'title' => 'Dailymotion Video search',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('scald_dailymotion_search_form', 2),
     'access arguments' => array('import dailymotion videos'),
@@ -186,7 +186,7 @@ function scald_dailymotion_menu() {
   );
 
   $items['atoms/dailymotion/import'] = array(
-    'title' => 'DailyMotion Video import',
+    'title' => 'Dailymotion Video import',
     'page callback' => 'scald_dailymotion_import',
     'page arguments' => array(),
     'access arguments' => array('import dailymotion videos'),
@@ -199,7 +199,7 @@ function scald_dailymotion_menu() {
 }
 
 /**
- * Creates an atom based on a DailyMotion video id or an object
+ * Creates an atom based on a Dailymotion video id or an object
  * containing the video informations..
  * @param $video
  *   Unique identifier of the video on dailymotion, or object
@@ -209,7 +209,7 @@ function scald_dailymotion_menu() {
  */
 function scald_dailymotion_register($video) {
   global $user;
-  // Fetch the needed informations from DailyMotion
+  // Fetch the needed informations from Dailymotion
   if (is_object($video)) {
     $infos = $video;
   }
@@ -249,18 +249,18 @@ function scald_dailymotion_register($video) {
 }
 
 /**
- * Analyze a DailyMotion RSS feed, reformating the informations about its
+ * Analyze a Dailymotion RSS feed, reformating the informations about its
  * items in an easy to manipulate objects containing the informations we're
  * interested in.
  * @param $type
- *   DailyMotion RSS feed type. Examples include 'user', 'video', 'tag', 'search', ...
+ *   Dailymotion RSS feed type. Examples include 'user', 'video', 'tag', 'search', ...
  * @param $id
  *   The identifier, related to the type mentionned above. If you're requestion
  *   a user feed, then, its the username...
  * @return array
  *   Each array value is an object containing the following members:
- *     - id: the DailyMotion video id
- *     - author: the DailyMotion username of the user who uploaded the video
+ *     - id: the Dailymotion video id
+ *     - author: the Dailymotion username of the user who uploaded the video
  *     - title: the video title
  *     - thumbnail: an associative array, containing the source ('src'), width
  *       and height of the video's thumbnail
@@ -268,11 +268,11 @@ function scald_dailymotion_register($video) {
  */
 function scald_dailymotion_feed($type, $id) {
   $url = DAILYMOTION_RSS . $type .'/'. urlencode($id);
-  $xml = drupal_http_request($url);
+  $response = drupal_http_request($url);
   $items = array();
-  if ($xml->code != 404 && !empty($xml->data)) {
+  if ($response->code != 404 && !empty($response->data)) {
     $dom = new DOMDocument();
-    $dom->loadXML($xml->data);
+    $dom->loadXML($response->data);
     if ($dom) {
       foreach($dom->getElementsByTagName('item') as $item) {
         $info = new stdClass();
@@ -293,6 +293,11 @@ function scald_dailymotion_feed($type, $id) {
           'width'  => $thumb->getAttribute('width'),
           'height' => $thumb->getAttribute('height')
         );
+        // Tags
+        $info->tags = array();
+        foreach($item->getElementsByTagNameNS(NS_MEDIA, 'category') as $tag) {
+          $info->tags[] = $tag->nodeValue;
+        }        
         // ... also get the author
         $info->author = $item->getElementsByTagNameNS(NS_DM, 'author')->item(0)->nodeValue;
         // ... and the publication date
@@ -351,21 +356,21 @@ function scald_dailymotion_already_imported($id) {
 }
 
 /**
- * Form element validation handler for DailyMotion identifier
+ * Form element validation handler for Dailymotion identifier
  *
  */
 function scald_dailymotion_validate_id($element, &$form_state) {
   $id = scald_dailymotion_parse_id($form_state['values']['identifier'], TRUE);
   if(!$id) {
-    form_error($element, t('Invalid DailyMotion video identifier.'));
+    form_error($element, t('Invalid Dailymotion video identifier.'));
   }
   else if(scald_dailymotion_already_imported($id)) {
-    form_error($element, t('DailyMotion video already imported.'));
+    form_error($element, t('Dailymotion video already imported.'));
   }
 }
 
 /**
- * Parse an DailyMotion ID and check validity
+ * Parse an Dailymotion ID and check validity
  *
  */
 function scald_dailymotion_parse_id($string, $check) {
@@ -380,7 +385,7 @@ function scald_dailymotion_parse_id($string, $check) {
     else if(preg_match("/^http/", $string)) {
       // This string is a URL, most likely a shortened one. (http://dai.ly, http://bit.ly, etc...)
       $response = drupal_http_request($string);
-      if($response->code == 200 && isset($response->redirect_code) &&  ($response->redirect_code == 301 || $response->redirect_code == 302)) {
+      if($response->code == 200 && isset($response->redirect_code) && ($response->redirect_code == 301 || $response->redirect_code == 302)) {
         return scald_dailymotion_parse_id($response->redirect_url, $check);
       }
     }
@@ -390,7 +395,7 @@ function scald_dailymotion_parse_id($string, $check) {
   }
 
   if($id && $check) {
-    // Last check to confirm this video really exists on DailyMotion
+    // Last check to confirm this video really exists on Dailymotion
     if(!scald_dailymotion_video($id)) {
       $id = FALSE;
     }
