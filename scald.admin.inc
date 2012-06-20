@@ -225,6 +225,7 @@ function scald_admin_contexts_form($form, $form_state, $type) {
   }
 
   foreach ($contexts as $name => $context) {
+    $default = !empty($contexts[$name]['type_format'][$type->type]['transcoder']) ? $contexts[$name]['type_format'][$type->type]['transcoder'] : NULL;
     $form[$name] = array(
       '#type'         => 'fieldset',
       '#title'        => $context['title'],
@@ -243,7 +244,7 @@ function scald_admin_contexts_form($form, $form_state, $type) {
       '#type'            => 'select',
       '#title'           => t('Transcoder'),
       '#options'         => $transcoder_options,
-      '#default_  value' => 'bla'
+      '#default_value'   => $default,
     );
 
   }
@@ -265,6 +266,7 @@ function scald_admin_contexts_form($form, $form_state, $type) {
  *  Configuration Object is rebuilt from the db.
  */
 function scald_admin_contexts_form_submit($form, &$form_state) {
+  drupal_set_message(t('Context transcoders settings saved'));
   $typename = $form_state['build_info']['args'][0]->type;
   foreach ($form_state['values'] as $key => $value) {
     switch (substr($key, -6)) {
@@ -282,8 +284,8 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
           db_merge('scald_context_type_transcoder')
             ->fields(array(
               'file_format' => 'jpg',
+              'transcoder' => $transcoder,
             ))
-            ->updateFields(array('transcoder' => $transcoder))
             ->key(array(
               'context' => $context,
               'type' => $typename
