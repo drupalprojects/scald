@@ -1,11 +1,14 @@
 <?php
 /**
  * @file
- *   Defines a DailyMotion provider for Scald.
+ *   Defines a YouTube provider for Scald.
  */
-define('YOUTUBE_OEMBED',    'http://www.youtube.com/oembed');
-define('YOUTUBE_WEB',       'http://www.youtube.com/watch');
-define('YOUTUBE_ID_REGEXP', '/^[a-zA-Z0-9\-_]+$/');
+
+define('YOUTUBE_OEMBED',      'http://www.youtube.com/oembed');
+define('YOUTUBE_ID_REGEXP',   '/^[a-zA-Z0-9\-_]+$/');
+define('YOUTUBE_WEB_REGEXP',  '#http://www\.youtube\.com/\S+[\?&]v=([a-zA-Z0-9\-_]+)#');
+define('YOUTUBE_RSS',         'http://gdata.youtube.com/feeds/api/videos/');
+define('YOUTUBE_MEDIA',       'http://search.yahoo.com/mrss/');
 
 /**
  * Implements hook_scald_atom_providers.
@@ -26,11 +29,11 @@ function scald_youtube_scald_add_form(&$form, &$form_state) {
     '#title' => t('Video identifier'),
     '#element_validate' => array('scald_youtube_validate_id'),
     '#default_value' => '',
-  ); 
+  );
 }
 
 /**
-   * Implements hook_scald_add_form_fill.
+ * Implements hook_scald_add_form_fill.
  */
 function scald_youtube_scald_add_form_fill(&$atom, $form, $form_state) {
 
@@ -39,10 +42,10 @@ function scald_youtube_scald_add_form_fill(&$atom, $form, $form_state) {
 
   // Get video info
   $infos = scald_youtube_video($identifier);
-  
+
   $atom->base_id = $identifier;
   $atom->title = $infos->title;
-  
+
   // Prefill the author
   $atom->scald_authors[LANGUAGE_NONE][0] = array(
     'tid' => 0,
@@ -69,8 +72,8 @@ function scald_youtube_scald_add_form_fill(&$atom, $form, $form_state) {
   $query = db_update('file_managed')
     ->condition('fid', $file->fid)
     ->fields(array('status' => 0))
-    ->execute();  
-  
+    ->execute();
+
   $atom->scald_thumbnail[LANGUAGE_NONE][0] = (array)$file;
 }
 
@@ -90,8 +93,8 @@ function scald_youtube_scald_fetch($atom, $type) {
 function scald_youtube_scald_prerender($atom, $context, $options, $mode) {
   if ($mode == 'atom') {
     if ($context != 'sdl_library_item') {
-      $atom->rendered->player = theme('scald_youtube_player', 
-        array('vars' => 
+      $atom->rendered->player = theme('scald_youtube_player',
+        array('vars' =>
           array(
             'video_id'      => $atom->base_id,
             'video_width'   => ($atom->data['video_width'] ? $atom->data['video_width'] : 480),
@@ -135,7 +138,7 @@ function scald_youtube_register($video) {
   else {
     $infos = scald_youtube_video($video);
   }
-  
+
   // Check if the video has already been imported to prevent duplicate
   $old = scald_youtube_already_imported($infos->id);
   if ($old) {
@@ -152,7 +155,7 @@ function scald_youtube_register($video) {
   }
 
   // @@@TODO: Import author into taxonomy vocabulary and link it
-  
+
   // Create an atom
   $atom = new stdClass();
   $atom->type       = 'video';
@@ -160,52 +163,104 @@ function scald_youtube_register($video) {
   $atom->base_id    = $infos->id;
   $atom->publisher  = $user->uid;
   $atom->title      = $infos->title;
-  
+
   // And save it
   $atom_sid = scald_atom_save($atom);
   // Finally, return this id
-  return $atom_sid; 
+  return $atom_sid;
 }
 
 
 /**
- * Analyze OEmbed response for a given video ID
+ * Analyze a YouTube RSS feed to extract videos information
+ * @param $type
+ *   RSS Type of the feed. Example, 'user', 'video', 'tag'.
+ * @param $id
+ *   Identifier or string associated with the type. For example, user name, video id or tag
+ * @return array
+ *   An array of object, each one containing an analyzed video.
  */
-function scald_youtube_video($id) {
-  $info = new stdClass();
-
-  // Build the full OEmbed URL
-  $url = YOUTUBE_OEMBED . '?url='. YOUTUBE_WEB . '?v=' . $id;
-
+function scald_youtube_feed($type, $id) {
+  if ($type == 'user') {
+    $url = YOUTUBE_RSS . '?author='. $id;
+  }
+  elseif ($type == 'tag') {
+    $url = YOUTUBE_RSS . '?category='. $id;
+  }
+  else {
+    $url = YOUTUBE_RSS . $id;
+  }
   $response = drupal_http_request($url);
+  $items = array();
   if ($response->code >= 200 && $response->code < 400 && !empty($response->data)) {
-    $data = json_decode($response->data);
-
-    // ID
-    $info->id = $id;
-
-    // Title
-    $info->title = $data->title;
-
-    // Author
-    $info->author = $data->author_name;
-    
-    // Video dimensions
-    $info->width = $data->width;
-    $info->height = $data->height;
-
-    // Thumbnail
-    if($data->thumbnail_url) {
-      $info->thumbnail = array(
-        'src'    => $data->thumbnail_url,
-        'width'  => $data->thumbnail_width,
-        'height' => $data->thumbnail_height,
-      );
+    $dom = DOMDocument::loadXML($response->data);
+    if ($dom) {
+      foreach($dom->getElementsByTagName('entry') as $item) {
+        $items[] = scald_youtube_parse_item($item);
+      }
     }
   }
+  return $items;
+}
 
+/**
+ * Analyze the youtube feed for a specific video.
+ */
+function scald_youtube_video($id) {
+  $items = scald_youtube_feed('video', $id);
+  return $items[0];
+}
+
+/**
+ * Analyze a XML DOMElement item to extract interesting info.
+ * @param $item
+ *   An object of classe DOMElement corresponding to an element of the feed.
+ * @return array
+ *   An abject containing various video informations.
+ */
+function scald_youtube_parse_item($item) {
+  $info = new stdClass();
+
+  // Fetch the video ID
+  $id = $item->getElementsByTagName('id')->item(0)->nodeValue;
+  $parts = explode('/', $id);
+  $info->id = array_pop($parts);
+
+  // Video Title
+  $title = $item->getElementsByTagName('title')->item(0);
+  $info->title = $title->nodeValue;
+
+  // Video dimensions - Hardcoded for now :(
+  // http://code.google.com/p/gdata-issues/issues/detail?id=1083
+  $info->width = 480;
+  $info->height = 365;
+
+  // Thumbnail data
+  $thumbs = $item->getElementsByTagNameNS(YOUTUBE_MEDIA, 'thumbnail');
+  if ($thumbs->length) {
+    $thumb = $thumbs->item(0);
+    $info->thumbnail = array(
+      'src'    => $thumb->getAttribute('url'),
+      'width'  => $thumb->getAttribute('width'),
+      'height' => $thumb->getAttribute('height')
+    );
+  }
+  
+  // Video tags
+  $tags = $item->getElementsByTagNameNS(YOUTUBE_MEDIA, 'keywords')->item(0)->nodeValue;
+  $info->tags = explode(', ', $tags);
+
+  // Author
+  $info->author = $item->getElementsByTagName('name')->item(0)->nodeValue;
+
+  // Creation Date
+  $info->pubDate = $item->getElementsByTagName('published')->item(0)->nodeValue;
+
+  // License
+  $info->license = 'YT';
   return $info;
 }
+
 
 
 /**
@@ -229,15 +284,15 @@ function scald_youtube_already_imported($id) {
 function scald_youtube_validate_id($element, &$form_state) {
   $id = scald_youtube_parse_id($form_state['values']['identifier'], TRUE);
   if(!$id) {
-    form_error($element, t('Invalid Youtube video identifier.'));
+    form_error($element, t('Invalid YouTube video identifier.'));
   }
   else if(scald_youtube_already_imported($id)) {
-    form_error($element, t('Youtube video already imported.'));
+    form_error($element, t('YouTube video already imported.'));
   }
 }
 
 /**
- * Parse an YouTube ID and check validity
+ * Parse a YouTube ID and check validity
  *
  */
 function scald_youtube_parse_id($string, $check) {
@@ -245,14 +300,14 @@ function scald_youtube_parse_id($string, $check) {
   $string = trim($string);
   if (!preg_match(YOUTUBE_ID_REGEXP, $string)) {
     // The string ID is not easy to parse, let's try to analyze it
-    if (preg_match('#^'. YOUTUBE_WEB .'([a-zA-Z0-9]+)(_.*)?$#', $string, $m)) {
+    if (preg_match(YOUTUBE_WEB_REGEXP, $string, $m)) {
       // This string is a full YouTube URL
       $id = $m[1];
     }
     else if(preg_match("/^http/", $string)) {
       // This string is a URL, most likely a shortened one. (http://dai.ly, http://bit.ly, etc...)
       $response = drupal_http_request($string);
-      if($response->code == 200 && isset($response->redirect_code) &&  ($response->redirect_code == 301 || $response->redirect_code == 302)) {
+      if($response->code == 200 && isset($response->redirect_code) && ($response->redirect_code == 301 || $response->redirect_code == 302)) {
         return scald_youtube_parse_id($response->redirect_url, $check);
       }
     }
