@@ -252,6 +252,7 @@ function scald_enable() {
   variable_set('scald_context_fallbacks', array('@default' => array('title')));
 
   _scald_create_author_vocabulary();
+  _scald_create_tags_vocabulary();
 }
 
 
@@ -331,7 +332,6 @@ function _scald_create_author_vocabulary() {
 
     // Create a URL field on the taxonomy terms of the Scald Authors
     // bundle.
-
     $field = array(
       'field_name' => 'scald_author_url',
       'type' => 'text',
@@ -359,11 +359,7 @@ function _scald_create_author_vocabulary() {
       'type' => 'taxonomy_term_reference',
       'settings' => array(
         'allowed_values' => array(
-          'vocabulary' => array(
-            'vocabulary' => $vocabulary->machine_name,
-            'parent' => 0,
-          ),
-          'parent' => array(
+          array(
             'vocabulary' => $vocabulary->machine_name,
             'parent' => 0,
           ),
@@ -374,6 +370,48 @@ function _scald_create_author_vocabulary() {
   }
 }
 
+/**
+ * Create a vocabulary for storing Scald Tags, and the matching fields.
+ */
+function _scald_create_tags_vocabulary() {
+  field_associate_fields('taxonomy');
+
+  // Create the atom vocabulary if it does not exist.
+  $vocabulary = taxonomy_vocabulary_load(variable_get('scald_tags_vocabulary', 0));
+  if (!$vocabulary) {
+    $edit = array(
+      'name' => t('Scald tags'),
+      'machine_name' => 'scald_tags',
+      'description' => t('Scald tags vocabulary'),
+      'hierachy' => 0,
+      'module' => 'scald',
+      'weight' => -5,
+    );
+    $vocabulary = (object)$edit;
+    taxonomy_vocabulary_save($vocabulary);
+    variable_set('scald_tags_vocabulary', $vocabulary->vid);
+  }
+  
+
+  // Create the scald_tags field
+  if (!field_info_field('scald_tags')) {
+    $field = array(
+      'title' => t('Scald tags'),
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+      'field_name' => 'scald_tags',
+      'type' => 'taxonomy_term_reference',
+      'settings' => array(
+        'allowed_values' => array(
+          array(
+            'vocabulary' => $vocabulary->machine_name,
+            'parent' => 0,
+          ),
+        )
+      ),
+    );
+    field_create_field($field);
+  }
+}
 
 /**
  * Add the data column
@@ -397,5 +435,13 @@ function scald_update_7001() {
 function scald_update_7002() {
   db_drop_table('scald_role_actions');
   variable_del('scald_actions_publisher');
+}
+
+/**
+ * Create Scald_tags vocabulary
+ * 
+ */
+function scald_update_7003() {
+  _scald_create_tags_vocabulary();
 }
 

@@ -50,6 +50,14 @@ function scald_vimeo_scald_add_form_fill(&$atom, $form, $form_state) {
     'tid' => 0,
     'taxonomy_term' => (object)(array('name' => $infos->author))
   );
+  
+  // Prefill tags
+  foreach($infos->tags as $index => $tag) {
+    $atom->scald_tags[LANGUAGE_NONE][$index] = array(
+      'tid' => $index,  // Beware, this is not a real tid, it's just an index
+      'taxonomy_term' => (object)(array('name' => $tag))
+    );
+  }
 
   // Save video width and height
   if(!isset($atom->data)) {
@@ -153,8 +161,6 @@ function scald_vimeo_register($video) {
     $file = file_save_data($thumb->data, $dest);
   }
 
-  // @@@TODO: Import author into taxonomy vocabulary and link it
-
   // Create an atom
   $atom = new stdClass();
   $atom->type       = 'video';
@@ -226,8 +232,6 @@ function scald_vimeo_video($id) {
  *   An abject containing various video informations.
  */
 function scald_vimeo_parse_item($item) {
-
-  dpm($item);
 
   $info = new stdClass();
 

@@ -66,6 +66,14 @@ function scald_dailymotion_scald_add_form_fill(&$atom, $form, $form_state) {
     'taxonomy_term' => (object)(array('name' => $infos->author))
   );
 
+  // Prefill tags
+  foreach($infos->tags as $index => $tag) {
+    $atom->scald_tags[LANGUAGE_NONE][$index] = array(
+      'tid' => $index,  // Beware, this is not a real tid, it's just an index
+      'taxonomy_term' => (object)(array('name' => $tag))
+    );
+  }
+
   // Save video width and height
   if(!isset($atom->data)) {
     $atom->data = array();
@@ -232,8 +240,6 @@ function scald_dailymotion_register($video) {
     $file = file_save_data($thumb->data, $dest);
   }
 
-  // @@@TODO: Import dailymotion author into taxonomy vocabulary and link it
-  
   // Create an atom
   $atom = new stdClass();
   $atom->type       = 'video';
@@ -319,6 +325,18 @@ function scald_dailymotion_feed($type, $id) {
  *   the object format, see @scald_dailymotion_feed.
  */
 function scald_dailymotion_video($id) {
+  $items = scald_dailymotion_feed('video', $id);
+  return $items[0];
+}
+
+/**
+ * Get OEmbed information on a specific video.
+ * @param $id
+ *   The video id
+ * @return object
+ *   An object containing the video informations.
+ */
+function scald_dailymotion_oembed($id) {
   $url = DAILYMOTION_OEMBED .'?url=' . urlencode(DAILYMOTION_WEB . $id) . '&format=json';
   $response = drupal_http_request($url);
   if ($response->code >= 200 && $response->code < 400) {
@@ -336,6 +354,7 @@ function scald_dailymotion_video($id) {
       );
       $item->author = $data->author_name;
       $item->license = 'DM';
+      $item->tags = array();
       return $item;
     }
   }

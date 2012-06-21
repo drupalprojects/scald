@@ -14,6 +14,10 @@
 function scald_quickstart_install() {
 
   // Create a few default fields on our entities
+  
+  /**
+   * Create 'scald_thumbnail' field
+   */
   $field = array(
     'field_name' => 'scald_thumbnail',
     'type' => 'image',
@@ -23,6 +27,9 @@ function scald_quickstart_install() {
   }
   
   foreach (array('image', 'audio', 'video') as $bundle) {
+    /**
+     * Instanciate 'scald_thumbnail' field.
+     */
     $instance = array(
       'field_name' => 'scald_thumbnail',
       'entity_type' => 'scald_atom',
@@ -34,11 +41,31 @@ function scald_quickstart_install() {
       field_create_instance($instance);
     }
 
+    /**
+     * Instanciate 'scald_authors' field.
+     */
     $instance = array(
       'field_name' => 'scald_authors',
       'entity_type' => 'scald_atom',
       'bundle' => $bundle,
       'label' => 'Authors',
+      'required' => FALSE,
+      'widget' => array(
+        'type' => 'taxonomy_autocomplete',
+      ),
+    );
+    if(!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
+      field_create_instance($instance);
+    }
+
+    /**
+     * Instanciate 'scald_tags' field.
+     */
+    $instance = array(
+      'field_name' => 'scald_tags',
+      'entity_type' => 'scald_atom',
+      'bundle' => $bundle,
+      'label' => 'Tags',
       'required' => FALSE,
       'widget' => array(
         'type' => 'taxonomy_autocomplete',
@@ -70,9 +97,8 @@ function scald_quickstart_install() {
 function scald_quickstart_uninstall() {
 }
 
-
 /**
- * Grant anoymous and authenticated user the rights to see published atoms
+ * Grant anonymous and authenticated user the rights to see published atoms
  */
 function scald_quickstart_update_7001() {
   $rids = array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID);
@@ -84,5 +110,26 @@ function scald_quickstart_update_7001() {
       )
     );    
     cache_clear_all('scald_actions_bitstring_for_rid_' . $rid, 'cache_scald');  
+  }
+}
+
+/**
+ * Instanciate 'scald_tags' field
+ */
+function scald_quickstart_update_7002() {
+  foreach (array('image', 'audio', 'video') as $bundle) {
+    $instance = array(
+      'field_name' => 'scald_tags',
+      'entity_type' => 'scald_atom',
+      'bundle' => $bundle,
+      'label' => 'Tags',
+      'required' => FALSE,
+      'widget' => array(
+        'type' => 'taxonomy_autocomplete',
+      ),
+    );
+    if(!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
+      field_create_instance($instance);
+    }
   }
 }
