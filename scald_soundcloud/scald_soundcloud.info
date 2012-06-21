@@ -1,0 +1,6 @@
+name = Scald SoundCloud
+core = 7.x
+php = 5.x
+package = Scald
+description = Provider: Provides Video atoms linked to SoundCloud sounds
+dependencies[] = scald
