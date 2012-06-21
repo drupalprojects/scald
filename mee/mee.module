@@ -30,6 +30,7 @@ function mee_theme($existing, $type, $theme, $path) {
  * Implements hook_field_info_alter().
  */
 function mee_field_info_alter(&$info) {
+  $info['text_with_summary']['instance_settings']['dnd_enabled'] = 0;
   $info['text_with_summary']['instance_settings']['mee_enabled'] = 0;
   $info['text_with_summary']['instance_settings']['context'] = '';
 }
@@ -59,6 +60,12 @@ function mee_form_alter(&$form, &$form_state, $form_id) {
     $context_options[$name] = $context['title'];
   }
 
+  $form['instance']['settings']['dnd_enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Drag\'n\'Drop Enabled'),
+    '#description' => t('Enable DnD for this field will show the Atom library and will allow you to drag and drop atoms to this field.'),
+    '#default_value' => $settings['dnd_enabled'],
+  );
   $form['instance']['settings']['mee_enabled'] = array(
     '#type' => 'checkbox',
     '#title' => t('MEE Enabled'),
@@ -99,7 +106,7 @@ function text_field_presave($entity_type, $entity, $field, $instance, $langcode,
  * @see text_field_presave()
  */
 function text_field_insert($entity_type, $entity, $field, $instance, $langcode, &$items) {
-  if (!_mee_field_instance_enabled($instance)) {
+  if (!_mee_field_instance_enabled($instance, 'mee')) {
     return;
   }
 
@@ -131,7 +138,7 @@ function text_field_insert($entity_type, $entity, $field, $instance, $langcode, 
  * @see text_field_presave()
  */
 function text_field_update($entity_type, $entity, $field, $instance, $langcode, &$items) {
-  if (!_mee_field_instance_enabled($instance)) {
+  if (!_mee_field_instance_enabled($instance, 'mee')) {
     return;
   }
 
@@ -171,7 +178,7 @@ function text_field_update($entity_type, $entity, $field, $instance, $langcode, 
  * @see text_field_presave()
  */
 function text_field_delete($entity_type, $entity, $field, $instance, $langcode, &$items) {
-  if (!_mee_field_instance_enabled($instance)) {
+  if (!_mee_field_instance_enabled($instance, 'mee')) {
     return;
   }
 
@@ -190,8 +197,22 @@ function text_field_delete($entity_type, $entity, $field, $instance, $langcode, 
  * Implements hook_field_widget_form_alter().
  */
 function mee_field_widget_form_alter(&$element, &$form_state, $context) {
+  $enables = _mee_field_instance_enabled($context['instance']);
+
+  // Activate DnD Library for this element if enabled.
+  if (!empty($enables['dnd'])) {
+    // Force an #id so that we can reference to it later
+    $element['#id'] = drupal_html_id('edit-' . $context['field']['field_name']);
+    $element += array(
+      '#dnd-enabled' => TRUE,
+      '#dnd-settings' => array(
+        'drop_selector' => '#' . $element['#id'] . ' .drop',
+      ),
+    );
+  }
+
   // Add our custom form element into MEE enabled textarea only.
-  if (empty($context['instance']['settings']['mee_enabled'])) {
+  if (empty($enables['mee'])) {
     return;
   }
 
@@ -263,16 +284,6 @@ function mee_field_widget_form_alter(&$element, &$form_state, $context) {
     ),
     '#weight' => isset($resource_manager[0]['weight']) ? $resource_manager[0]['weight'] : 0,
   );
-
-  // Force an #id so that we can reference to it later
-  $element['#id'] = drupal_html_id('edit-' . $context['field']['field_name']);
-
-  $element += array(
-    '#dnd-enabled' => TRUE,
-    '#dnd-settings' => array(
-      'drop_selector' => '#' . $element['#id'] . ' .drop',
-    ),
-  );
 }
 
 /**
@@ -317,18 +328,22 @@ function theme_mee_resource_manager($variables) {
 /**
  * Tests if MEE is supported and enabled for this field instance.
  */
-function _mee_field_instance_enabled($instance) {
+function _mee_field_instance_enabled($instance, $key = NULL) {
+  $enables = array('mee' => FALSE, 'dnd' => FALSE);
+
   if ($instance['entity_type'] !== 'node') {
     // @todo support entities other than nodes.
-    return FALSE;
+    return $key ? FALSE : $enables;
   }
 
-  // If MEE is not enabled on this field, there is nothing to do.
-  if (empty($instance['settings']['mee_enabled'])) {
-    return FALSE;
+  if (!empty($instance['settings']['mee_enabled'])) {
+    $enables['mee'] = TRUE;
+  }
+  if (!empty($instance['settings']['dnd_enabled'])) {
+    $enables['dnd'] = TRUE;
   }
 
-  return TRUE;
+  return $key ? $enables[$key] : $enables;
 }
 
 /**
