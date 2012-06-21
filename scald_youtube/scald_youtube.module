@@ -27,7 +27,7 @@ function scald_youtube_scald_atom_providers() {
 function scald_youtube_scald_add_form(&$form, &$form_state) {
   $form['identifier'] = array(
     '#type' => 'textfield',
-    '#title' => t('Video identifier'),
+    '#title' => t('YouTube video identifier or URL'),
     '#element_validate' => array('scald_youtube_validate_id'),
     '#default_value' => '',
   );
@@ -304,6 +304,8 @@ function scald_youtube_video_oembed($id) {
         'height' => $data->thumbnail_height,
       );
     }
+    // License
+    $info->license = 'YT';
   }
   return $info;
 }

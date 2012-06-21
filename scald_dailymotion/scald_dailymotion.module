@@ -32,7 +32,7 @@ function scald_dailymotion_scald_add_form(&$form, &$form_state) {
 
   $form['identifier'] = array(
     '#type' => 'textfield',
-    '#title' => t('Video identifier'),
+    '#title' => t('Dailymotion video identifier or URL'),
     '#element_validate' => array('scald_dailymotion_validate_id'),
     '#default_value' => $identifier,
   );

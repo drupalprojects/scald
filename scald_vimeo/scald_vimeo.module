@@ -25,7 +25,7 @@ function scald_vimeo_scald_atom_providers() {
 function scald_vimeo_scald_add_form(&$form, &$form_state) {
   $form['identifier'] = array(
     '#type' => 'textfield',
-    '#title' => t('Video identifier'),
+    '#title' => t('Vimeo video identifier or URL'),
     '#element_validate' => array('scald_vimeo_validate_id'),
     '#default_value' => '',
   );

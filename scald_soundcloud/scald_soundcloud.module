@@ -28,7 +28,7 @@ function scald_soundcloud_scald_atom_providers() {
 function scald_soundcloud_scald_add_form(&$form, &$form_state) {
   $form['identifier'] = array(
     '#type' => 'textfield',
-    '#title' => t('SoundCloud ID or URL'),
+    '#title' => t('SoundCloud track identifier or URL'),
     '#element_validate' => array('scald_soundcloud_validate_id'),
     '#default_value' => '',
   );
