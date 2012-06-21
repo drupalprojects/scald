@@ -67,7 +67,7 @@ Drupal.theme.prototype.scaldEmbed = function(atom) {
  */
 Drupal.behaviors.dndLibrary = {
 attach: function(context, settings) {
-  if (!Drupal.settings.dndDropAreas || Drupal.settings.dnd.suppress) {
+  if (Drupal.settings.dnd.suppress) {
     return;
   }
 
@@ -120,8 +120,6 @@ renderLibrary: function(data, editor) {
       $('.dnd-library-wrapper').toggleClass('library-on');
     });
   });
-
-  var settings = Drupal.settings.dndDropAreas[editor.get(0).id];
 
   for (atom_id in data.atoms) {
     // Store the atom data in our object
