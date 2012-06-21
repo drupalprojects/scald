@@ -11,8 +11,10 @@ define('MEE_RENDERED_COPYRIGHT_PATTERN', '/<!--\s*copyright=(\d+)\s*-->(.*)<!--\
  * Implements hook_init().
  */
 function mee_init() {
-  // @todo add support for SAS and remote this hack
-  $GLOBALS['conf']['mee_store_sas'] = FALSE;
+  drupal_add_js(array('mee' => array(
+    'sas' => variable_get('mee_store_sas', TRUE),
+    'editors' => array(),
+  )), 'setting');
 }
 
 /**
@@ -194,10 +196,35 @@ function text_field_delete($entity_type, $entity, $field, $instance, $langcode, 
 }
 
 /**
+ * Implements hook_field_formatter_prepare_view() on behalf of Text module.
+ *
+ * @see text_field_presave()
+ */
+function text_field_formatter_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items, $display) {
+  if (variable_get('mee_store_sas', TRUE)) {
+    foreach ($entities as $id => $entity) {
+      if ($instances[$id]['settings']['text_processing']) {
+        foreach ($items[$id] as $delta => &$item) {
+          $item['value'] = scald_sas_to_rendered($item['value']);
+          $item['safe_value'] = scald_sas_to_rendered($item['safe_value']);
+        }
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_field_widget_form_alter().
  */
 function mee_field_widget_form_alter(&$element, &$form_state, $context) {
   $enables = _mee_field_instance_enabled($context['instance']);
+
+  // In any case, convert SAS into rendered for format textarea
+  if ($context['field']['type'] === 'text_with_summary') {
+    if (variable_get('mee_store_sas', TRUE)) {
+      $element['#default_value'] = scald_sas_to_rendered($element['#default_value']);
+    }
+  }
 
   // Activate DnD Library for this element if enabled.
   if (!empty($enables['dnd'])) {
