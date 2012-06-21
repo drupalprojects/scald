@@ -372,5 +372,37 @@ function scald_settings_form() {
       it. Checking this box, Scald will re-render the atom each time. This is a
       massive performance hit."
   );
+  
+  // Scald tags vocabulary
+  $options = array();
+  $vocabularies = taxonomy_get_vocabularies();
+  foreach($vocabularies as $vid => $vocabulary) {
+    $options[$vid] = $vocabulary->name;
+  }
+  $form['scald_tags_vocabulary'] = array(
+    '#type' => 'select',
+    '#title' => t('Vocabulary used for tags storing'),
+    '#description' => t('By default, Scald uses its own vocabulary to store atoms tags, you can override it here.'),
+    '#options' => $options,
+    '#default_value' => variable_get('scald_tags_vocabulary', 0), 
+  );
+  
+  // Add our custom submit handler
+  $form['#submit'][] = 'scald_settings_form_submit';
+  
   return system_settings_form($form);
+}
+
+
+function scald_settings_form_submit($form, &$form_state) {
+  // Find the selected vocabulary
+  $vocabularies = taxonomy_get_vocabularies();
+  $vocabulary = $vocabularies[$form_state['values']['scald_tags_vocabulary']];
+
+  // Fetch info on the scald_tags taxonomy reference field
+  $field = field_info_field('scald_tags');
+  
+  // Change the vocabulary used for this field
+  $field['settings']['allowed_values'][0]['vocabulary'] = $vocabulary->machine_name;
+  field_update_field($field);
 }
