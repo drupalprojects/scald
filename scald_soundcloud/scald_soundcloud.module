@@ -2,6 +2,9 @@
 /**
  * @file
  *   Defines a SoundCloud provider for Scald.
+ * 
+ *   Note: Had to slightly hack php-soundcloud SDK to accept "30x" http response codes as valid
+ *    to be able to read the 'resolve' response.
  */
 
 define('SOUNDCLOUD_ID_REGEXP',        '/^[a-zA-Z0-9]+$/');
