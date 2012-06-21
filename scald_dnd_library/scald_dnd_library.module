@@ -70,6 +70,7 @@ function scald_dnd_library_add_item(&$library, $sid) {
       'type' => $atom->type,
       'legend' => theme('sdl_editor_legend', array('atom' => $atom)),
     ),
+    'sas' =>  '[scald=' . $atom->sid . ':sdl_editor_representation]',
     'editor' => scald_render($atom, 'sdl_editor_representation'),
     'preview' => scald_render($atom, 'sdl_preview'),
     'library' => scald_render($atom, 'sdl_library_item')

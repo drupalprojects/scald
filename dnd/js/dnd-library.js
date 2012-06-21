@@ -160,7 +160,7 @@ renderLibrary: function(data, editor) {
         }
         var id = $.url.setUrl($img.attr('src')).param('dnd_id');
         dt.dropEffect = 'copy';
-        dt.setData('Text', id);
+        dt.setData('Text', Drupal.dnd.Atoms[id].sas);
         dt.setData('text/html', Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[id]));
         return true;
       })
