@@ -7,8 +7,3 @@ foreach ($library_items as $id => $item): ?>
     <?php print $item; ?>
   </div>
 <?php endforeach; ?>
-<?php if (count($library_items) == 0) : ?>
-  <div class='editor-item'>
-    Aucune ressource trouvée
-  </div>
-<?php endif; ?>
