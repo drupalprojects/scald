@@ -17,7 +17,7 @@
  * @ingroup scald
  */
 
-require_once('scald.constants.inc');
+require_once('includes/scald.constants.inc');
 
 
 /*******************************************************************************
@@ -1537,7 +1537,7 @@ function scald_menu() {
     'page arguments'   => array(2),
     'access callback'  => 'user_access',
     'access arguments' => array('administer scald'),
-    'file'             => 'scald.debug.inc',
+    'file'             => 'includes/scald.debug.inc',
     'type'             => MENU_NORMAL_ITEM,
   );
 
@@ -1547,7 +1547,7 @@ function scald_menu() {
     'page callback'     => 'scald_admin_atoms',
     'access callback'   => 'user_access',
     'access arguments'  => array('administer scald'),
-    'file'              => 'scald.admin.inc',
+    'file'              => 'includes/scald.admin.inc',
     'type'              => MENU_LOCAL_TASK,
   );
   $items['admin/structure/scald'] = array(
@@ -1556,7 +1556,7 @@ function scald_menu() {
     'page callback'     => 'scald_admin_dashboard',
     'access callback'   => 'user_access',
     'access arguments'  => array('administer scald'),
-    'file'              => 'scald.admin.inc',
+    'file'              => 'includes/scald.admin.inc',
     'type'              => MENU_NORMAL_ITEM,
   );
   $items['admin/structure/scald/%scald_type'] = array(
@@ -1568,7 +1568,7 @@ function scald_menu() {
     'page arguments'    => array('scald_admin_type_form', 3),
     'access callback'   => 'user_access',
     'access arguments'  => array('administer scald'),
-    'file'              => 'scald.admin.inc',
+    'file'              => 'includes/scald.admin.inc',
     'type'              => MENU_NORMAL_ITEM,
   );
   $items['admin/structure/scald/%scald_type/edit'] = array(
@@ -1583,7 +1583,7 @@ function scald_menu() {
     'page arguments'    => array(3),
     'access callback'   => 'user_access',
     'access arguments'  => array('administer scald'),
-    'file'              => 'scald.admin.inc',
+    'file'              => 'includes/scald.admin.inc',
     'type'              => MENU_LOCAL_TASK,
   );
   $items['admin/config/content/scald'] = array(
@@ -1593,13 +1593,13 @@ function scald_menu() {
     'page arguments'    => array('scald_settings_form'),
     'access callback'   => 'user_access',
     'access arguments'  => array('administer scald'),
-    'file'              => 'scald.admin.inc',
+    'file'              => 'includes/scald.admin.inc',
   );
   $items['atoms/add'] = array(
     'title' => 'Create Atom',
     'page callback' => 'scald_atom_add',
     'access arguments' => array('administer scald'),
-    'file' => 'scald.pages.inc'
+    'file' => 'includes/scald.pages.inc'
 
   );
   $items['atoms/add/%scald_type'] = array(
@@ -1607,7 +1607,7 @@ function scald_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('scald_atom_add_form', 2),
     'access arguments' => array('administer scald'),
-    'file' => 'scald.pages.inc',
+    'file' => 'includes/scald.pages.inc',
     'type' => MENU_CALLBACK,
   );
 
@@ -1617,7 +1617,7 @@ function scald_menu() {
     'page arguments' => array('scald_atom_view', 2),
     'access callback' => 'scald_action_permitted',
     'access arguments' => array(2, 'view'),
-    'file' => 'scald.pages.inc'
+    'file' => 'includes/scald.pages.inc'
   );
   $items['atoms/edit/%scald_atom'] = array(
     'title' => 'Edit Atom',
@@ -1625,7 +1625,7 @@ function scald_menu() {
     'page arguments' => array('scald_atom_edit', 2),
     'access callback' => 'scald_action_permitted',
     'access arguments' => array(2, 'edit'),
-    'file' => 'scald.pages.inc'
+    'file' => 'includes/scald.pages.inc'
   );
 
   return $items;
