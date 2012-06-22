@@ -3,7 +3,7 @@
 // tpl we can add more specific class (atom type, for example) to the wrapper
 // DIV.
 foreach ($library_items as $id => $item): ?>
-  <div class="editor-item clear-block" id="sdl-<?php print $id; ?>">
+  <div class="editor-item clearfix" id="sdl-<?php print $id; ?>">
     <?php print $item; ?>
   </div>
 <?php endforeach; ?>
