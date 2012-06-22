@@ -49,8 +49,12 @@ Drupal.dnd.btSettings = {
  * behavior attachment.
  */
 Drupal.behaviors.dndLibrary = function(context) {
-  if (!Drupal.settings.dndDropAreas || Drupal.settings.dnd.suppress) {
+  if (Drupal.settings.dnd.suppress) {
     return;
+  }
+
+  if (!Drupal.settings.dndDropAreas) {
+    Drupal.settings.dndDropAreas = {};
   }
 
   // Bind our functions to WYSIWYG attach / detach events
@@ -114,8 +118,7 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
     });
   });
 
-  var settings = Drupal.settings.dndDropAreas[editor.get(0).id];
-  var params = Drupal.wysiwyg.instances[editor.get(0).id];
+  params = {};
 
   editor.trigger('wysiwygDetach', params);
   editor.trigger('wysiwygAttach', params);
