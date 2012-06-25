@@ -136,42 +136,33 @@ function atom_reference_field_is_empty($item, $field) {
  * Implements hook_field_formatter_info().
  */
 function atom_reference_field_formatter_info() {
-  return array(
-    'title' => array(
-      'label' => 'Title',
-      'field types' => array('atom_reference'),
-    ),
-    'library' => array(
-      'label' => 'Library',
-      'field types' => array('atom_reference'),
-    ),
-    'editor' => array(
-      'label' => 'Editor',
-      'field types' => array('atom_reference'),
-    ),
-  );
+  // Expose all the Scald Contexts as formatters for the Atom Reference field.
+  $formatters = array();
+  $contexts = scald_contexts();
+  foreach ($contexts as $name => $context) {
+    if (empty($context['hidden'])) {
+      $formatters[$name] = array(
+        'label' => $context['title'],
+        'field types' => array('atom_reference')
+      );
+    }
+  }
+
+  return $formatters;
 }
 
 /**
  * Implements hook_field_formatter_view.
  */
 function atom_reference_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $render_context = $display['type'];
+  $contexts = scald_contexts();
   $element = array();
 
-  foreach ($items as $delta => $item) {
-    $sid = $item['sid'];
-    switch ($display['type']) {
-      case 'title':
-        $element[$delta] = array('#markup' => scald_render($sid, 'title'));
-        break;
-
-      case 'library':
-        $element[$delta] = array('#markup' => scald_render($sid, 'sdl_library_item'));
-        break;
-
-      case 'editor':
-        $element[$delta] = array('#markup' => scald_render($sid, 'sdl_editor_representation'));
-        break;
+  if (!empty($contexts[$render_context])) {
+    foreach ($items as $delta => $item) {
+      $sid = $item['sid'];
+      $element[$delta] = array('#markup' => scald_render($sid, $render_context));
     }
   }
 
