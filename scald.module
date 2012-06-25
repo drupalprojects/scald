@@ -1213,6 +1213,7 @@ function scald_scald_contexts() {
       'description'     => t('A useful debugging display of a Scald Atom.'),
       'render_language' => 'XHTML',
       'parseable'       => FALSE,
+      'hidden'          => TRUE,
       'formats'         => array(
         '<all>' => 'passthrough',
       ),
@@ -1222,6 +1223,7 @@ function scald_scald_contexts() {
       'description'     => t('Built-in Context used when an Atom cannot be viewed by the current User.'),
       'render_language' => 'XHTML',
       'parseable'       => TRUE,
+      'hidden'          => TRUE,
       'formats'         => array(),
     ),
     'invalid-id' => array(
@@ -1229,6 +1231,7 @@ function scald_scald_contexts() {
       'description'     => t('Built-in Context used when an Invalid Scald ID is provided to the rendering stack.'),
       'render_language' => 'XHTML',
       'parseable'       => TRUE,
+      'hidden'          => TRUE,
       'formats'         => array(),
     ),
     'deleted'   => array(
@@ -1236,6 +1239,7 @@ function scald_scald_contexts() {
       'description'     => t('Built-in Context used when an Atom is no longer present in the Registry (but once was).'),
       'render_language' => 'XHTML',
       'parseable'       => TRUE,
+      'hidden'          => TRUE,
       'formats'         => array(),
     ),
     'title'     => array(
@@ -1246,7 +1250,7 @@ function scald_scald_contexts() {
       'formats'         => array(),
     ),
     'full'      => array(
-      'title'           => t('Title'),
+      'title'           => t('Full page'),
       'description'     => t('Built-in Context used when pre-viewing an atom.'),
       'render_language' => 'XHTML',
       'parseable'       => FALSE,
