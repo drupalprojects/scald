@@ -225,6 +225,11 @@ function scald_admin_contexts_form($form, $form_state, $type) {
   }
 
   foreach ($contexts as $name => $context) {
+    // Only list visible contexts
+    if (!empty($context['hidden'])) {
+      continue;
+    }
+
     $default = !empty($contexts[$name]['type_format'][$type->type]['transcoder']) ? $contexts[$name]['type_format'][$type->type]['transcoder'] : NULL;
     $form[$name] = array(
       '#type'         => 'fieldset',
