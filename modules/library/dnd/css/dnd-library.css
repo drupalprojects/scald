@@ -438,6 +438,7 @@ body {
   border-bottom-left-radius: 4px;
   box-shadow: 2px 2px 5px 0px #999;
   padding: 3px;
+  width: 266px;
 }
 
 .scald-library .summary-filters {

@@ -5,3 +5,4 @@ version=7.x-1.0
 
 dependencies[] = scald
 dependencies[] = scald_image
+dependencis[]  = scald_dnd_library

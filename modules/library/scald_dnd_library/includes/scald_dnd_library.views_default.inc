@@ -11,7 +11,7 @@ function scald_dnd_library_views_default_views() {
   $views = array();
 
   // Library view
-  
+
   $view = new view;
   $view->name = 'scald_library';
   $view->description = 'Library view provided by Scald to access atoms.';
@@ -21,7 +21,7 @@ function scald_dnd_library_views_default_views() {
   $view->core = 0;
   $view->api_version = '3.0';
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
-  
+
   /* Display: Paramètres par défaut */
   $handler = $view->new_display('default', 'Paramètres par défaut', 'default');
   $handler->display->display_options['title'] = 'Atoms library';
@@ -35,12 +35,13 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['pager']['type'] = 'none';
   $handler->display->display_options['style_plugin'] = 'table';
   /* No results behavior: Global: Text area */
-  $handler->display->display_options['empty']['text']['id'] = 'area';
+  $handler->display->display_options['empty']['text']['id'] = 'text';
   $handler->display->display_options['empty']['text']['table'] = 'views';
   $handler->display->display_options['empty']['text']['field'] = 'area';
   $handler->display->display_options['empty']['text']['empty'] = FALSE;
-  $handler->display->display_options['empty']['text']['content'] = '<div class=\'editor-item\'>No atom found.</div>';
-  $handler->display->display_options['empty']['text']['format'] = '2';
+  $handler->display->display_options['empty']['text']['content'] = 'No atom found.';
+  $handler->display->display_options['empty']['text']['format'] = 'plain_text';
+  $handler->display->display_options['empty']['text']['tokenize'] = 0;
   /* Relationship: Atom: Publisher */
   $handler->display->display_options['relationships']['publisher']['id'] = 'publisher';
   $handler->display->display_options['relationships']['publisher']['table'] = 'scald_atoms';
@@ -145,7 +146,7 @@ function scald_dnd_library_views_default_views() {
   );
   $handler->display->display_options['filters']['actions']['group'] = '0';
   $handler->display->display_options['filters']['actions']['expose']['operator'] = FALSE;
-  
+
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page_1');
   $handler->display->display_options['defaults']['header'] = FALSE;
@@ -161,7 +162,7 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['menu']['type'] = 'tab';
   $handler->display->display_options['menu']['title'] = 'Atoms';
   $handler->display->display_options['menu']['weight'] = '-60';
-  
+
   /* Display: Scald Library */
   $handler = $view->new_display('dnd_library', 'Scald Library', 'dnd_library_2');
   $handler->display->display_options['defaults']['access'] = FALSE;
@@ -215,8 +216,7 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['fields']['sid']['hide_empty'] = 0;
   $handler->display->display_options['fields']['sid']['empty_zero'] = 0;
   $handler->display->display_options['path'] = 'scald/library_dnd';
-  
-  
+
   $views[$view->name] = $view;
   return $views;
 }
