@@ -1767,6 +1767,15 @@ function scald_menu() {
 } // end scald_menu()
 
 /**
+ * Scald Atom entity uri callback.
+ */
+function scald_atom_uri($atom) {
+  return array(
+    'path' => 'atoms/view/' . $atom->sid
+  );
+}
+
+/**
  * Load callback for the %scald_type placeholder.
  */
 function scald_type_load($type) {
