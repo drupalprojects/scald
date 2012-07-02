@@ -18,6 +18,7 @@ function atom_reference_field_info() {
       ),
       'default_widget' => 'textfield',
       'default_formatter' => 'title',
+      'property_type' => 'scald_atom',
     )
   );
 }
