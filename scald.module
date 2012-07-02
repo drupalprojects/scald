@@ -368,6 +368,10 @@ function scald_atom_save(&$atom) {
 
   field_attach_presave('scald_atom', $atom);
 
+  // Inform all modules before writing the atom in the database
+  module_invoke_all('scald_atom_presave', $atom);
+  module_invoke_all('entity_presave', $atom, 'scald_atom');
+
   // Put the basic data in the Scald Atom Registry
   if($op == 'update') {
     $written = drupal_write_record('scald_atoms', $atom, array('sid'));
@@ -382,6 +386,10 @@ function scald_atom_save(&$atom) {
 
   $function = 'field_attach_' . $op;
   $function('scald_atom', $atom);
+
+  // Notify all modules of our new atom.
+  module_invoke_all('scald_atom_' . $op, $atom);
+  module_invoke_all('entity_' . $op, $atom, 'scald_atom');
 
   // Transcoding
   // Only fire hook_register_atom() for Transcoder Providers that might be
