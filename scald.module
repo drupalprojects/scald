@@ -1017,6 +1017,10 @@ function _scald_user_combine_actions($account) {
     $scald_actions['any'] |= $role_actions['any'];
   }
 
+  // Allow operations that are allowed on any atoms to
+  // the user own atoms too.
+  $scald_actions['own'] |= $scald_actions['any'];
+
   return $scald_actions;
 }
 
@@ -1546,7 +1550,7 @@ function scald_entity_property_info() {
     'type' => 'token',
     'description' => t("The type of the atom."),
     'setter callback' => 'entity_property_verbatim_set',
-    'setter permission' => 'administer scald',
+    'setter permission' => 'administer scald atoms',
     'options list' => 'scald_type_get_names',
     'required' => TRUE,
     'schema field' => 'type',
@@ -1570,7 +1574,7 @@ function scald_entity_property_info() {
     'description' => t("The actions that are allowed for this atom."),
     'type' => 'integer',
     'setter callback' => 'entity_property_verbatim_set',
-    'setter permission' => 'administer scald',
+    'setter permission' => 'administer scald atoms',
     'schema field' => 'status',
   );
   $properties['publisher'] = array(
@@ -1578,7 +1582,7 @@ function scald_entity_property_info() {
     'type' => 'user',
     'description' => t("The user who published this atom."),
     'setter callback' => 'entity_property_verbatim_set',
-    'setter permission' => 'administer scald',
+    'setter permission' => 'administer scald atoms',
     'required' => TRUE,
     'schema field' => 'publisher',
   );
@@ -1609,15 +1613,16 @@ function scald_field_extra_fields () {
  * Implements hook_permission().
  *
  * Actions are assigned to Drupal User Roles there.
- * NOTE: Scald Actions permissions are *not* assigned using the normal Drupal
- *  permissions interface.  Instead they are managed separately through the
- *  Scald Admin Interface.  
  */
 function scald_permission() {
   $permissions = array(
     'administer scald' => array(
       'title' => t('Administer Scald'),
       'description' => t('Access Atom fields configuration and permissions'),
+      'restrict access' => TRUE,
+    ),
+    'administer scald atoms' => array(
+      'title' => t('Administer Scald Atoms'),
       'restrict access' => TRUE,
     ),
     'bypass atom access restrictions' => array(
@@ -1676,7 +1681,7 @@ function scald_menu() {
     'weight'            => -60,
     'page callback'     => 'scald_admin_atoms',
     'access callback'   => 'user_access',
-    'access arguments'  => array('administer scald'),
+    'access arguments'  => array('administer scald atoms'),
     'file'              => 'includes/scald.admin.inc',
     'type'              => MENU_LOCAL_TASK,
   );
@@ -1728,15 +1733,15 @@ function scald_menu() {
   $items['atoms/add'] = array(
     'title' => 'Create Atom',
     'page callback' => 'scald_atom_add',
-    'access arguments' => array('administer scald'),
+    'access callback' => 'scald_atom_add_access',
     'file' => 'includes/scald.pages.inc'
-
   );
   $items['atoms/add/%scald_type'] = array(
     'title' => 'Create Atom',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('scald_atom_add_form', 2),
-    'access arguments' => array('administer scald'),
+    'access callback' => 'scald_atom_add_access',
+    'access arguments' => array(2),
     'file' => 'includes/scald.pages.inc',
     'type' => MENU_CALLBACK,
   );
@@ -1761,6 +1766,9 @@ function scald_menu() {
   return $items;
 } // end scald_menu()
 
+/**
+ * Load callback for the %scald_type placeholder.
+ */
 function scald_type_load($type) {
   $types = scald_types();
   if (isset($types[$type])) {
@@ -1769,8 +1777,35 @@ function scald_type_load($type) {
   return FALSE;
 }
 
+/**
+ * Title callback for the atom type administration page.
+ */
 function scald_type_name($type) {
   return $type->title;
+}
+
+/**
+ * Access callback for the atom add page.
+ */
+function scald_atom_add_access($type = NULL) {
+  if (user_access('administer scald atoms') || user_access('create atom of any type')) {
+    return TRUE;
+  }
+
+  // If we got a type, check that the user can create atom of this type.
+  if (!empty($type)) {
+    return user_access('create atom of ' . $type->type . ' type');
+  }
+
+  // Otherwise, iterate over our atom types to check if there's one that the
+  // current user is allowed to create.
+  $types = scald_types();
+  foreach ($types as $type) {
+    if (user_access('create atom of ' . $type->type . ' type')) {
+      return TRUE;
+    }
+  }
+  return FALSE;
 }
 
 

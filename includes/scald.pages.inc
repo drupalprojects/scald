@@ -12,7 +12,14 @@ function scald_atom_add() {
   }
 
   $content = array();
+
+  // Check if the user is allowed to create atoms of any type
+  $any = user_access('administer scald atoms') || user_access('create atom of any type');
   foreach ($types as $name => $type) {
+    // Skip atom type the user isn't allowed to create
+    if (!$any && !user_access('create atom of ' . $type->type . ' type')) {
+      continue;
+    }
     $content[] = array(
       'title' => $type->title,
       'href'  => 'atoms/add/' . $name,
@@ -105,7 +112,7 @@ function scald_atom_add_form($form, $form_state, $type) {
         '#group' => 'additional_settings',
         '#options' => $options,
         '#default_value' => $options_default,
-        '#access' => user_access('administer scald'),
+        '#access' => user_access('administer scald atoms'),
       );
 
       field_attach_form('scald_atom', $atom, $form, $form_state);
@@ -245,7 +252,7 @@ function scald_atom_edit($form, &$form_state, $atom) {
     '#group' => 'additional_settings',
     '#options' => $options,
     '#default_value' => $options_default,
-    '#access' => user_access('administer scald'),
+    '#access' => user_access('administer scald atoms'),
   );
 
 
