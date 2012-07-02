@@ -256,7 +256,7 @@ function theme_sdl_editor_item($variables) {
 function theme_sdl_editor_legend($variables) {
   $atom = $variables['atom'];
   $sid = $atom->sid;
-  if (empty($atom->rendered)) {
+  if ($atom && empty($atom->rendered)) {
     $clone = clone $atom;
     scald_prerender($clone, 'sdl_editor_representation');
     $informations = $clone->rendered;
