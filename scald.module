@@ -68,7 +68,7 @@ function scald_type_get_names() {
 }
 
 /**
- * Add a Scald unified type 
+ * Add a Scald unified type
  *
  * This function create a new type if it does not already exist.
  *
@@ -87,6 +87,53 @@ function scald_add_type($type, $title, $description) {
     ->fields(array('type', 'title', 'description', 'provider'))
     ->values(array($type, $title, $description, 'scald'))
     ->execute();
+
+  // And add fields on it
+
+  // Instantiante the Scald Thumbnail field.
+  $instance = array(
+    'field_name' => 'scald_thumbnail',
+    'entity_type' => 'scald_atom',
+    'bundle' => $type,
+    'label' => 'Thumbnail',
+    'required' => FALSE,
+  );
+  if(!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
+    field_create_instance($instance);
+  }
+
+  // Instantiate the Scald Authors field.
+  $instance = array(
+    'field_name' => 'scald_authors',
+    'entity_type' => 'scald_atom',
+    'bundle' => $type,
+    'label' => 'Authors',
+    'required' => FALSE,
+    'widget' => array(
+      'type' => 'taxonomy_autocomplete',
+    ),
+  );
+  if(!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
+    field_create_instance($instance);
+  }
+
+  // Instantiate the Scald Tags field.
+  $instance = array(
+    'field_name' => 'scald_tags',
+    'entity_type' => 'scald_atom',
+    'bundle' => $type,
+    'label' => 'Tags',
+    'required' => FALSE,
+    'widget' => array(
+      'type' => 'taxonomy_autocomplete',
+    ),
+  );
+  if(!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
+    field_create_instance($instance);
+  }
+
+  // Flush our caches
+  scald_contexts(TRUE);
 
   return TRUE;
 } // end scald_add_type()

@@ -251,6 +251,7 @@ function scald_uninstall() {
 function scald_enable() {
   variable_set('scald_context_fallbacks', array('@default' => array('title')));
 
+  _scald_create_thumbnail_field();
   _scald_create_author_vocabulary();
   _scald_create_tags_vocabulary();
 }
@@ -307,6 +308,20 @@ function scald_update_7000() {
   // to new taxonomy terms of the scald_authors vocabulary.
   db_drop_table('scald_authors');
   db_drop_table('scald_atom_authors');
+}
+
+/**
+ * Create a field to store atom thumbnails.
+ */
+function _scald_create_thumbnail_field() {
+  // Create the scald_thumbnail field
+  if (!field_info_field('scald_thumbnail')) {
+    $field = array(
+      'field_name' => 'scald_thumbnail',
+      'type' => 'image',
+    );
+    field_create_field($field);
+  }
 }
 
 /**
@@ -368,6 +383,7 @@ function _scald_create_author_vocabulary() {
     );
     field_create_field($field);
   }
+
 }
 
 /**
@@ -445,3 +461,9 @@ function scald_update_7003() {
   _scald_create_tags_vocabulary();
 }
 
+/**
+ * Ensure that a thumbnail fields exits.
+ */
+function scald_update_7004() {
+  _scald_create_thumbnail_field();
+}

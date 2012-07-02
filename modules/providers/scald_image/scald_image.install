@@ -13,6 +13,11 @@
 function scald_image_install() {
   // @@@TODO: Pre-populate appropriate variables/configuration
   scald_add_type('image', 'Image', 'Resource image');
+  $instance = field_read_instance('scald_atom', 'scald_thumbnail', 'image');
+  if ($instance) {
+    $instance['label'] = 'Image';
+    field_update_instance($instance);
+  }
 }
 
 
