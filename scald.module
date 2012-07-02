@@ -62,8 +62,9 @@ function scald_type_get_names() {
   $types = scald_types();
   $options = array();
   foreach ($types as $name => $type) {
-    $options[$name] = $type;
+    $options[$name] = $type->title;
   }
+  return $options;
 }
 
 /**

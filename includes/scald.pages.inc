@@ -91,6 +91,23 @@ function scald_atom_add_form($form, $form_state, $type) {
         '#default_value' => $atom->title,
       );
 
+      $default = scald_atom_defaults($atom->type);
+      $actions = scald_actions();
+      $options = array();
+      $options_default = array();
+      foreach ($actions as $name => $action) {
+        $options[$name] = $action['title'];
+        $options_default[$name] = $default->actions & $action['bitmask'] ? $name : '';
+      }
+      $form['scald_actions'] = array(
+        '#type' => 'checkboxes',
+        '#title' => 'Openly available actions',
+        '#group' => 'additional_settings',
+        '#options' => $options,
+        '#default_value' => $options_default,
+        '#access' => user_access('administer scald'),
+      );
+
       field_attach_form('scald_atom', $atom, $form, $form_state);
 
       $form['actions']['submit']['#value'] = t('Save');
@@ -114,7 +131,7 @@ function scald_atom_add_form_submit($form, &$form_state) {
       $form_state['storage']['step']++;
       break;
 
-    case 1: 
+    case 1:
       // Create the stub atom
       $type = $form_state['storage']['type'];
 
@@ -142,6 +159,17 @@ function scald_atom_add_form_submit($form, &$form_state) {
 
       $atom = $form_state['storage']['atom'];
 
+      if (is_array($form_state['values']['scald_actions'])) {
+        $bitstream = 0;
+        $actions = scald_actions();
+        foreach ($actions as $name => $action) {
+          if (!empty($form_state['values']['scald_actions'][$name])) {
+            $bitstream |= $action['bitmask'];
+          }
+        }
+        $form_state['values']['actions'] = $bitstream;
+      }
+
       $op = empty($atom->sid) ? t('created') : t('updated');
 
       // Let entity add its properties to the atom
@@ -164,7 +192,7 @@ function scald_atom_add_form_submit($form, &$form_state) {
 /**
  * Handles the view of an atom
  */
-function scald_atom_view($form, &$form_state, $atom) {  
+function scald_atom_view($form, &$form_state, $atom) {
   drupal_set_title(t('View: @title', array('@title' => $atom->title)));
 
   // Rendering content of atom
@@ -203,16 +231,34 @@ function scald_atom_edit($form, &$form_state, $atom) {
     '#required' => TRUE,
     '#default_value' => $atom->title,
   );
-  field_attach_form('scald_atom', $atom, $form, $form_state);  
 
-  $form['actions'] = array(
+  $actions = scald_actions();
+  $options = array();
+  $options_default = array();
+  foreach ($actions as $name => $action) {
+    $options[$name] = $action['title'];
+    $options_default[$name] = $atom->actions & $action['bitmask'] ? $name : '';
+  }
+  $form['scald_actions'] = array(
+    '#type' => 'checkboxes',
+    '#title' => 'Openly available actions',
+    '#group' => 'additional_settings',
+    '#options' => $options,
+    '#default_value' => $options_default,
+    '#access' => user_access('administer scald'),
+  );
+
+
+  field_attach_form('scald_atom', $atom, $form, $form_state);
+
+  $form['buttons'] = array(
     '#type' => 'actions',
   );
-  $form['actions']['submit'] = array(
+  $form['buttons']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save')
   );
-  $form['actions']['submit']['#submit'][] = 'scald_atom_add_form_submit';
+  $form['buttons']['submit']['#submit'][] = 'scald_atom_add_form_submit';
   return $form;
 }
 
