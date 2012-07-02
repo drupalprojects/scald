@@ -96,14 +96,20 @@ function scald_admin_type_form($form, $form_state, $type) {
     '#maxlength'      => 255,
     '#required'       => TRUE,
   );
-  // @@@TODO: Make this into a *useful* UI!
+  // Create checkboxes for the defined actions
+  $actions = scald_actions();
+  $options = array();
+  $options_default = array();
+  foreach ($actions as $name => $action) {
+    $options[$name] = $action['title'];
+    $options_default[$name] = $default->actions & $action['bitmask'] ? $name : '';
+  }
   $form['defaults']['type_' . $type_name . '_actin'] = array(
-    '#type'           => 'textfield',
-    '#title'          => t('Default Actions bitstring'),
-    '#description'    => t('Should be an integer.  Note that the numbering on the Actions Admin page does not correspond to bit order.'),
-    '#default_value'  => $default->actions,
-    '#size'           => 10,
-    '#maxlength'      => 24,
+    '#type'           => 'checkboxes',
+    '#title'          => t('Default Actions'),
+    '#description'    => t('Please select the actions that should be enabled by default for atom of this type. Note that the actions you choose here are the one that you want to be made available on this atom to everyone ; the actions that the atom author can perform can be configured per role using standard Drupal rights.'),
+    '#options'        => $options,
+    '#default_value'  => $options_default,
     '#required'       => TRUE,
   );
 
@@ -119,8 +125,6 @@ function scald_admin_type_form($form, $form_state, $type) {
 
   return $form;
 } // end scald_admin_types_form()
-
-
 
 /**
  * Submist function for admin settings for Scald Types.
@@ -156,7 +160,14 @@ function scald_admin_type_form_submit($form, &$form_state) {
           break; // end '_descr'
 
         case '_actin':
-          $scald_atom_defaults[$type]->actions = (int) $value;
+          $actions = scald_actions();
+          $bitmask = 0;
+          foreach ($actions as $name => $action) {
+            if (!empty($value[$name])) {
+              $bitmask |= $action['bitmask'];
+            }
+          }
+          $scald_atom_defaults[$type]->actions = $bitmask;
           break; // end '_actin'
       }
     }

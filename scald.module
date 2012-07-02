@@ -260,7 +260,7 @@ function _scald_get_info($type, $reset = FALSE) {
  * Get the defaults options for a specific Atom type.
  */
 function scald_atom_defaults($type) {
-  $defaults = variable_get('scald_atom_defaults', array());
+  $all = variable_get('scald_atom_defaults', array());
   if (isset($all[$type])) {
     $default = $all[$type];
   }
