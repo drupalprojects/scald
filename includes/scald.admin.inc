@@ -208,8 +208,6 @@ function scald_admin_contexts($type) {
   return $output;
 } // end scald_admin_contexts()
 
-
-
 /**
  * Form for admin settings for Scald Contexts.
  */
@@ -307,53 +305,6 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
   cache_clear_all('*', 'cache_scald', TRUE);
 
 } // end scald_admin_contexts_form_submit()
-
-
-
-/**
- * The Scald Admin page for Scald Transcoders
- *
- * The Transcoders and their descriptions are simply listed; no configuration
- *  changes can be made from this page.
- */
-function scald_admin_transcoders() {
-  $content = t('
-    <h3>Scald Transcoders</h3>
-    <br>
-    <p>Scald Transcoders take the files associated with Atoms of a particular Type and transcode them into a file format which is appropriate for output.  Any configuration for the Transcoders should be completed on the settings page for the Providing module.</p>
-    <ol>
-      <li>
-        <strong>Passthrough</strong>
-        <ul>
-          <li><em>The Passthrough Transcoder simply makes the source file available to the rendering stack in an unmodified form.</em></li>
-          <li>Provided by <code>scald.module</code></li>
-        </ul>
-      </li>
-  ');
-
-  $transcoders_results = db_query("
-    SELECT
-      *
-    FROM
-      {scald_transcoders}
-  ");
-  while ($transcoder_raw = db_fetch_array($transcoders_results)) {
-    $content .= '
-      <li>
-        <strong>' . $transcoder_raw['title'] . '</strong>
-        <ul>
-          <li><em>' . $transcoder_raw['description'] . '</em></li>
-          <li>Provided by <code>' . $transcoder_raw['provider'] . '.module</code></li>
-        </ul>
-      </li>
-    ';
-  }
-  $content .= '</ol>';
-
-  return $content;
-} // end scald_admin_transcoders()
-
-
 
 /**
  * Generates Scald admin settings form.
