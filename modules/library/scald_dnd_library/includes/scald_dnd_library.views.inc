@@ -9,8 +9,8 @@ function scald_dnd_library_views_plugins() {
   return array(
     'style' => array(
       'scald_library' => array(
-        'title' => 'Scald Library',
-        'help' => 'Format atoms for use in a DnD Library',
+        'title' => t('Scald Library'),
+        'help' => t('Format atoms for use in a DnD Library'),
         'handler' => 'scald_plugin_style_library',
         'path' => drupal_get_path('module', 'scald_dnd_library') .'/includes',
         'uses row plugin' => FALSE,
@@ -32,7 +32,7 @@ function scald_dnd_library_views_plugins() {
         'theme' => 'views_view',
         'use ajax' => FALSE,
         'use pager' => TRUE,
-        'admin' => t('Libary'),
+        'admin' => t('Library'),
         'help topic' => 'scald-library',
         'uses hook menu' => TRUE,
       )

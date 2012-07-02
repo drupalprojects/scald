@@ -28,3 +28,4 @@ define('SCALD_ADMIN_ACTIONS_BATCH_LIMIT', 1);
 
 // How many users to register as Authors at a time during hook_enable().
 define('SCALD_ENABLE_BATCH_LIMIT',        100);
+

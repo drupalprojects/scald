@@ -142,7 +142,7 @@ function scald_atom_add_form_submit($form, &$form_state) {
 
       $atom = $form_state['storage']['atom'];
 
-      $op = empty($atom->sid) ? 'created' : 'updated';
+      $op = empty($atom->sid) ? t('created') : t('updated');
 
       // Let entity add its properties to the atom
       entity_form_submit_build_entity('scald_atom', $atom, $form, $form_state);
@@ -165,8 +165,8 @@ function scald_atom_add_form_submit($form, &$form_state) {
  * Handles the view of an atom
  */
 function scald_atom_view($form, &$form_state, $atom) {  
-  drupal_set_title('View "' . $atom->title . '"');  
-  
+  drupal_set_title(t('View: @title', array('@title' => $atom->title)));
+
   // Rendering content of atom
   $view_mode = 'full';
   field_attach_prepare_view('scald_atom', array($atom->sid => $atom), $view_mode);
@@ -189,7 +189,7 @@ function scald_atom_view($form, &$form_state, $atom) {
  * Handles the editing of an existing atom
  */
 function scald_atom_edit($form, &$form_state, $atom) {
-  drupal_set_title('Edit "' . $atom->title . '"');  
+  drupal_set_title(t('Edit: @title', array('@title' => $atom->title)));
 
   // Jump directly to the last step
   $form_state['storage']['step'] = 2;
@@ -215,3 +215,4 @@ function scald_atom_edit($form, &$form_state, $atom) {
   $form['actions']['submit']['#submit'][] = 'scald_atom_add_form_submit';
   return $form;
 }
+

@@ -139,7 +139,7 @@ function scald_views_data() {
     'field' => array(
       'handler' => 'scald_views_handler_field_actions',
       'click sortable' => FALSE,
-     ),
+    ),
     'filter' => array(
       'handler' => 'scald_views_handler_filter_actions',
     ),

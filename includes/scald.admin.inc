@@ -111,7 +111,7 @@ function scald_admin_type_form($form, $form_state, $type) {
     '#type' => 'value',
     '#value' => $type_name
   );
-  
+
   $form['submit'] = array(
     '#type'   => 'submit',
     '#value'  => t('Save'),
@@ -183,7 +183,7 @@ function scald_admin_atoms() {
     <h4>Currently, there @count_atoms registered with Scald Core.</h4>
     <p>Enable the Views module to get an handy paginated table with filters which will allow you to browse your atoms.</p>',
     array(
-      '!add_link'     => l('Add atom', 'atoms/add'), 
+      '!add_link'     => l(t('Add atom'), 'atoms/add'),
       '@count_atoms'  => format_plural($count, 'is 1 atom', 'are @count atoms')
     )
   );
@@ -322,13 +322,10 @@ function scald_settings_form() {
   $form['scald_always_rebuild'] = array(
     '#type' => 'checkbox',
     '#default_value' => variable_get('scald_always_rebuild', FALSE),
-    '#title' => 'Always rebuild rendered content',
-    '#description' => "By default, Scald tries to agressively cache the atom's
-      rendered content, by context and by actions available to the user viewing
-      it. Checking this box, Scald will re-render the atom each time. This is a
-      massive performance hit."
+    '#title' => t('Always rebuild rendered content'),
+    '#description' => t('By default, Scald tries to agressively cache the atom\'s rendered content, by context and by actions available to the user viewing it. Checking this box, Scald will re-render the atom each time. This is a massive performance hit.'),
   );
-  
+
   // Scald tags vocabulary
   $options = array();
   $vocabularies = taxonomy_get_vocabularies();
@@ -342,10 +339,10 @@ function scald_settings_form() {
     '#options' => $options,
     '#default_value' => variable_get('scald_tags_vocabulary', 0), 
   );
-  
+
   // Add our custom submit handler
   $form['#submit'][] = 'scald_settings_form_submit';
-  
+
   return system_settings_form($form);
 }
 
@@ -357,8 +354,9 @@ function scald_settings_form_submit($form, &$form_state) {
 
   // Fetch info on the scald_tags taxonomy reference field
   $field = field_info_field('scald_tags');
-  
+
   // Change the vocabulary used for this field
   $field['settings']['allowed_values'][0]['vocabulary'] = $vocabulary->machine_name;
   field_update_field($field);
 }
+

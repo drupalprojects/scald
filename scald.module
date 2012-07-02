@@ -67,13 +67,13 @@ function scald_add_type($type, $title, $description) {
   if (!empty($types[$type])) {
     return FALSE;
   }
-  
+
   // Create a new type
   db_insert('scald_types')
     ->fields(array('type', 'title', 'description', 'provider'))
     ->values(array($type, $title, $description, 'scald'))
     ->execute();
-    
+
   return TRUE;
 } // end scald_add_type()
 
@@ -221,7 +221,7 @@ function scald_atom_providers($reset = FALSE) {
 
 /**
  * Get the info from all modules on a specific scald item type.
- */ 
+ */
 function _scald_get_info($type, $reset = FALSE) {
   $info = cache_get($type, 'cache_scald');
   if ($reset || empty($info)) {
@@ -377,7 +377,7 @@ function scald_atom_save(&$atom) {
 
   $contexts = scald_contexts();
   $transcoders = scald_transcoders();
-  
+
   foreach ($contexts as $context => $details) {
     if (isset($details['type_format'][$atom->type])) {
       $transcoder = $details['type_format'][$atom->type]['transcoder'];
@@ -672,7 +672,7 @@ function scald_search($query = array(), $fuzzy = FALSE, $singular = FALSE) {
         continue;
     }
   }
-  
+
   // @@@TODO: Use a pager_query() call here?
   $search_results = db_query(
     "
@@ -685,23 +685,22 @@ function scald_search($query = array(), $fuzzy = FALSE, $singular = FALSE) {
       . ($singular ? " LIMIT 1" : '')
     , $data
   );
-  
-  
+
   // Compose and return result
   $sids = array();
   foreach($search_results as $result) {
     $sids[] = $result->sid;
   }
-  
+
   if(!count($sids)) {
     return FALSE;
   }
-  
+
   if($singular) {
     return $sids[0];
   }
   else {
-    return $sids;  
+    return $sids;
   }
 
 } // end scald_search()
@@ -932,8 +931,8 @@ function _scald_user_combine_actions($account) {
   $scald_actions = array(
     'own' => 0,
     'any' => 0,
-  );  
-  
+  );
+
   // Fetch action bitstring components by User Role and combine
   foreach($account->roles as $rid => $role_name) {
     $cache = cache_get('scald_actions_bitstring_for_rid_' . $rid, 'cache_scald');
@@ -944,11 +943,11 @@ function _scald_user_combine_actions($account) {
     else {
       $role_actions = $cache->data;
     }
-  
+
     $scald_actions['own'] |= $role_actions['own'];
     $scald_actions['any'] |= $role_actions['any'];
   }
-  
+
   return $scald_actions;
 }
 
@@ -1468,8 +1467,8 @@ function scald_field_extra_fields () {
     $extra['scald_atom'][$slug] = array(
       'form' => array(
         'title' => array(
-          'label' => 'Title',
-          'description' => 'Atom title - Scald module element',
+          'label' => t('Title'),
+          'description' => t('Atom title - Scald module element'),
           'weight' => -5,
         )
       )
@@ -1504,7 +1503,7 @@ function scald_permission() {
       'description' => t('Create atom of any type'),
     ),
   );
-    
+
   // "Create" action for each types
   foreach(scald_types() as $type) {
     $permissions['create atom of ' . $type->type . ' type'] = array(
@@ -1519,13 +1518,13 @@ function scald_permission() {
       'title' => t('%action own atom', array('%action' => $action['title'])),
       'description' => t('%action own atom', array('%action' => $action['title'])),
     );
-    
+
     $permissions[$key . ' any atom'] = array(
       'title' => t('%action any atom marked as %actionable', array('%action' => $action['title'], '%actionable' => $action['title'] . 'able')),
       'description' => t('%action any atom marked as %actionable', array('%action' => $action['title'], '%actionable' => $action['title'] . 'able')),
     );
   }
-  
+
   return $permissions;
 }
 
@@ -1576,7 +1575,7 @@ function scald_menu() {
     'type'              => MENU_NORMAL_ITEM,
   );
   $items['admin/structure/scald/%scald_type/edit'] = array(
-    'title'             => t('Edit'),
+    'title'             => 'Edit',
     'type'              => MENU_DEFAULT_LOCAL_TASK,
     'weight'            => -20,
   );
@@ -1776,10 +1775,10 @@ function theme_scald_render_error($context, $message){
 function scald_compute_role_actions($role) {
   // Get permissions for the specified role
   $permissions = user_role_permissions($role);
-  
+
   // Get all Scald actions
   $scald_actions = scald_actions();
-  
+
   // Get rid
   $rid = key($role);
 
@@ -1804,7 +1803,7 @@ function scald_compute_role_actions($role) {
       }
     }
   }
-  
+
   cache_set('scald_actions_bitstring_for_rid_' . $rid, $role_actions, 'cache_scald', CACHE_TEMPORARY);
   return $role_actions;
 }
@@ -1834,7 +1833,7 @@ function scald_atom_user_build_actions_links($atom, $query = NULL) {
   $actions = scald_actions();
   $supported_actions = array('view', 'edit');
   $current_actions = scald_user_actions($atom);
-  
+
   $links = array();
   foreach ($actions as $action => $details) {
     if(in_array($action, $supported_actions) && ($current_actions & $details['bitmask'])) {

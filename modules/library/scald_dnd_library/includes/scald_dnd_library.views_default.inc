@@ -14,7 +14,7 @@ function scald_dnd_library_views_default_views() {
 
   $view = new view;
   $view->name = 'scald_library';
-  $view->description = 'Library view provided by Scald to access atoms.';
+  $view->description = t('Library view provided by Scald to access atoms.');
   $view->tag = '';
   $view->base_table = 'scald_atoms';
   $view->human_name = '';
@@ -23,8 +23,8 @@ function scald_dnd_library_views_default_views() {
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
 
   /* Display: Paramètres par défaut */
-  $handler = $view->new_display('default', 'Paramètres par défaut', 'default');
-  $handler->display->display_options['title'] = 'Atoms library';
+  $handler = $view->new_display('default', 'Master', 'default');
+  $handler->display->display_options['title'] = 'Atoms Library';
   $handler->display->display_options['use_ajax'] = TRUE;
   $handler->display->display_options['access']['type'] = 'perm';
   $handler->display->display_options['access']['perm'] = 'administer scald';
@@ -106,7 +106,7 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['filters']['title']['group'] = '0';
   $handler->display->display_options['filters']['title']['exposed'] = TRUE;
   $handler->display->display_options['filters']['title']['expose']['operator_id'] = 'title_op';
-  $handler->display->display_options['filters']['title']['expose']['label'] = 'Titre';
+  $handler->display->display_options['filters']['title']['expose']['label'] = 'Title';
   $handler->display->display_options['filters']['title']['expose']['operator'] = 'title_op';
   $handler->display->display_options['filters']['title']['expose']['identifier'] = 'title';
   /* Filter criterion: User: Name */
@@ -155,7 +155,7 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['header']['area']['table'] = 'views';
   $handler->display->display_options['header']['area']['field'] = 'area';
   $handler->display->display_options['header']['area']['empty'] = TRUE;
-  $handler->display->display_options['header']['area']['content'] = '<ul class="action-links"><li>' . l('Add atom', 'atoms/add') . '</li></ul>';
+  $handler->display->display_options['header']['area']['content'] = '<ul class="action-links"><li>' . l(t('Add atom'), 'atoms/add') . '</li></ul>';
   $handler->display->display_options['header']['area']['format'] = 'filtered_html';
   $handler->display->display_options['header']['area']['tokenize'] = 0;
   $handler->display->display_options['path'] = 'admin/content/atoms';
@@ -216,6 +216,17 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['fields']['sid']['hide_empty'] = 0;
   $handler->display->display_options['fields']['sid']['empty_zero'] = 0;
   $handler->display->display_options['path'] = 'scald/library_dnd';
+
+  $translatables[$view->name] = array(
+    t('Master'),
+    t('Atoms'),
+    t('Atoms Library'),
+    t('Scald Library'),
+    t('No atom found.'),
+    t('Title'),
+    t('Type'),
+    t('Publisher'),
+  );
 
   $views[$view->name] = $view;
   return $views;

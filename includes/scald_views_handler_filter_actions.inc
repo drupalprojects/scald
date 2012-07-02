@@ -73,3 +73,4 @@ class scald_views_handler_filter_actions extends views_handler_filter {
      return implode(',', $names);
    }
 }
+
