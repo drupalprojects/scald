@@ -191,7 +191,7 @@ function theme_sdl_library_item($variables) {
   $atom = $variables['atom'];
   $image = $variables['image'];
   $informations = $atom->rendered;
-  
+
   // Action links
   $links = scald_atom_user_build_actions_links($atom, NULL);
   // Force all links to open in a new window
@@ -215,7 +215,7 @@ function theme_sdl_library_item($variables) {
   else {
     $authors = '';
   }
-  
+
   $return =  "
   <div class='image'>
     {$image}

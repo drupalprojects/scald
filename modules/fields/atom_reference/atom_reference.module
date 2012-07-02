@@ -12,7 +12,7 @@ function atom_reference_field_info() {
   return array(
     'atom_reference' => array(
       'label' => t('Atom Reference'),
-      'description' => 'This field stores the ID of a related atom as an integer value',
+      'description' => t('This field stores the ID of a related atom as an integer value.'),
       'instance_settings' => array(
         'referencable_types' => array()
       ),

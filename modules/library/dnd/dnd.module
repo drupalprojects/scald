@@ -25,7 +25,7 @@ function dnd_menu() {
 function dnd_permission() {
   return array(
     'administer dnd' => array(
-      'title' => 'Administer DnD',
+      'title' => t('Administer DnD'),
     ),
   );
 }
