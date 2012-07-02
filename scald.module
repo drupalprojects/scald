@@ -52,6 +52,19 @@ function scald_types() {
   return $types;
 } // end scald_types()
 
+/**
+ * Returns a list of available atom type names.
+ *
+ * @return array
+ *   An array of atom type names, keyed by the type machine name.
+ */
+function scald_type_get_names() {
+  $types = scald_types();
+  $options = array();
+  foreach ($types as $name => $type) {
+    $options[$name] = $type;
+  }
+}
 
 /**
  * Add a Scald unified type 
@@ -1457,6 +1470,64 @@ function scald_entity_info() {
   }
 
   return $return;
+}
+
+/**
+ * Implements hook_entity_property_info.
+ */
+function scald_entity_property_info() {
+  $info = array();
+  // Add meta-data about the basic node properties.
+  $properties = &$info['scald_atom']['properties'];
+
+  $properties['sid'] = array(
+    'label' => t("Scald ID"),
+    'type' => 'integer',
+    'description' => t("The unique ID of the node."),
+    'schema field' => 'nid',
+  );
+  $properties['type'] = array(
+    'label' => t("Atom type"),
+    'type' => 'token',
+    'description' => t("The type of the atom."),
+    'setter callback' => 'entity_property_verbatim_set',
+    'setter permission' => 'administer scald',
+    'options list' => 'scald_type_get_names',
+    'required' => TRUE,
+    'schema field' => 'type',
+  );
+  $properties['title'] = array(
+    'label' => t("Title"),
+    'description' => t("The title of the atom."),
+    'setter callback' => 'entity_property_verbatim_set',
+    'schema field' => 'title',
+    'required' => TRUE,
+  );
+  $properties['url'] = array(
+    'label' => t("URL"),
+    'description' => t("The URL of the atom."),
+    'getter callback' => 'entity_metadata_entity_get_properties',
+    'type' => 'uri',
+    'computed' => TRUE,
+  );
+  $properties['actions'] = array(
+    'label' => t("Status"),
+    'description' => t("The actions that are allowed for this atom."),
+    'type' => 'integer',
+    'setter callback' => 'entity_property_verbatim_set',
+    'setter permission' => 'administer scald',
+    'schema field' => 'status',
+  );
+  $properties['publisher'] = array(
+    'label' => t("Publisher"),
+    'type' => 'user',
+    'description' => t("The user who published this atom."),
+    'setter callback' => 'entity_property_verbatim_set',
+    'setter permission' => 'administer scald',
+    'required' => TRUE,
+    'schema field' => 'publisher',
+  );
+  return $info;
 }
 
 /**
