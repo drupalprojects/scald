@@ -167,7 +167,7 @@ function scald_dnd_library_views_default_views() {
   $handler = $view->new_display('dnd_library', 'Scald Library', 'dnd_library_2');
   $handler->display->display_options['defaults']['access'] = FALSE;
   $handler->display->display_options['access']['type'] = 'perm';
-  $handler->display->display_options['access']['perm'] = 'use scald';
+  $handler->display->display_options['access']['perm'] = 'access scald dnd library';
   $handler->display->display_options['defaults']['style_plugin'] = FALSE;
   $handler->display->display_options['style_plugin'] = 'scald_library';
   $handler->display->display_options['defaults']['style_options'] = FALSE;

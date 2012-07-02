@@ -119,10 +119,12 @@ class scald_plugin_display_library extends views_plugin_display_page {
     $atom_types = scald_types();
     $buttons = array('type' => 'ul', 'title' => NULL, 'attributes' => array());
     foreach ($atom_types as $type) {
-      $buttons['items'][] = array(
-        'data' => l(t($type->type), 'atoms/add/' . $type->type),
-        'class' => array('add-' . strtolower($type->type)),
-      );
+      if (user_access('create atom of ' . $type->type . ' type')) {
+        $buttons['items'][] = array(
+          'data' => l(t($type->type), 'atoms/add/' . $type->type),
+          'class' => array('add-' . strtolower($type->type)),
+        );
+      }
     }
     $library['menu'] = '<div class="scald-menu"><div class="add-buttons">'. theme_item_list($buttons) .'</div></div>';
     $library['library'] = '<div class="scald-library">' . $library['library'] . '</div>';
