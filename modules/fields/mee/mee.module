@@ -71,7 +71,7 @@ function mee_form_alter(&$form, &$form_state, $form_id) {
   $form['instance']['settings']['mee_enabled'] = array(
     '#type' => 'checkbox',
     '#title' => t('MEE Enabled'),
-    '#description' => t('Enable MEE for this field give you advance resource management. MEE automatically link embedded resource with field so that you have more control over fields, e.g. unpublish linked nodes when a principle resource is unpublished.'),
+    '#description' => t('Enable MEE for this field to get access to an advance resource management interface. MEE will automatically detect the resources embedded in this field, and allow you to define a few metadata properties on them, e.g. choose if the node should be unpublished if at some point in the future the resource became unavailable.'),
     '#default_value' => $settings['mee_enabled'],
   );
   $form['instance']['settings']['context'] = array(

@@ -1,8 +1,8 @@
 name = Multimedia Editorial Element
 package = Scald
-description = A configurable field that provides a textarea and drag and drop media library.
+description = Allows users to define metadata on atoms that are embedded in text fields
 dependencies[] = field
 dependencies[] = text
 dependencies[] = dnd
+dependencies[] = scald
 core = 7.x
-; @todo Define a default context?
