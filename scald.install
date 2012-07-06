@@ -455,7 +455,6 @@ function scald_update_7002() {
 
 /**
  * Create Scald_tags vocabulary
- * 
  */
 function scald_update_7003() {
   _scald_create_tags_vocabulary();
@@ -466,4 +465,11 @@ function scald_update_7003() {
  */
 function scald_update_7004() {
   _scald_create_thumbnail_field();
+}
+
+/**
+ * Refresh Scald action lists to include the new 'adjective' attribute.
+ */
+function scald_update_7005() {
+  scald_actions(TRUE);
 }

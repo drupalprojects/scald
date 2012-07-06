@@ -1147,6 +1147,7 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
       $sid  = $atom->sid;
     }
     else {
+      debug('abort');
       return FALSE;
     }
   }
@@ -1176,7 +1177,6 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
   if (empty($contexts[$context])) {
     return scald_render($atom, _scald_context_fallback($type, $context), $options, $rebuild);
   }
-
 
   // Check the cache unless explicitly rebuilding the rendering of the Atom
   $cache_id = $sid
@@ -1355,18 +1355,22 @@ function scald_scald_actions() {
   return array(
     'fetch' => array(
       'title'       => t('Fetch'),
+      'adjective'   => t('Fetchable'),
       'description' => t('<see scald.admin.inc>'),
     ),
     'edit' => array(
       'title'       => t('Edit'),
+      'adjective'   => t('Editable'),
       'description' => t('Edit the details of a Scald Atom'),
     ),
-    'view'       => array(
+    'view' => array(
       'title'       => t('View'),
+      'adjective'   => t('Viewable'),
       'description' => t('View a Scald Atom on-site'),
     ),
-    'delete'       => array(
+    'delete' => array(
       'title'       => t('Delete'),
+      'adjective'   => t('Deletable'),
       'description' => t('Delete (unregister) a Scald Atom'),
     ),
   );
@@ -1503,7 +1507,7 @@ function scald_entity_info() {
         'bundle' => 'type'
       ),
       'bundles' => array(),
-      'view modes' => array()
+      'view modes' => array(),
     )
   );
 
@@ -1632,7 +1636,6 @@ function scald_permission() {
     ),
     'create atom of any type' => array(
       'title' => t('Create atom of any type'),
-      'description' => t('Create atom of any type'),
     ),
   );
 
@@ -1640,7 +1643,6 @@ function scald_permission() {
   foreach(scald_types() as $type) {
     $permissions['create atom of ' . $type->type . ' type'] = array(
       'title' => t('Create atom of %type type', array('%type' => $type->type)),
-      'description' => t('Create atom of %type type', array('%type' => $type->type)),
     );
   }
 
@@ -1648,12 +1650,10 @@ function scald_permission() {
   foreach (scald_actions() as $key => $action) {
     $permissions[$key . ' own atom'] = array(
       'title' => t('%action own atom', array('%action' => $action['title'])),
-      'description' => t('%action own atom', array('%action' => $action['title'])),
     );
 
     $permissions[$key . ' any atom'] = array(
-      'title' => t('%action any atom marked as %actionable', array('%action' => $action['title'], '%actionable' => $action['title'] . 'able')),
-      'description' => t('%action any atom marked as %actionable', array('%action' => $action['title'], '%actionable' => $action['title'] . 'able')),
+      'title' => t('%action any atom marked as %actionable', array('%action' => $action['title'], '%actionable' => $action['adjective'])),
     );
   }
 
