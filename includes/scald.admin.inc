@@ -20,11 +20,8 @@ require_once('scald.constants.inc');
 function scald_admin_dashboard() {
   $types = scald_types();
 
-  $content = t('
-    <h3>Scald Providers</h3>
-
-    <p>The following Scald Providers are registered with Scald Core.  To force a Provider to renew its registration (this is useful if a Provider conditionally provides something such as a Transcoder based on whether or not a module is availble and you have just enabled new modules) click the <em>re-register</em> link next to the Provider\'s name.</p>
-  ');
+  $content = '<h3>' . t('Scald Providers') . '</h3>';
+  $content .= '<p>' . t('The following Scald Providers are registered with Scald Core.  To force a Provider to renew its registration (this is useful if a Provider conditionally provides something such as a Transcoder based on whether or not a module is availble and you have just enabled new modules) click the <em>re-register</em> link next to the Provider\'s name.') . '</p>';
 
   $list = array('type' => 'ul', 'items' => array());
   $table = array(
@@ -185,19 +182,10 @@ function scald_admin_type_form_submit($form, &$form_state) {
  */
 function scald_admin_atoms() {
   $count = db_query("SELECT COUNT(*) FROM {scald_atoms}")->fetchField();
-  $content = t('
-    <h3>Scald Atoms</h3>
-    <ul class="action-links">
-      <li>!add_link</li>
-    </ul>
-
-    <h4>Currently, there @count_atoms registered with Scald Core.</h4>
-    <p>Enable the Views module to get an handy paginated table with filters which will allow you to browse your atoms.</p>',
-    array(
-      '!add_link'     => l(t('Add atom'), 'atoms/add'),
-      '@count_atoms'  => format_plural($count, 'is 1 atom', 'are @count atoms')
-    )
-  );
+  $content = '<h3>' . t('Scald Atoms') . '</h3>';
+  $content .= '<ul class="action-links"><li>' . l(t('Add atom'), 'atoms/add') . '</li></ul>';
+  $content .= '<h4>' . format_plural($count, 'Currently, there is 1 atom registered with Scald Core.', 'Currently, there are @count atoms registered with Scald Core.') . '</h4>';
+  $content .= '<p>' . t('Enable the Views module to get an handy paginated table with filters which will allow you to browse your atoms.') . '</p>';
 
   return $content;
 } // end scald_admin_atoms()
@@ -206,14 +194,11 @@ function scald_admin_atoms() {
  * The Scald Admin page for Scald Contexts.
  */
 function scald_admin_contexts($type) {
-  $output[] = t('
-    <h3>Scald Rendering Contexts</h3>
-    <br>
-    <p>Scald Rendering Contexts are something like themes for Scald Atoms.  Any Atom can be rendered in any Context and the Context determines what that rendering looks like and what language it is in.</p>
-    <p>If a Context is "parseable", that means that its output is wrapped in HTML comments (currently this feature only works reliably for Contexts which have a render language of XHTML) which make it possible for Scald Core to uniquely identify the Atom based on the rendering.  For instance, if a WYSIWYG editor is being used in some text areas and Scald Atoms should be included in the WYSIWYG preview of the text, a Context can be chosen and specified as parseable.  That ensures that when the textarea is submitted, Scald Core will be able to determine which Atoms are present in the textarea, convert the rendered versions to Scald Atom Shorthand and ensure proper parsing by the Scald Atom Shorthand Input Filter.</p>
-  ');
+  $content = '<h3>' . t('Scald Rendering Contexts') . '</h3>';
+  $content .= '<p>' . t('Scald Rendering Contexts are something like themes for Scald Atoms.  Any Atom can be rendered in any Context and the Context determines what that rendering looks like and what language it is in.') . '</p>';
+  $content .= '<p>' . t('If a Context is "parseable", that means that its output is wrapped in HTML comments (currently this feature only works reliably for Contexts which have a render language of XHTML) which make it possible for Scald Core to uniquely identify the Atom based on the rendering.  For instance, if a WYSIWYG editor is being used in some text areas and Scald Atoms should be included in the WYSIWYG preview of the text, a Context can be chosen and specified as parseable.  That ensures that when the textarea is submitted, Scald Core will be able to determine which Atoms are present in the textarea, convert the rendered versions to Scald Atom Shorthand and ensure proper parsing by the Scald Atom Shorthand Input Filter.') . '</p>';
 
-
+  $output[] = $content;
   $output[] = drupal_get_form('scald_admin_contexts_form', $type);
 
   return $output;

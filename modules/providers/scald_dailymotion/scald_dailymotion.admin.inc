@@ -55,10 +55,7 @@ function scald_dailymotion_imports_form() {
   $form['add']['value'] = array(
     '#type' => 'textfield',
     '#title' => t('Identifier'),
-    '#description' => t('This field value meaning depends on the Type
-    field defined above. For a <em>User</em> import, put the username
-    whose videos you\'d loke to import here, for a tag import, use the
-    tag name.')
+    '#description' => t('This field value meaning depends on the Type field defined above. For a <em>User</em> import, put the username whose videos you\'d loke to import here, for a tag import, use the tag name.')
   );
   $form['add']['submit'] = array(
     '#type' => 'submit',

@@ -24,7 +24,7 @@ function scald_image_scald_atom_providers() {
 function scald_image_scald_add_form(&$form, &$form_state) {
   $form['file'] = array(
     '#type' => 'managed_file',
-    '#title' => 'Image',
+    '#title' => t('Image'),
     '#upload_location' => 'public://atoms/images/',
   );
 }
@@ -46,8 +46,8 @@ function scald_image_scald_transcoders() {
   $transcoders = array();
   foreach (image_styles() as $name => $style) {
     $transcoders['style-' . $name] = array(
-      'title' => $name . ' (Image style)',
-      'description' => "Uses the Image style {$name} to prepare the image",
+      'title' => t('@style (Image style)', array('@style' => $name)),
+      'description' => t('Use the Image style @style to prepare the image', array('@style' => $name)),
       'formats' => array(
         'image' => 'passthrough'
       )
