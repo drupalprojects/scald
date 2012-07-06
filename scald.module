@@ -479,6 +479,44 @@ function scald_atom_save(&$atom) {
 } // end scald_atom_save()
 
 /**
+ * Delete a Scald atom.
+ *
+ * @param int $sid Scald atom ID.
+ */
+function scald_atom_delete($sid) {
+  scald_atom_delete_multiple(array($sid));
+}
+
+/**
+ * Delete multiple Scald atoms.
+ *
+ * @param array $sids An array of Scald atom IDs.
+ */
+function scald_atom_delete_multiple($sids) {
+  $atoms = scald_atom_load_multiple($sids);
+  if ($atoms) {
+    $transaction = db_transaction();
+    // Delete the Scald atoms.
+    db_delete('scald_atoms')
+      ->condition('sid', array_keys($atoms), 'IN')
+      ->execute();
+    try {
+      foreach ($sids as $sid) {
+        $atom = scald_atom_load($sid);
+        field_attach_delete('scald_atom', $atom);
+        module_invoke_all('scald_atom_delete', $atom);
+        module_invoke_all('entity_delete', $atom, 'scald_atom');
+      }
+    }
+    catch (Exception $e) {
+      $transaction->rollback();
+      watchdog_exception('scald_atom', $e);
+      throw $e;
+    }
+  }
+}
+
+/**
  * Unregister a Scald Atom
  *
  * @param $sid
