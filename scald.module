@@ -1147,7 +1147,6 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
       $sid  = $atom->sid;
     }
     else {
-      debug('abort');
       return FALSE;
     }
   }
