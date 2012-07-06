@@ -1228,7 +1228,27 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
   return $rendered;
 } // end scald_render()
 
-
+/**
+ * Render multiple atoms.
+ *
+ * @param array $atoms
+ *   An array of Scald Atoms
+ * @param string $context
+ *   A valid Scald Context slug (machine name)
+ *
+ * @return array
+ *   A renderable array containing the representations of
+ *   the atoms in the choosen context.
+ */
+function scald_render_multiple($atoms, $context) {
+  $output = array();
+  foreach ($atoms as $atom) {
+    $output[] = array(
+      '#markup' => scald_render($atom, $context)
+    );
+  }
+  return $output;
+}
 
 /**
  * Determine the next Context in the Context fallback order for this Scald
@@ -1507,6 +1527,7 @@ function scald_entity_info() {
       ),
       'bundles' => array(),
       'view modes' => array(),
+      'view callback' => 'scald_render_multiple',
     )
   );
 
