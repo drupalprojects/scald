@@ -337,7 +337,21 @@ function scald_atom_defaults($type) {
  *   FALSE upon failure
  */
 function scald_atom_load($sid) {
-  return scald_fetch($sid);
+  $atom = scald_atom_load_multiple(array($sid));
+  return $atom ? $atom[$sid] : FALSE;
+}
+
+/**
+ * Load multiple Scald atoms.
+ *
+ * @todo This function needs to be optimized;
+ */
+function scald_atom_load_multiple($sids) {
+  $atoms = array();
+  foreach ($sids as $sid) {
+    $atoms[$sid] = scald_fetch($sid);
+  }
+  return $atoms;
 }
 
 /**
