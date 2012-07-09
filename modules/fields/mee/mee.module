@@ -250,6 +250,7 @@ function mee_field_widget_form_alter(&$element, &$form_state, $context) {
       'css' => array(drupal_get_path('module', 'mee') . '/css/mee.css'),
       'js' => array(drupal_get_path('module', 'mee')  . '/mee.js'),
     ),
+    '#element_validate' => array('mee_field_text_validate'),
     '#weight' => 0.5,
     'resource_manager' => array(
       '#theme' => 'mee_resource_manager',
@@ -257,8 +258,10 @@ function mee_field_widget_form_alter(&$element, &$form_state, $context) {
   );
 
   $resource_manager = array();
-  if (isset($form_state['values'])) {
-    $resource_manager = $form_state['values']['mee'];
+  // 'input' is used instead of 'values' because we need extra items inserted
+  // using JavaScript on the client side.
+  if (isset($form_state['input'][$context['field']['field_name']])) {
+    $resource_manager = $form_state['input'][$context['field']['field_name']][$context['langcode']][$context['delta']]['mee']['resource_manager'];
   }
   elseif (isset($element['#entity']->nid)) {
     $result = db_select('mee_resource', 'r')
@@ -311,6 +314,19 @@ function mee_field_widget_form_alter(&$element, &$form_state, $context) {
     ),
     '#weight' => isset($resource_manager[0]['weight']) ? $resource_manager[0]['weight'] : 0,
   );
+}
+
+/**
+ * Validate callback for mee_field_widget_form.
+ */
+function mee_field_text_validate($element, &$form_state) {
+  foreach ($form_state['field'] as $field_name => $values) {
+    foreach ($values as $langcode => $data) {
+      if (isset($form_state['values'][$field_name][$langcode][0]['mee']) && isset($form_state['input'][$field_name][$langcode][0]['mee'])) {
+        $form_state['values'][$field_name][$langcode][0]['mee'] = $form_state['input'][$field_name][$langcode][0]['mee'];
+      }
+    }
+  }
 }
 
 /**
