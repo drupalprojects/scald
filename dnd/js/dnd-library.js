@@ -366,17 +366,6 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
       // Remove dropped item
       $drop.remove();
 
-      // If the containing block is now empty after the removal of the dropped
-      // item, remove it and switch the containing block to its parent. The
-      // goal is to get rid of the <p> that are sometimes inserted around our
-      // dropped <img />
-      if (block.textContent == '') {
-        $tmp = $block.parent();
-        $block.remove();
-        $block = $tmp;
-        block = $block[0];
-      }
-
       // Create an element to insert
       var snippet = '<div class="dnd-drop-wrapper" id="dnd-inserted">' + representation + '</div>';
       if (legend) {
@@ -403,6 +392,17 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
         } else {
           $block.removeAttr('id');
         }
+      }
+
+      // If the containing block is now empty after the removal of the dropped
+      // item, remove it and switch the containing block to its parent. The
+      // goal is to get rid of the <p> that are sometimes inserted around our
+      // dropped <img />
+      if (block.textContent == '') {
+        $tmp = $block.parent();
+        $block.remove();
+        $block = $tmp;
+        block = $block[0];
       }
 
       var $inserted = $('#dnd-inserted', $target.contents());
