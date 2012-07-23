@@ -1143,8 +1143,10 @@ function scald_update_atom($atom, $values = NULL) {
   }
 
   foreach ($scald_config->contexts as $context => $details) {
-    $transcoder = $details['type_format'][$atom->type]['transcoder'];
-    scald_invoke($scald_config->transcoders[$transcoder]['provider'], 'scald_update_atom', $atom, $values, 'transcoder');
+    if (!empty($details['type_format'][$atom->type]['transcoder'])) {
+      $transcoder = $details['type_format'][$atom->type]['transcoder'];
+      scald_invoke($scald_config->transcoders[$transcoder]['provider'], 'scald_update_atom', $atom, $values, 'transcoder');
+    }
   }
 
 
