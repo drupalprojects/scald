@@ -71,6 +71,8 @@ attach: function(context, settings) {
     return;
   }
 
+  Drupal.ajax.prototype.commands.dnd_refresh = Drupal.dnd.refreshLibraries;
+
   if ($(".node-form:not(.dnd-processed)").length) {
     $(".node-form")
       .addClass('dnd-processed')
@@ -279,14 +281,10 @@ idSelector: function(element) {//@todo unused
  * @todo unused
  */
 Drupal.dnd.refreshLibraries = function() {
-  var settings = Drupal.settings.dndDropAreas;
-  for (editor_id in settings) {
-    var elem = $("#" + settings[editor_id].library_id).get(0);
-    var $editor = $("#" + editor_id);
-    $.getJSON(elem.library_url, function (data) {
-      Drupal.behaviors.dndLibrary.renderLibrary.call(elem, data, $editor);
-    });
-  }
+  $.getJSON(Drupal.settings.dnd.url, function (data) {
+    Drupal.behaviors.dndLibrary.renderLibrary.call($('.dnd-library-wrapper').get(0), data, $('<a/>'));
+  });
 }
+
 }) (jQuery);
 

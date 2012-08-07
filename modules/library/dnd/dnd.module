@@ -123,6 +123,37 @@ function dnd_add_library() {
 
     // Settings for the library url
     drupal_add_js(array('dnd' => array('url' => url(dnd_get_library()))), 'setting');
+
+    // Libraries might provide atom quick add links. We add CTools Modal JS so
+    // that libraries can take use of it if they want.
+    if (module_exists('ctools')) {
+      ctools_include('ajax');
+      ctools_include('modal');
+      ctools_modal_add_js();
+
+      // Create our own javascript that will be used to theme a modal.
+      $sample_style = array(
+        'custom-style' => array(
+          'modalSize' => array(
+            'type' => 'fixed',
+            'width' => 500,
+            'height' => 300,
+            'addWidth' => 20,
+            'addHeight' => 15,
+          ),
+          'modalOptions' => array(
+            'opacity' => .5,
+            'background-color' => '#000',
+          ),
+          'animation' => 'fadeIn',
+          'modalTheme' => 'CToolsSampleModal',
+          'throbber' => theme('image', array('path' => ctools_image_path('ajax-loader.gif', 'ctools_ajax_sample'), 'alt' => t('Loading...'), 'title' => t('Loading'))),
+        ),
+      );
+      drupal_add_js($sample_style, 'setting');
+      ctools_add_js('ctools-ajax-sample', 'ctools_ajax_sample');
+      ctools_add_css('ctools-ajax-sample', 'ctools_ajax_sample');
+    }
   }
 }
 

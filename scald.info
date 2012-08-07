@@ -4,6 +4,7 @@ package = Scald
 core = 7.x
 
 dependencies[] = taxonomy
+dependencies[] = ctools
 
 files[] = includes/scald_views_handler_field_actions.inc
 files[] = includes/scald_views_handler_field_representation.inc
