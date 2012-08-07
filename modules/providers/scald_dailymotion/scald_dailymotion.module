@@ -430,7 +430,7 @@ function scald_dailymotion_parse_id($string, $check) {
  *
  */
 function scald_dailymotion_import() {
-  module_load_include('inc', 'scald', 'scald.pages');
+  module_load_include('inc', 'scald', 'includes/scald.pages');
 
   $types = scald_types();
   $type = $types['video'];
@@ -444,3 +444,4 @@ function scald_dailymotion_import() {
   $form = drupal_build_form('scald_atom_add_form', $form_state);
   return drupal_render($form);
 }
+
