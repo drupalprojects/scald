@@ -118,10 +118,12 @@ class scald_plugin_display_library extends views_plugin_display_page {
     }
     $atom_types = scald_types();
     $buttons = array('type' => 'ul', 'title' => NULL, 'attributes' => array());
+    ctools_include('ajax');
+    ctools_include('modal');
     foreach ($atom_types as $type) {
       if (user_access('create atom of ' . $type->type . ' type')) {
         $buttons['items'][] = array(
-          'data' => l(t($type->type), 'atoms/add/' . $type->type),
+          'data' => ctools_modal_text_button(t($type->type), 'atoms/nojs/add/' . $type->type, '', 'ctools-modal-custom-style'),
           'class' => array('add-' . strtolower($type->type)),
         );
       }

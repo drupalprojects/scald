@@ -71,6 +71,8 @@ attach: function(context, settings) {
     return;
   }
 
+  Drupal.ajax.prototype.commands.dnd_refresh = Drupal.dnd.refreshLibraries;
+
   if ($(".node-form:not(.dnd-processed)").length) {
     $(".node-form")
       .addClass('dnd-processed')
@@ -283,5 +285,6 @@ Drupal.dnd.refreshLibraries = function() {
     Drupal.behaviors.dndLibrary.renderLibrary.call($('.dnd-library-wrapper').get(0), data, $('<a/>'));
   });
 }
+
 }) (jQuery);
 
