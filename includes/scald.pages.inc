@@ -30,170 +30,265 @@ function scald_atom_add() {
   return theme('node_add_list', array('content' => $content));
 }
 
-function scald_atom_add_form($form, $form_state, $type) {
-  $form = array();
+/**
+ * Atom add page callback.
+ */
+function scald_atom_add_page($js, $type, $step = NULL) {
+  if ($js) {
+    ctools_include('modal');
+    ctools_include('ajax');
+  }
 
-  $form['actions'] = array(
-    '#type' => 'actions',
-  );
+  ctools_include('object-cache');
+  ctools_include('wizard');
 
-  $form['actions']['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Next')
-  );
-
-  // Start by getting the list of all the modules that
-  // said they can provide this atom type.
+  // Start by getting the list of all the modules that said they can provide
+  // this atom type.
   $providers = scald_atom_providers();
   $sources = $providers[$type->type];
 
-  // If there's more than one, provide a choice between
-  // them. Otherwise, skip a step and select the only
-  // provider upfront.
-  if (empty($form_state['storage'])) {
-    $form_state['storage']['type'] = $type;
+  // If there's more than one, provide a choice between them. Otherwise, skip
+  // a step and select the only provider upfront.
+  if (empty($step)) {
     if (count($sources) < 2) {
-      $form_state['storage']['step'] = 1;
-      $form_state['storage']['source'] = key($sources);
+      $step = 'add';
+      $source = key($sources);
     }
     else {
-      $form_state['storage']['step'] = 0;
+      $step = 'source';
+    }
+    ctools_object_cache_clear('scald_atom', 'add');
+  }
+
+  $form_state = array(
+    'ajax' => $js,
+    'storage' => ctools_object_cache_get('scald_atom', 'add'),
+  );
+
+  if (empty($form_state['storage'])) {
+    $form_state['storage'] = (object) array(
+      'type' => $type,
+      'source' => isset($source) ? $source : NULL,
+    );
+  }
+
+  $form_state['storage']->step = $step;
+
+  $form_info = array(
+    'id' => 'scald-atom-add',
+    'path' => 'atoms/' . ($js ? 'ajax' : 'nojs') . '/add/' . $type->type . '/%step',
+    'show trail' => TRUE,
+    'show back' => TRUE,
+    'show cancel' => TRUE,
+    'show return' => FALSE,
+    'next callback' =>  'scald_atom_add_wizard_next',
+    'finish callback' => 'scald_atom_add_wizard_finish',
+    'cancel callback' => 'scald_atom_add_wizard_cancel',
+    'order' => array(
+      'source' => t('Source'),
+      'add' => t('Add'),
+      'options' => t('Options'),
+    ),
+    'forms' => array(
+      'source' => array(
+        'form id' => 'scald_atom_add_form_source',
+      ),
+      'add' => array(
+        'form id' => 'scald_atom_add_form_add',
+      ),
+      'options' => array(
+        'form id' => 'scald_atom_add_form_options',
+      ),
+    ),
+  );
+
+  // Send this all off to our form. This is like drupal_get_form only wizardy.
+  $form = ctools_wizard_multistep_form($form_info, $step, $form_state);
+  $output = drupal_render($form);
+
+  // If $output is FALSE, there was no actual form.
+  if ($js) {
+    // If javascript is active, we have to use a render array.
+    $commands = array();
+    if ($output === FALSE || !empty($form_state['complete'])) {
+      // Do some good thing
+      //$commands[] = ajax_command_html('#ctools-sample', $animal);
+      // Dismiss the modal.
+      $commands[] = array('command' => 'dnd_refresh');
+      $commands[] = ctools_modal_command_dismiss();
+    }
+    else if (!empty($form_state['cancel'])) {
+      // If cancelling, return to the activity.
+      $commands[] = ctools_modal_command_dismiss();
+    }
+    else {
+      $commands = ctools_modal_form_render($form_state, $output);
+    }
+    print ajax_render($commands);
+    exit;
+  }
+  else {
+    if ($output === FALSE || !empty($form_state['complete'])) {
+      // @todo should we display a confirmation instead?
+      //return 'confirm message';
+      drupal_goto('atoms/add');
+    }
+    elseif (!empty($form_state['cancel'])) {
+      drupal_goto('atoms/add');
+    }
+    else {
+      return $output;
     }
   }
-  $step = $form_state['storage']['step'];
-
-  switch ($step) {
-    case 0:
-      $form['source'] = array(
-        '#title' => t('Source'),
-        '#type' => 'select',
-        '#options' => $sources,
-        '#description' => t('Please choose the source of your new atom'),
-      );
-
-      break;
-    case 1:
-      // Let the source put the all the fields it needs on this
-      // step.
-      $source = $form_state['storage']['source'];
-      $function = $source . '_scald_add_form';
-      if (function_exists($function)) {
-        $function($form, $form_state);
-      }
-      else {
-        // TODO: Figure out what should be done here.
-        $form['error'] = array(
-          '#markup' => 'Importer without form ; does it makes sense ?'
-        );
-      }
-      break;
-
-    case 2:
-      $atom = $form_state['storage']['atom'];
-
-      $form['title'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Title'),
-        '#required' => TRUE,
-        '#default_value' => $atom->title,
-      );
-
-      $default = scald_atom_defaults($atom->type);
-      $actions = scald_actions();
-      $options = array();
-      $options_default = array();
-      foreach ($actions as $name => $action) {
-        $options[$name] = $action['title'];
-        $options_default[$name] = $default->actions & $action['bitmask'] ? $name : '';
-      }
-      $form['scald_actions'] = array(
-        '#type' => 'checkboxes',
-        '#title' => 'Openly available actions',
-        '#group' => 'additional_settings',
-        '#options' => $options,
-        '#default_value' => $options_default,
-        '#access' => user_access('administer scald atoms'),
-      );
-
-      field_attach_form('scald_atom', $atom, $form, $form_state);
-
-      $form['actions']['submit']['#value'] = t('Save');
-
-      break;
-
-  }
-  return $form;
 }
 
 /**
- * Handles the submission of the atom add form.
+ * Source form.
  */
-function scald_atom_add_form_submit($form, &$form_state) {
-  $step = $form_state['storage']['step'];
-  $form_state['rebuild'] = TRUE;
+function scald_atom_add_form_source($form, &$form_state) {
+  $providers = scald_atom_providers();
+  $sources = $providers[$form_state['storage']->type->type];
 
-  switch ($step) {
-    case 0:
-      $form_state['storage']['source'] = $form_state['values']['source'];
-      $form_state['storage']['step']++;
-      break;
+  $form_state['title'] = t('Source');
+  $form['source'] = array(
+    '#title' => t('Source'),
+    '#type' => 'select',
+    '#options' => $sources,
+    '#description' => t('Please choose the source of your new atom'),
+  );
 
-    case 1:
-      // Create the stub atom
-      $type = $form_state['storage']['type'];
+  return $form;
+}
 
-      $atom = new stdClass();
-      $atom->title = '';
-      $atom->type = $type->type;
-      $atom->provider = $form_state['storage']['source'];
+function scald_atom_add_form_source_submit(&$form, &$form_state) {
+  $form_state['storage']->source = $form_state['values']['source'];
+}
 
-      // Allow the source provider to alter it, filling in
-      // defaults value.
-      $function = $atom->provider . '_scald_add_form_fill';
-      if (function_exists($function)) {
-        $function($atom, $form, $form_state);
-      }
-
-      // And put it in the form_state
-      $form_state['storage']['atom'] = $atom;
-
-      // Finally, mark that we should move on to the next step
-      $form_state['storage']['step']++;
-      break;
-
-    case 2:
-      $form_state['rebuild'] = FALSE;
-
-      $atom = $form_state['storage']['atom'];
-
-      if (is_array($form_state['values']['scald_actions'])) {
-        $bitstream = 0;
-        $actions = scald_actions();
-        foreach ($actions as $name => $action) {
-          if (!empty($form_state['values']['scald_actions'][$name])) {
-            $bitstream |= $action['bitmask'];
-          }
-        }
-        $form_state['values']['actions'] = $bitstream;
-      }
-
-      $op = empty($atom->sid) ? t('created') : t('updated');
-
-      // Let entity add its properties to the atom
-      entity_form_submit_build_entity('scald_atom', $atom, $form, $form_state);
-
-      // And save it
-      scald_atom_save($atom);
-
-      // Add a message confirming the creation
-      drupal_set_message(t('Atom %title, of type %type has been %op', array(
-        '%title' => $atom->title,
-        '%type'  => $atom->type,
-        '%op'    => $op,
-      )));
-
-      break;
+/**
+ * Add form.
+ */
+function scald_atom_add_form_add($form, &$form_state) {
+  $storage = $form_state['storage'];
+  $function = $storage->source . '_scald_add_form';
+  if (function_exists($function)) {
+    $function($form, $form_state);
   }
+  else {
+    // TODO: Figure out what should be done here.
+    $form['error'] = array(
+      '#markup' => 'Importer without form ; does it makes sense ?'
+    );
+  }
+
+  return $form;
+}
+
+function scald_atom_add_form_add_submit(&$form, &$form_state) {
+  $storage = $form_state['storage'];
+  $type = $storage->type;
+
+  // Create the stub atom
+  $atom = new stdClass();
+  $atom->title = '';
+  $atom->type = $type->type;
+  $atom->provider = $storage->source;
+
+  // Allow the source provider to alter it, filling in defaults value.
+  $function = $atom->provider . '_scald_add_form_fill';
+  if (function_exists($function)) {
+    $function($atom, $form, $form_state);
+  }
+
+  // And put it in the form_state
+  $storage->atom = $atom;
+}
+
+/**
+ * Options form.
+ */
+function scald_atom_add_form_options($form, &$form_state) {
+  $atom = $form_state['storage']->atom;
+
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title'),
+    '#required' => TRUE,
+    '#default_value' => $atom->title,
+  );
+
+  $default = scald_atom_defaults($atom->type);
+  $actions = scald_actions();
+  $options = array();
+  $options_default = array();
+  foreach ($actions as $name => $action) {
+    $options[$name] = $action['title'];
+    $options_default[$name] = $default->actions & $action['bitmask'] ? $name : '';
+  }
+  $form['scald_actions'] = array(
+   '#type' => 'checkboxes',
+     '#title' => 'Openly available actions',
+    '#group' => 'additional_settings',
+    '#options' => $options,
+    '#default_value' => $options_default,
+    '#access' => user_access('administer scald atoms'),
+  );
+
+  field_attach_form('scald_atom', $atom, $form, $form_state);
+
+  $form['actions']['submit']['#value'] = t('Save');
+
+  return $form;
+}
+
+function scald_atom_add_form_options_submit(&$form, &$form_state) {
+  $atom = $form_state['storage']->atom;
+
+  if (is_array($form_state['values']['scald_actions'])) {
+    $bitstream = 0;
+    $actions = scald_actions();
+    foreach ($actions as $name => $action) {
+      if (!empty($form_state['values']['scald_actions'][$name])) {
+        $bitstream |= $action['bitmask'];
+      }
+    }
+    $form_state['values']['actions'] = $bitstream;
+  }
+
+  $op = empty($atom->sid) ? t('created') : t('updated');
+
+  // Let entity add its properties to the atom
+  entity_form_submit_build_entity('scald_atom', $atom, $form, $form_state);
+
+  // And save it
+  scald_atom_save($atom);
+
+  // Add a message confirming the creation
+  drupal_set_message(t('Atom %title, of type %type has been %op', array(
+    '%title' => $atom->title,
+    '%type' => $atom->type,
+    '%op' => $op,
+  )));
+}
+
+/**
+ * Handle the 'next' click on the add/edit pane form wizard.
+ */
+function scald_atom_add_wizard_next(&$form_state) {
+  ctools_object_cache_set('scald_atom', 'add', $form_state['storage']);
+}
+
+/**
+ * Handle the 'finish' click on the add/edit pane form wizard.
+ */
+function scald_atom_add_wizard_finish(&$form_state) {
+  $form_state['complete'] = TRUE;
+}
+
+/**
+ * Handle the 'cancel' click on the add/edit pane form wizard.
+ */
+function scald_atom_add_wizard_cancel(&$form_state) {
+  $form_state['cancel'] = TRUE;
 }
 
 /**

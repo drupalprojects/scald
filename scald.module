@@ -1808,12 +1808,22 @@ function scald_menu() {
     'access callback' => 'scald_atom_add_access',
     'file' => 'includes/scald.pages.inc'
   );
+  // The following two items do the same thing. We can consider them aliases.
   $items['atoms/add/%scald_type'] = array(
     'title' => 'Create Atom',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('scald_atom_add_form', 2),
+    'page callback' => 'scald_atom_add_page',
+    'page arguments' => array(FALSE, 2),
     'access callback' => 'scald_atom_add_access',
     'access arguments' => array(2),
+    'file' => 'includes/scald.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $items['atoms/%ctools_js/add/%scald_type'] = array(
+    'title' => 'Create Atom',
+    'page callback' => 'scald_atom_add_page',
+    'page arguments' => array(1, 3),
+    'access callback' => 'scald_atom_add_access',
+    'access arguments' => array(3),
     'file' => 'includes/scald.pages.inc',
     'type' => MENU_CALLBACK,
   );
