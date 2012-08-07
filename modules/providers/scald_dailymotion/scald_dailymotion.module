@@ -164,7 +164,7 @@ function scald_dailymotion_cron() {
   foreach ($imports as $import) {
     $items = scald_dailymotion_feed($import['type'], $import['value']);
     foreach ($items as $item) {
-      scald_dailymotion_register($item);
+      scald_dailymotion_direct_import($item);
     }
   }
 }
@@ -207,16 +207,20 @@ function scald_dailymotion_menu() {
 }
 
 /**
- * Creates an atom based on a Dailymotion video id or an object
- * containing the video informations..
+ * Automatically creates an atom based on a Dailymotion id or
+ * an object containing the video informations.
+ *
+ * This function is used by the CRON importer and does not require user intervention 
+ *
  * @param $video
  *   Unique identifier of the video on dailymotion, or object
  *   returned by scald_dailymotion_video.
  * @return integer
  *   Unique identifier of the new atom
  */
-function scald_dailymotion_register($video) {
+function scald_dailymotion_direct_import($video) {
   global $user;
+
   // Fetch the needed informations from Dailymotion
   if (is_object($video)) {
     $infos = $video;
@@ -231,6 +235,37 @@ function scald_dailymotion_register($video) {
     return FALSE;
   }
 
+  // Create an atom
+  $atom = new stdClass();
+  $atom->type       = 'video';
+  $atom->provider   = 'scald_dailymotion';
+  $atom->base_id    = $infos->id;
+  $atom->publisher  = $user->uid;
+  $atom->title      = $infos->title;
+  
+  // Create and link author term
+  if($term = scald_dailymotion_taxonomy_get_create($infos->author, variable_get('scald_author_vocabulary', 0))) {
+    $atom->scald_authors[LANGUAGE_NONE][0] = array(
+      'tid' => $term->tid,
+    );
+  }
+  
+  // Create and link tags terms
+  foreach($infos->tags as $index => $tag) {
+    if($term = scald_dailymotion_taxonomy_get_create($tag, variable_get('scald_tags_vocabulary', 0))) {
+      $atom->scald_tags[LANGUAGE_NONE][$index] = array(
+        'tid' => $term->tid,
+      );
+    }
+  }
+
+  // Save video width and height
+  if(!isset($atom->data)) {
+    $atom->data = array();
+  }
+  $atom->data['video_width'] = $infos->width;
+  $atom->data['video_height'] = $infos->height;
+
   // Download a copy of the video thumbnail. This makes it possible
   // to do interesting manipulation with image styles presets.
   $thumb = drupal_http_request($infos->thumbnail['src']);
@@ -240,18 +275,57 @@ function scald_dailymotion_register($video) {
     $file = file_save_data($thumb->data, $dest);
   }
 
-  // Create an atom
-  $atom = new stdClass();
-  $atom->type       = 'video';
-  $atom->provider   = 'scald_dailymotion';
-  $atom->base_id    = $infos->id;
-  $atom->publisher  = $user->uid;
-  $atom->title      = $infos->title;
+  // Set the file status to temporary
+  $query = db_update('file_managed')
+    ->condition('fid', $file->fid)
+    ->fields(array('status' => 0))
+    ->execute();  
   
+  $atom->scald_thumbnail[LANGUAGE_NONE][0] = (array)$file;
+
   // And save it
   $atom_sid = scald_atom_save($atom);
   // Finally, return this id
   return $atom_sid; 
+}
+
+
+/**
+ * Get a taxonomy term by name from a given vocabulary.
+ * Create the term if no matches found.
+ *
+ * @param $name
+ *   The name or the taxonomy term.
+ * @param $vid
+ *   Vocabulary ID to search and create from/to.
+ * @return object
+ *   The taxonomy term.
+ */
+function scald_dailymotion_taxonomy_get_create($name, $vid) {
+  // remove extra white spaces
+  $name = trim($name);
+  
+  // find existing term(s)
+  $terms = taxonomy_term_load_multiple(
+    array(),
+    array(
+      'name' => $name,
+      'vid' =>  $vid,
+    )
+  );
+  
+  if(!count($terms)) {
+    // create a new term
+    $term = new stdClass();
+    $term->name = trim($name);
+    $term->vid = $vid;
+    taxonomy_term_save($term);
+  }
+  else {
+    // get the first found term
+    $term = reset($terms);
+  }
+  return $term;
 }
 
 /**
