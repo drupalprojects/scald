@@ -33,7 +33,7 @@ function scald_atom_add() {
 /**
  * Atom add page callback.
  */
-function scald_atom_add_page($js, $type, $step = NULL) {
+function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
   if ($js) {
     ctools_include('modal');
     ctools_include('ajax');
@@ -41,6 +41,8 @@ function scald_atom_add_page($js, $type, $step = NULL) {
 
   ctools_include('object-cache');
   ctools_include('wizard');
+
+  $cache_id = isset($atom_id) ? 'edit:' . $atom_id : 'add';
 
   // Start by getting the list of all the modules that said they can provide
   // this atom type.
@@ -57,12 +59,12 @@ function scald_atom_add_page($js, $type, $step = NULL) {
     else {
       $step = 'source';
     }
-    ctools_object_cache_clear('scald_atom', 'add');
+    ctools_object_cache_clear('scald_atom', $cache_id);
   }
 
   $form_state = array(
     'ajax' => $js,
-    'storage' => ctools_object_cache_get('scald_atom', 'add'),
+    'storage' => ctools_object_cache_get('scald_atom', $cache_id),
   );
 
   if (empty($form_state['storage'])) {
@@ -192,6 +194,8 @@ function scald_atom_add_form_add_submit(&$form, &$form_state) {
   $atom->title = '';
   $atom->type = $type->type;
   $atom->provider = $storage->source;
+  $default = scald_atom_defaults($atom->type);
+  $atom->actions = $default->options;
 
   // Allow the source provider to alter it, filling in defaults value.
   $function = $atom->provider . '_scald_add_form_fill';
@@ -216,17 +220,16 @@ function scald_atom_add_form_options($form, &$form_state) {
     '#default_value' => $atom->title,
   );
 
-  $default = scald_atom_defaults($atom->type);
   $actions = scald_actions();
   $options = array();
   $options_default = array();
   foreach ($actions as $name => $action) {
     $options[$name] = $action['title'];
-    $options_default[$name] = $default->actions & $action['bitmask'] ? $name : '';
+    $options_default[$name] = $atom->actions & $action['bitmask'] ? $name : '';
   }
   $form['scald_actions'] = array(
-   '#type' => 'checkboxes',
-     '#title' => 'Openly available actions',
+    '#type' => 'checkboxes',
+    '#title' => 'Openly available actions',
     '#group' => 'additional_settings',
     '#options' => $options,
     '#default_value' => $options_default,
@@ -274,7 +277,8 @@ function scald_atom_add_form_options_submit(&$form, &$form_state) {
  * Handle the 'next' click on the add/edit pane form wizard.
  */
 function scald_atom_add_wizard_next(&$form_state) {
-  ctools_object_cache_set('scald_atom', 'add', $form_state['storage']);
+  $cache_id = isset($form_state['storage']->atom) ? 'edit:' . $form_state['storage']->atom->sid : 'add';
+  ctools_object_cache_set('scald_atom', $cache_id, $form_state['storage']);
 }
 
 /**
@@ -316,51 +320,18 @@ function scald_atom_view($form, &$form_state, $atom) {
 }
 
 /**
- * Handles the editing of an existing atom
+ * Atom edit page callback.
  */
-function scald_atom_edit($form, &$form_state, $atom) {
-  drupal_set_title(t('Edit: @title', array('@title' => $atom->title)));
-
-  // Jump directly to the last step
-  $form_state['storage']['step'] = 2;
-  $form_state['storage']['atom'] = $atom;
-
-  // Form definition
-  $form = array();
-  $form['title'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Title'),
-    '#required' => TRUE,
-    '#default_value' => $atom->title,
+function scald_atom_edit_page($js, $atom) {
+  // The edit page is nothing else other than the add page, at the Options step.
+  // We prepare data for this step then send back to the add page. The only
+  // useful information at this step is the atom itself.
+  $storage = (object) array(
+    'atom' => $atom,
   );
-
-  $actions = scald_actions();
-  $options = array();
-  $options_default = array();
-  foreach ($actions as $name => $action) {
-    $options[$name] = $action['title'];
-    $options_default[$name] = $atom->actions & $action['bitmask'] ? $name : '';
-  }
-  $form['scald_actions'] = array(
-    '#type' => 'checkboxes',
-    '#title' => 'Openly available actions',
-    '#group' => 'additional_settings',
-    '#options' => $options,
-    '#default_value' => $options_default,
-    '#access' => user_access('administer scald atoms'),
-  );
-
-
-  field_attach_form('scald_atom', $atom, $form, $form_state);
-
-  $form['buttons'] = array(
-    '#type' => 'actions',
-  );
-  $form['buttons']['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save')
-  );
-  $form['buttons']['submit']['#submit'][] = 'scald_atom_add_form_submit';
-  return $form;
+  $types = scald_types();
+  ctools_include('object-cache');
+  ctools_object_cache_set('scald_atom', 'edit:' . $atom->sid, $storage);
+  return scald_atom_add_page($js, $types[$atom->type], 'options', $atom->sid);
 }
 
