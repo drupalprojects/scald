@@ -2104,6 +2104,13 @@ function scald_atom_user_build_actions_links($atom, $query = NULL) {
         'title' => $details['title'],
         'href' => 'atoms/' . $action . '/' . $atom->sid,
       );
+      // The 'edit' action supports CTools Modal
+      if ($action == 'edit') {
+        $links[$action]['attributes'] = array(
+          'class' => array('ctools-use-modal', 'ctools-modal-custom-style'),
+        );
+        $links[$action]['href'] = 'atoms/nojs/' . $action . '/' . $atom->sid;
+      }
 
       if($query) {
         $links[$action]['query'] = $query;
