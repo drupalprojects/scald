@@ -121,7 +121,7 @@ function scald_dailymotion_scald_prerender($atom, $context, $options, $mode) {
             'video_id'      => $atom->base_id,
             'video_width'   => ($atom->data['video_width'] ? $atom->data['video_width'] : 480),
             'video_height'  => ($atom->data['video_height'] ? $atom->data['video_height'] : 365),
-            'thumbnail'     => $atom->thumbnail_source
+            'thumbnail'     => $atom->rendered->thumbnail_source_url,
           )
         )
       );
