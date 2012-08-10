@@ -22,7 +22,7 @@ function scald_dnd_library_views_default_views() {
   $view->api_version = '3.0';
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
 
-  /* Display: Paramètres par défaut */
+  /* Display: Master */
   $handler = $view->new_display('default', 'Master', 'default');
   $handler->display->display_options['title'] = 'Atoms Library';
   $handler->display->display_options['use_ajax'] = TRUE;
@@ -32,7 +32,7 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['query']['type'] = 'views_query';
   $handler->display->display_options['query']['options']['query_comment'] = FALSE;
   $handler->display->display_options['exposed_form']['type'] = 'basic';
-  $handler->display->display_options['pager']['type'] = 'none';
+  $handler->display->display_options['pager']['type'] = 'mini';
   $handler->display->display_options['style_plugin'] = 'table';
   /* No results behavior: Global: Text area */
   $handler->display->display_options['empty']['text']['id'] = 'text';
