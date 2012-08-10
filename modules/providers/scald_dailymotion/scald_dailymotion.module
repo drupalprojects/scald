@@ -345,8 +345,7 @@ function scald_dailymotion_feed($type, $id) {
   $items = array();
   if ($response->code != 404 && !empty($response->data)) {
     $dom = new DOMDocument();
-    $dom->loadXML($response->data);
-    if ($dom) {
+    if ($dom->loadXML($response->data)) {
       foreach($dom->getElementsByTagName('item') as $item) {
         $info = new stdClass();
         // Fetch from the feed

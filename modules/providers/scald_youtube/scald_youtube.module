@@ -197,8 +197,8 @@ function scald_youtube_feed($type, $id) {
   $response = drupal_http_request($url);
   $items = array();
   if ($response->code >= 200 && $response->code < 400 && !empty($response->data)) {
-    $dom = DOMDocument::loadXML($response->data);
-    if ($dom) {
+    $dom = new DOMDocument();
+    if ($dom->loadXML($response->data)) {
       foreach($dom->getElementsByTagName('entry') as $item) {
         $items[] = scald_youtube_parse_item($item);
       }
