@@ -195,7 +195,7 @@ function scald_atom_add_form_add_submit(&$form, &$form_state) {
   $atom->type = $type->type;
   $atom->provider = $storage->source;
   $default = scald_atom_defaults($atom->type);
-  $atom->actions = $default->options;
+  $atom->actions = $default->actions;
 
   // Allow the source provider to alter it, filling in defaults value.
   $function = $atom->provider . '_scald_add_form_fill';
@@ -277,7 +277,7 @@ function scald_atom_add_form_options_submit(&$form, &$form_state) {
  * Handle the 'next' click on the add/edit pane form wizard.
  */
 function scald_atom_add_wizard_next(&$form_state) {
-  $cache_id = isset($form_state['storage']->atom) ? 'edit:' . $form_state['storage']->atom->sid : 'add';
+  $cache_id = isset($form_state['storage']->atom->sid) ? 'edit:' . $form_state['storage']->atom->sid : 'add';
   ctools_object_cache_set('scald_atom', $cache_id, $form_state['storage']);
 }
 
