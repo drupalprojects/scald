@@ -281,9 +281,7 @@ idSelector: function(element) {//@todo unused
  * @todo unused
  */
 Drupal.dnd.refreshLibraries = function() {
-  $.getJSON(Drupal.settings.dnd.url, function (data) {
-    Drupal.behaviors.dndLibrary.renderLibrary.call($('.dnd-library-wrapper').get(0), data, $('<a/>'));
-  });
+  $('.dnd-library-wrapper .view-filters input[type=submit]').click()
 }
 
 }) (jQuery);
