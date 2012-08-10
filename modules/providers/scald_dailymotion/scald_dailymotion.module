@@ -504,18 +504,17 @@ function scald_dailymotion_parse_id($string, $check) {
  *
  */
 function scald_dailymotion_import() {
-  module_load_include('inc', 'scald', 'includes/scald.pages');
-
+  // The edit page is nothing else other than the add page, at the Add step. We
+  // prepare data for this step then send back to the add page.
   $types = scald_types();
-  $type = $types['video'];
+  $storage = (object) array(
+    'type' => $types['video'],
+    'source' => 'scald_dailymotion',
+  );
+  ctools_include('object-cache');
+  ctools_object_cache_set('scald_atom', 'add', $storage);
 
-  $form_state = array();
-  $form_state['storage']['type'] = $type;
-  $form_state['storage']['source'] = 'scald_dailymotion';
-  $form_state['storage']['step'] = 1;
-  $form_state['build_info']['args'] = array($type);
-
-  $form = drupal_build_form('scald_atom_add_form', $form_state);
-  return drupal_render($form);
+  module_load_include('inc', 'scald', 'includes/scald.pages');
+  return scald_atom_add_page(FALSE, $types['video'], 'add');
 }
 
