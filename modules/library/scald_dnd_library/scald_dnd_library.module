@@ -227,13 +227,11 @@ function theme_sdl_library_item($variables) {
   </div>";
   }
   $return .= "
-  <div class='meta'>
-    <div class='type type-" . strtolower($informations->type) ."'></div>
+  <div class='meta type-" . strtolower($informations->type) ." clearfix'>
     <div class='title'>{$informations->title}</div>
     <div class='author'>{$authors}</div>
     {$rendered_links}
   </div>
-  <span class='clear' />
   ";
   return $return;
 }

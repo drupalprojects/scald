@@ -72,8 +72,7 @@
   clear: left;
   color: #7f7f7f;
   position: relative;
-  min-height: 70px;
-  padding-top: 4px;
+  padding: 4px 0;
 }
 .dnd-library-wrapper .editor-item:hover {
   background-color: #e3f4f0;
@@ -95,23 +94,19 @@
 }
 .dnd-library-wrapper .editor-item .meta {
   margin-left: 0!important;/* @todo remove - quickfix to override incorrect CSS in theme */
+  background-repeat: no-repeat;
+  background-position: 100% 0;
 }
-.dnd-library-wrapper .editor-item .type {
-  float: right;
-  width: 20px;
-  height: 20px;
-  background: 100% 0 no-repeat;
-}
-.dnd-library-wrapper .editor-item .type.type-audio {
+.dnd-library-wrapper .editor-item .meta.type-audio {
   background-image: url('../icons/audio.png');
 }
-.dnd-library-wrapper .editor-item .type.type-image {
+.dnd-library-wrapper .editor-item .meta.type-image {
   background-image: url('../icons/image.png');
 }
-.dnd-library-wrapper .editor-item .type.type-video {
+.dnd-library-wrapper .editor-item .meta.type-video {
   background-image: url('../icons/video.png');
 }
-.dnd-library-wrapper .editor-item .type.type-soundslide {
+.dnd-library-wrapper .editor-item .meta.type-soundslide {
   background-image: url('../icons/soundslide.png');
 }
 .dnd-library-wrapper .editor-item .title {
@@ -120,6 +115,7 @@
   font-size: 13px;
   line-height: 1.3;
   margin-bottom: 3px;
+  padding-right: 20px;
 }
 .dnd-library-wrapper .editor-item .date,
 .dnd-library-wrapper .editor-item .author {
@@ -130,7 +126,14 @@
   color: #7f7f7f;
 }
 .dnd-library-wrapper .editor-item .links {
-  float: right;
+  font-size: 11px;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  line-height: 15px;
+}
+.dnd-library-wrapper .editor-item .links li {
+  padding: 0 0 0 10px;
 }
 .dnd-library-wrapper .editor-item .sizes {
   float: left;
