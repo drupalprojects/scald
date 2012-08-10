@@ -187,15 +187,8 @@ function scald_atom_add_form_add($form, &$form_state) {
 
 function scald_atom_add_form_add_submit(&$form, &$form_state) {
   $storage = $form_state['storage'];
-  $type = $storage->type;
 
-  // Create the stub atom
-  $atom = new stdClass();
-  $atom->title = '';
-  $atom->type = $type->type;
-  $atom->provider = $storage->source;
-  $default = scald_atom_defaults($atom->type);
-  $atom->actions = $default->actions;
+  $atom = new ScaldAtom($storage->type->type, $storage->source);
 
   // Allow the source provider to alter it, filling in defaults value.
   $function = $atom->provider . '_scald_add_form_fill';

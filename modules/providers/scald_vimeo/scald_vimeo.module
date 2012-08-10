@@ -59,10 +59,6 @@ function scald_vimeo_scald_add_form_fill(&$atom, $form, $form_state) {
     );
   }
 
-  // Save video width and height
-  if(!isset($atom->data)) {
-    $atom->data = array();
-  }
   $atom->data['video_width'] = $infos->width;
   $atom->data['video_height'] = $infos->height;
 
@@ -162,12 +158,10 @@ function scald_vimeo_register($video) {
   }
 
   // Create an atom
-  $atom = new stdClass();
-  $atom->type       = 'video';
-  $atom->provider   = 'scald_vimeo';
-  $atom->base_id    = $infos->id;
-  $atom->publisher  = $user->uid;
-  $atom->title      = $infos->title;
+  $atom = new ScaldAtom('video', 'scald_vimeo', array(
+    'base_id' => $infos->id,
+    'title' => $infos->title,
+  ));
 
   // And save it
   $atom_sid = scald_atom_save($atom);

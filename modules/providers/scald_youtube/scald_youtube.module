@@ -139,7 +139,6 @@ function scald_youtube_theme() {
  *   Unique identifier of the new atom
  */
 function scald_youtube_register($video) {
-  global $user;
   // Fetch the needed informations from YouTube
   if (is_object($video)) {
     $infos = $video;
@@ -164,12 +163,10 @@ function scald_youtube_register($video) {
   }
 
   // Create an atom
-  $atom = new stdClass();
-  $atom->type       = 'video';
-  $atom->provider   = 'scald_youtube';
-  $atom->base_id    = $infos->id;
-  $atom->publisher  = $user->uid;
-  $atom->title      = $infos->title;
+  $atom = new ScaldAtom('video', 'scald_youtube', array(
+    'base_id' => $infos->id,
+    'title' => $infos->title,
+  ));
 
   // And save it
   $atom_sid = scald_atom_save($atom);

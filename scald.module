@@ -2121,3 +2121,24 @@ function scald_atom_user_build_actions_links($atom, $query = NULL) {
   return $links;  
 }
 
+/**
+ * Defines a class for Scald Atoms.
+ */
+class ScaldAtom {
+  public function __construct($type, $provider, array $values = array()) {
+    // Add default values
+    $values += array(
+      'title' => '',
+      'type' => $type,
+      'provider' => $provider,
+      'publisher' => $GLOBALS['user']->uid,
+      'actions' => scald_atom_defaults($type)->actions,
+      'data' => array(),
+    );
+
+    foreach ($values as $key => $value) {
+      $this->$key = $value;
+    }
+  }
+}
+

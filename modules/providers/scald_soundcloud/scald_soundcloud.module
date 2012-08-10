@@ -130,7 +130,6 @@ function scald_soundcloud_theme() {
  *   Unique identifier of the new atom
  */
 function scald_soundcloud_register($audio) {
-  global $user;
   // Fetch the needed informations from Vimeo
   if (is_object($audio)) {
     $infos = $audio;
@@ -155,12 +154,10 @@ function scald_soundcloud_register($audio) {
   }
 
   // Create an atom
-  $atom = new stdClass();
-  $atom->type       = 'audio';
-  $atom->provider   = 'scald_soundcloud';
-  $atom->base_id    = $infos->id;
-  $atom->publisher  = $user->uid;
-  $atom->title      = $infos->title;
+  $atom = new ScaldAtom('audio', 'scald_soundcloud', array(
+    'base_id' => $infos->id,
+    'title' => $infos->title,
+  ));
 
   // And save it
   $atom_sid = scald_atom_save($atom);
