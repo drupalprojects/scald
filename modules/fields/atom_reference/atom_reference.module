@@ -233,7 +233,7 @@ function atom_reference_field_widget_form_process(&$element) {
   // Get the default value, and format the placeholder accordingly.
   $default = $element['#value'];
   if ($default) {
-    $prefix = '<div class="atom_reference_drop_zone">' . scald_render($default['sid'], 'sdl_editor_representation') .'</div>';
+    $prefix = '<div class="atom_reference_drop_zone">' . scald_render($default, 'sdl_editor_representation') .'</div>';
   }
   else {
     $placeholder = t('Drop a resource here');
