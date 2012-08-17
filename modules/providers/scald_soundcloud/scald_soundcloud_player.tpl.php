@@ -2,4 +2,4 @@
 /**
  */
 ?>
-<iframe width="100%" height="166" scrolling="no" frameborder="no" src="http://w.soundcloud.com/player/?url=http://api.soundcloud.com/tracks/<?php print $vars['track_id'] ?>&amp;show_artwork=true"></iframe>
+<iframe width="100%" height="<?php print $vars['iframe_height'] ?>" scrolling="no" frameborder="no" src="http://w.soundcloud.com/player/?url=http://api.soundcloud.com/<?php print $vars['id'] ?>&amp;show_artwork=true"></iframe>

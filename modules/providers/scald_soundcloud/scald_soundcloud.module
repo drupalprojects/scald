@@ -28,7 +28,7 @@ function scald_soundcloud_scald_atom_providers() {
 function scald_soundcloud_scald_add_form(&$form, &$form_state) {
   $form['identifier'] = array(
     '#type' => 'textfield',
-    '#title' => t('SoundCloud track identifier or URL'),
+    '#title' => t('SoundCloud track identifier or track/set URL'),
     '#element_validate' => array('scald_soundcloud_validate_id'),
     '#default_value' => '',
   );
@@ -63,13 +63,14 @@ function scald_soundcloud_scald_add_form_fill(&$atom, $form, $form_state) {
   }
 
   if(isset($infos->thumbnail)) {
-    // Download a copy of the track thumbnail. This makes it possible
+    // Download a copy of the audio thumbnail. This makes it possible
     // to do interesting manipulation with image styles presets.
     $thumb = drupal_http_request($infos->thumbnail['src']);
-    $dir = 'public://soundcloud';
-    if ($thumb->code == 200 && file_prepare_directory($dir, FILE_CREATE_DIRECTORY)) {
-      $dest = $dir . '/' . $infos->id . '.jpg';
-      $file = file_save_data($thumb->data, $dest);
+    if ($thumb->code == 200) {
+      $dest = 'public://soundcloud/' . $infos->id . '.jpg';
+      if(file_prepare_directory(dirname($dest), FILE_CREATE_DIRECTORY)) {
+        $file = file_save_data($thumb->data, $dest);
+      }
     }
   
     // Set the file status to temporary
@@ -80,6 +81,11 @@ function scald_soundcloud_scald_add_form_fill(&$atom, $form, $form_state) {
   
     $atom->scald_thumbnail[LANGUAGE_NONE][0] = (array)$file;
   }
+  
+  
+  $atom->data['kind'] = $infos->kind;
+  $atom->data['track_count'] = $infos->track_count;
+  $atom->data['permalink_url'] = $infos->permalink_url;
 }
 
 /**
@@ -98,10 +104,19 @@ function scald_soundcloud_scald_fetch($atom, $type) {
 function scald_soundcloud_scald_prerender($atom, $context, $options, $mode) {
   if ($mode == 'atom') {
     if ($context != 'sdl_library_item') {
+
+      // base height for a single track
+      $iframe_height = 166;
+      if(isset($atom->data['track_count']) && ($atom->data['track_count'] > 1)) {
+        // Empirique computation to show 10 tracks max (like on soundcloud website)
+        $iframe_height = 175 + 57 + min($atom->data['track_count'], 10) * 24;
+      }
+
       $atom->rendered->player = theme('scald_soundcloud_player',
         array('vars' =>
           array(
-            'track_id' => $atom->base_id,
+            'id' => $atom->base_id,
+            'iframe_height' => $iframe_height,
           )
         )
       );
@@ -121,52 +136,6 @@ function scald_soundcloud_theme() {
   );
 }
 
-
-/**
- * Creates an atom based on a SoundCloud audio id or an object
- * containing the audio informations..
- * @param $audio
- *   Unique identifier of the audio track on SoundCloud, or object
- *   returned by scald_soundcloud_audio
- * @return integer
- *   Unique identifier of the new atom
- */
-function scald_soundcloud_register($audio) {
-  // Fetch the needed informations from Vimeo
-  if (is_object($audio)) {
-    $infos = $audio;
-  }
-  else {
-    $infos = scald_soundcloud_audio($audio);
-  }
-
-  // Check if the track has already been imported to prevent duplicate
-  $old = scald_soundcloud_already_imported($infos->id);
-  if ($old) {
-    return FALSE;
-  }
-
-  // Download a copy of the audio thumbnail. This makes it possible
-  // to do interesting manipulation with image styles presets.
-  $thumb = drupal_http_request($infos->thumbnail['src']);
-  $dir = 'public://soundcloud';
-  if ($thumb->code == 200 && file_prepare_directory($dir, FILE_CREATE_DIRECTORY)) {
-    $dest = $dir . '/' . $infos->id . '.jpg';
-    $file = file_save_data($thumb->data, $dest);
-  }
-
-  // Create an atom
-  $atom = new ScaldAtom('audio', 'scald_soundcloud', array(
-    'base_id' => $infos->id,
-    'title' => $infos->title,
-  ));
-
-  // And save it
-  $atom_sid = scald_atom_save($atom);
-  // Finally, return this id
-  return $atom_sid;
-}
-
 /**
  * Get all necessary on an given audio track using SoundCloud API
  * @param $id
@@ -181,7 +150,8 @@ function scald_soundcloud_audio($id) {
   $client = new Services_Soundcloud(SCALD_APP_CLIENT_ID, NULL);
 
   try {
-    $track = json_decode($client->get('tracks/' . $id));
+    // Fetch data for a track or playlist
+    $data = json_decode($client->get($id));
   }
   catch(Exception $e) {
     watchdog('scald_soundcloud', $e->getMessage());
@@ -192,23 +162,29 @@ function scald_soundcloud_audio($id) {
   // ID
   $info->id = $id;
   // Title
-  $info->title = $track->title;
+  $info->title = $data->title;
   // Author
-  $info->author = $track->user->username;
+  $info->author = $data->user->username;
   // Thumbnail
-  if($track->artwork_url) {
+  if($data->artwork_url) {
     // Artwork is always 100x100
     $info->thumbnail = array(
-      'src'    => $track->artwork_url,
+      'src'    => $data->artwork_url,
       'width'  => 100,
       'height' => 100,
     );
   }
   
   // Tags
-  $info->tags = explode(" ", $track->tag_list);
+  $info->tags = explode(" ", $data->tag_list);
   // License
   $info->license = 'SC';
+  
+  // Extra SC data
+  $info->kind = $data->kind;
+  $info->track_count = ($data->kind == 'track') ? 1 : count($data->tracks);
+  $info->permalink_url = $data->permalink_url;
+  
   return $info;
 }
 
@@ -262,7 +238,8 @@ function scald_soundcloud_parse_id($string, $check) {
     }
   }
   else {
-    $id = $string;
+    // If a simple numeric ID was specified, we assume it's a 'track'
+    $id = 'tracks/' . $string;
   }
   
   if($id && $check) {
@@ -294,11 +271,17 @@ function scald_soundcloud_resolve_url($track_url) {
     watchdog('scald_soundcloud', $e->getMessage());
     return FALSE;
   }
-  
+
   $api_url_full = $resolve->location;
   $api_url_parts = explode('/', $api_url_full);
-  $api_last_part = array_pop($api_url_parts);
-  $id = explode('?', $api_last_part);
+
+  // numeric id
+  $id = array_pop($api_url_parts);
+  $id = explode('?', $id); // get rid of the query garbage
   $id = reset($id);
-  return $id;
+
+  // tracks or playlists
+  $type = array_pop($api_url_parts);
+
+  return $type . '/' . $id;
 }
