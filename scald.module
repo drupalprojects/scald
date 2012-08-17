@@ -680,13 +680,13 @@ function scald_fetch($sid, $rebuild = FALSE) {
   //  the "essentials" like the Type, Provider, SID, etc.
   $defaults = scald_atom_defaults($atom->type);
   if (empty($atom->file_source)) {
-    $atom->file_source = $defaults->file_source;
+    $atom->file_source = isset($defaults->file_source) ? $defaults->file_source : '';
   }
   if (empty($atom->thumbnail_source)) {
-    $atom->thumbnail_source = $defaults->thumbnail_source;
+    $atom->thumbnail_source = isset($defaults->thumbnail_source) ? $defaults->thumbnail_source : '';
   }
   if (empty($atom->description)) {
-    $atom->description = $defaults->description;
+    $atom->description = isset($defaults->description) ? $defaults->description : '';
   }
 
   $atom->fetched = TRUE;
