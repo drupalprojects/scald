@@ -154,7 +154,7 @@ function scald_soundcloud_audio($id) {
     $data = json_decode($client->get($id));
   }
   catch(Exception $e) {
-    watchdog('scald_soundcloud', $e->getMessage());
+    watchdog('scald_soundcloud', 'Exception : @exception', array('@exception' => $e->getMessage()));
     return FALSE;
   }
 
@@ -268,7 +268,7 @@ function scald_soundcloud_resolve_url($track_url) {
     $resolve = json_decode($client->get('resolve', array('url' => $track_url)));
   }
   catch(Exception $e) {
-    watchdog('scald_soundcloud', $e->getMessage());
+    watchdog('scald_soundcloud', 'Exception : @exception', array('@exception' => $e->getMessage()));
     return FALSE;
   }
 
