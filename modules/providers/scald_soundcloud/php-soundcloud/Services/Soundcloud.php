@@ -271,6 +271,41 @@ class Services_Soundcloud
     }
 
     /**
+     * Retrieve access token through credentials flow
+     *
+     * @param string $username Username
+     * @param string $password Password
+     *
+     * @return mixed
+     *
+     * @access public
+     */
+    function credentialsFlow($username, $password)
+    {
+        $postData = array(
+            'client_id' => $this->_clientId,
+            'client_secret' => $this->_clientSecret,
+            'username' => $username,
+            'password' => $password,
+            'grant_type' => 'password'
+        );
+
+        $options = array(CURLOPT_POST => true, CURLOPT_POSTFIELDS => $postData);
+        $response = json_decode(
+            $this->_request($this->getAccessTokenUrl(), $options),
+            true
+        );
+
+        if (array_key_exists('access_token', $response)) {
+            $this->_accessToken = $response['access_token'];
+
+            return $response;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Retrieve access token
      *
      * @param string $code        Optional OAuth code returned from the service provider
@@ -682,9 +717,7 @@ class Services_Soundcloud
     public function updatePlaylist($playlistId, $trackIds, $optionalPostData = null)
     {
         $url = $this->_buildUrl('playlists/' . $playlistId);
-        $postData = array_map(function ($track) {
-            return 'playlist[tracks][][id]=' . $track;
-        }, $trackIds);
+        $postData = array_map("_getPlaylistTrackString", $trackIds);
 
         if (is_array($optionalPostData)) {
             foreach ($optionalPostData as $key => $val) {
@@ -700,6 +733,10 @@ class Services_Soundcloud
         );
 
         return $this->_request($url, $curlOptions);
+    }
+
+    protected function _getPlaylistTrackString($track) {
+      return 'playlist[tracks][][id]=' . $track;
     }
 
     /**
@@ -891,7 +928,7 @@ class Services_Soundcloud
         );
         $this->_lastHttpResponseBody = substr($data, $info['header_size']);
         $this->_lastHttpResponseCode = $info['http_code'];
-        
+
         if ($this->_validResponseCode($this->_lastHttpResponseCode)) {
             return $this->_lastHttpResponseBody;
         } else {
