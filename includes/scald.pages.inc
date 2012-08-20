@@ -48,13 +48,13 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
   // this atom type.
   $providers = scald_atom_providers();
   $sources = $providers[$type->type];
+  $source = key($sources);
 
   // If there's more than one, provide a choice between them. Otherwise, skip
   // a step and select the only provider upfront.
   if (empty($step)) {
     if (count($sources) < 2) {
       $step = 'add';
-      $source = key($sources);
     }
     else {
       $step = 'source';
@@ -80,7 +80,7 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
     'id' => 'scald-atom-add',
     'path' => 'atoms/' . ($js ? 'ajax' : 'nojs') . '/add/' . $type->type . '/%step',
     'show trail' => TRUE,
-    'show back' => TRUE,
+    'show back' => FALSE,
     'show cancel' => TRUE,
     'show return' => FALSE,
     'next callback' =>  'scald_atom_add_wizard_next',
@@ -187,7 +187,6 @@ function scald_atom_add_form_add($form, &$form_state) {
 
 function scald_atom_add_form_add_submit(&$form, &$form_state) {
   $storage = $form_state['storage'];
-
   $atom = new ScaldAtom($storage->type->type, $storage->source);
 
   // Allow the source provider to alter it, filling in defaults value.
