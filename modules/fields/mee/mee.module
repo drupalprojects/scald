@@ -322,7 +322,7 @@ function mee_field_widget_form_alter(&$element, &$form_state, $context) {
 function mee_field_text_validate($element, &$form_state) {
   foreach ($form_state['field'] as $field_name => $values) {
     foreach ($values as $langcode => $data) {
-      if (isset($form_state['values'][$field_name][$langcode][0]['mee']) && isset($form_state['input'][$field_name][$langcode][0]['mee'])) {
+      if (is_array($form_state['values'][$field_name][$langcode]) && isset($form_state['values'][$field_name][$langcode][0]['mee']) && isset($form_state['input'][$field_name][$langcode][0]['mee'])) {
         $form_state['values'][$field_name][$langcode][0]['mee'] = $form_state['input'][$field_name][$langcode][0]['mee'];
       }
     }
