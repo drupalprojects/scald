@@ -107,31 +107,11 @@ function scald_twitter_scald_prerender($atom, $context, $options, $mode) {
         watchdog('scald_twitter', $e->getMessage());
         return FALSE;
       }
-      $atom->rendered->player = theme('scald_twitter_renderer',
-        array('vars' =>
-          array(
-            'tweet_id' => $atom->base_id,
-            'embed' => $tweet_embed->html,
-          )
-        )
-      );
+      $atom->rendered->player = $tweet_embed->html;
       $atom->rendered->title = '';
     }
   }
 }
-
-/**
- * Implements hook_theme.
- */
-function scald_twitter_theme() {
-  return array(
-    'scald_twitter_renderer' => array(
-      'variables' => array('vars' => NULL),
-      'template' => 'scald_twitter_renderer'
-    ),
-  );
-}
-
 
 /**
  * Creates an atom based on a twitter text id or an object
