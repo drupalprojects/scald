@@ -101,7 +101,7 @@ function scald_twitter_scald_prerender($atom, $context, $options, $mode) {
   if ($mode == 'atom') {
     if ($context != 'sdl_library_item') {
       try {
-        $tweet_embed = json_decode( file_get_contents( "http://api.twitter.com/1/statuses/oembed.json?id=". $atom->base_id));
+        $tweet_embed = json_decode( file_get_contents( "http://api.twitter.com/1/statuses/oembed.json?omit_script=1&id=". $atom->base_id));
       }
       catch(Exception $e) {
         watchdog('scald_twitter', $e->getMessage());
