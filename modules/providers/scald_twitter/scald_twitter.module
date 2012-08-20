@@ -6,7 +6,7 @@
  */
 
 define('TWITTER_ID_REGEXP',        '/^[a-zA-Z0-9]+$/');
-define('TWITTER_WEB_REGEXP',       '#^https?://([-\w]+\.)?twitter\.com/.*/status/(.+$)#');
+define('TWITTER_WEB_REGEXP',       '#^https?://([-\w]+\.)?twitter\.com/.*/(status|statuses)/(\d+)#');
 define('TWITTER_WEB',              'http://twitter.com');
 
 /**
