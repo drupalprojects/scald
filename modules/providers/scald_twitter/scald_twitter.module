@@ -90,6 +90,7 @@ function scald_twitter_scald_fetch($atom, $type) {
   if (file_exists($file)) {
     $atom->file_source = $atom->thumbnail_source = $file;
   }
+  $atom->omit_legend = TRUE;
 }
 
 
@@ -99,7 +100,6 @@ function scald_twitter_scald_fetch($atom, $type) {
 function scald_twitter_scald_prerender($atom, $context, $options, $mode) {
   if ($mode == 'atom') {
     if ($context != 'sdl_library_item') {
-      drupal_add_js('http://platform.twitter.com/widgets.js', 'external');
       try {
         $tweet_embed = json_decode( file_get_contents( "http://api.twitter.com/1/statuses/oembed.json?id=". $atom->base_id));
       }
