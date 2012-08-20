@@ -1512,15 +1512,15 @@ function scald_scald_render($atom, $context, $options = NULL) {
       break;
 
     case 'no-access':
-      return theme('scald_render_error', $context, t('You do not have access to view this Atom.'));
+      return theme('scald_render_error', array('context' => $context, 'message' => t('You do not have access to view this Atom.')));
       break;
 
     case 'invalid-id':
-      return theme('scald_render_error', $context, t('Invalid Scald ID.'));
+      return theme('scald_render_error', array('context' => $context, 'message' => t('Invalid Scald ID.')));
       break;
 
     case 'deleted':
-      return theme('scald_render_error', $context, t('Atom deleted!'));
+      return theme('scald_render_error', array('context' => $context, 'message' => t('Atom deleted!')));
       break;
 
     case 'title':
@@ -2021,8 +2021,8 @@ function scald_flush_caches() {
   return array('cache_scald');
 }
 
-function theme_scald_render_error($context, $message){
-	return '<h3>' . $message . '</h3>';
+function theme_scald_render_error($vars){
+	return '<h3>' . $vars['message'] . '</h3>';
 }
 
 
