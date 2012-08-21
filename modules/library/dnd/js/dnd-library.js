@@ -276,13 +276,29 @@ idSelector: function(element) {//@todo unused
 }
 }
 
-/**
- * Refresh the library.
- * @todo unused
- */
+// Refresh the library.
 Drupal.dnd.refreshLibraries = function() {
-  $('.dnd-library-wrapper .view-filters input[type=submit]').click()
-}
+  $('.dnd-library-wrapper .view-filters input[type=submit]').click();
+};
+
+// Convert HTML to SAS. We consider there is no nested elements.
+Drupal.dnd.html2sas = function(text) {
+  text = text.replace(/<!-- (scald=(\d+):([a-z_]+)) -->[\r\n\s\S]*<!-- END scald=\2 -->/g, '[$1]');
+  return text;
+};
+
+// Convert SAS to HTML
+// @todo Known bug: we have to fetch atoms that are not present in
+// the current scope of Drupal.dnd.Atoms
+Drupal.dnd.sas2html = function(text) {
+  for (var i in Drupal.dnd.Atoms) {
+    atom = Drupal.dnd.Atoms[i];
+    if (text.indexOf(atom.sas) > -1) {
+      text = text.replace(atom.sas, atom.editor);
+    }
+  }
+  return text;
+};
 
 }) (jQuery);
 

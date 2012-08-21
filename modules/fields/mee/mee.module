@@ -461,3 +461,13 @@ function mee_extract_copyrights($string) {
   return $copyrights;
 }
 
+/**
+ * Implements hook_wysiwyg_include_directory().
+ */
+function mee_wysiwyg_include_directory($type) {
+  switch ($type) {
+    case 'plugins':
+      return $type;
+  }
+}
+
