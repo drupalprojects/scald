@@ -646,7 +646,7 @@ function scald_fetch($sid, $rebuild = FALSE) {
   $atom = reset($atoms);
 
   // Verify that the current user is allowed to fetch this Atom
-  if (!scald_action_permitted($atom, 'fetch')) {
+  if (!scald_action_permitted($atom, array('fetch', 'view'))) {
     return FALSE;
   }
 
