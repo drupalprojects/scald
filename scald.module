@@ -1009,13 +1009,13 @@ function scald_user_actions($atom, $account = NULL) {
 /**
  * Determines if a given User can act on a given Atom in a given way.
  *
- * @@@TODO: Implement an optional batch mode which takes an array of Scald
- *          Actions.
- *
  * @param $atom
  *   A Scald Atom
  * @param $action
- *   A Scald Action slug
+ *   A Scald Action slug or an array of actions with operator AND or OR (by
+ *   default). Examples:
+ *   - 'fetch'
+ *   - array('fetch', 'view', 'op' => 'AND')
  * @param $account
  *   A Drupal user account
  *   Defaults to the current $user
@@ -1023,12 +1023,30 @@ function scald_user_actions($atom, $account = NULL) {
  *   TRUE/FALSE
  */
 function scald_action_permitted($atom, $action = 'fetch', $account = NULL) {
-  $actions = scald_actions();
-  if (empty($actions[$action])) {
-    return FALSE;
+  $actions = is_array($action) ? $action : array($action);
+  if (!isset($actions['op']) || $actions['op'] !== 'AND') {
+    $actions['op'] = 'OR';
   }
 
-  return (bool) (scald_user_actions($atom, $account) & $actions[$action]['bitmask']);
+  $bitmask = 0;
+  $scald_actions = scald_actions();
+  foreach ($actions as $key => $action) {
+    if (is_numeric($key)) {
+      // If asked for an unknown action, simply return FALSE if 'op' = AND,
+      // otherwise ignore it.
+      if (!isset($scald_actions[$action])) {
+        if ($actions['op'] === 'AND') {
+          return FALSE;
+        }
+      }
+      else {
+        $bitmask += $scald_actions[$action]['bitmask'];
+      }
+    }
+  }
+
+  $check = scald_user_actions($atom, $account) & $bitmask;
+  return $actions['op'] === 'OR' ? $check > 0 : $check == $bitmask;
 } // end scald_action_permitted()
 
 
