@@ -679,7 +679,7 @@ function scald_fetch($sid, $rebuild = FALSE) {
   //  values.  NOTE: it is assumed that Atom Providers won't be monkeying with
   //  the "essentials" like the Type, Provider, SID, etc.
   $defaults = scald_atom_defaults($atom->type);
-  if (empty($atom->file_source)) {
+  if (empty($atom->file_source) && isset($defaults->file_source)) {
     $atom->file_source = isset($defaults->file_source) ? $defaults->file_source : '';
   }
   if (empty($atom->thumbnail_source)) {
