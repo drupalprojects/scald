@@ -113,7 +113,7 @@ function text_field_insert($entity_type, $entity, $field, $instance, $langcode, 
   }
 
   foreach ($items as $delta => $item) {
-    list($sids, $copyrights) = _mee_process_item_value($item);
+    list($sids, $copyrights) = _mee_process_item_value($item, $entity, $field);
 
     // Normalize the weight, putting our separator at 0.
     $separator = $item['mee']['resource_manager'][0]['weight'];
@@ -145,7 +145,7 @@ function text_field_update($entity_type, $entity, $field, $instance, $langcode, 
   }
 
   foreach ($items as $delta => $item) {
-    list($sids, $copyrights) = _mee_process_item_value($item);
+    list($sids, $copyrights) = _mee_process_item_value($item, $entity, $field);
 
     // In fact, we'll delete all the associations and recreate afterwards
     // the needed one, to be sure that new resources are correctly
@@ -166,7 +166,7 @@ function text_field_update($entity_type, $entity, $field, $instance, $langcode, 
             'atom_sid' => $sid,
             'field' => $field['field_name'],
             'weight' => $resource['weight'] - $separator,
-            'required' => (int) $resource['required'],
+            'required' => isset($resource['required']) ? (int) $resource['required'] : 0,
             'copyright' => isset($copyrights[$sid]) ? $copyrights[$sid] : '',
           ))
           ->execute();
@@ -405,7 +405,7 @@ function _mee_field_instance_enabled($instance, $key = NULL) {
 /**
  * Extracts sids and copyright from $item. Updates $item if necessary.
  */
-function _mee_process_item_value(&$item) {
+function _mee_process_item_value(&$item, $entity, $field) {
   // $sids contients the list of atom sid actually used in the item.
   $sas = scald_rendered_to_sas($item['value']);
   $scald_included = scald_included($sas);
