@@ -97,6 +97,46 @@ function dnd_process_textarea($element, $form_state) {
 }
 
 /**
+ * Implements hook_library().
+ */
+function dnd_library() {
+  $path = drupal_get_path('module', 'dnd');
+  $libraries['library'] = array(
+    'title' => 'DnD Library',
+    'website' => 'http://drupal.org/project/scald',
+    'version' => '1.x',
+    'js' => array(
+      // BeautyTips
+      $path . '/js/bt/other_libs/excanvas_0002/excanvas-compressed.js' => array(),
+      $path . '/js/bt/other_libs/jquery.hoverIntent.minified.js' => array(),
+      $path . '/js/bt/jquery.bt.js' => array(),
+
+      // Dependencies
+      $path . '/js/jquery.url.packed.js' => array(),
+      $path . '/js/jquery.fieldselection.js' => array(),
+      'misc/jquery.form.js' => array(),
+
+      // Drag and drop
+      $path . '/js/dnd-library.js' => array(),
+
+      // Settings for the library url
+      array(
+        'type' => 'setting',
+        'data' => array('dnd' => array('url' => url(dnd_get_library()))),
+      ),
+    ),
+    'css' => array(
+      // Contains the library theming
+      $path . '/css/dnd-library.css' => array(
+        'type' => 'file',
+        'media' => 'screen',
+      ),
+    ),
+  );
+  return $libraries;
+}
+
+/**
  * Adds all the JS libraries for the library to the page.
  */
 function dnd_add_library() {
@@ -105,24 +145,7 @@ function dnd_add_library() {
   if (!$included) {
     $included = TRUE;
 
-    // BeautyTips
-    drupal_add_js(drupal_get_path('module', 'dnd') .'/js/bt/other_libs/excanvas_0002/excanvas-compressed.js');
-    drupal_add_js(drupal_get_path('module', 'dnd') .'/js/bt/other_libs/jquery.hoverIntent.minified.js');
-    drupal_add_js(drupal_get_path('module', 'dnd') .'/js/bt/jquery.bt.js');
-
-    // Dependencies
-    drupal_add_js(drupal_get_path('module', 'dnd') .'/js/jquery.url.packed.js');
-    drupal_add_js(drupal_get_path('module', 'dnd') .'/js/jquery.fieldselection.js');
-    drupal_add_js('misc/jquery.form.js');
-
-    // Drag and drop
-    drupal_add_js(drupal_get_path('module', 'dnd') .'/js/dnd-library.js');
-
-    // Contains the library theming
-    drupal_add_css(drupal_get_path('module', 'dnd') .'/css/dnd-library.css');
-
-    // Settings for the library url
-    drupal_add_js(array('dnd' => array('url' => url(dnd_get_library()))), 'setting');
+    drupal_add_library('dnd', 'library');
 
     // Libraries might provide atom quick add links. We add CTools Modal JS so
     // that libraries can take use of it if they want.
