@@ -205,8 +205,8 @@ function text_field_formatter_prepare_view($entity_type, $entities, $field, $ins
     foreach ($entities as $id => $entity) {
       if ($instances[$id]['settings']['text_processing']) {
         foreach ($items[$id] as $delta => &$item) {
-          $item['value'] = scald_sas_to_rendered($item['value']);
-          $item['safe_value'] = scald_sas_to_rendered($item['safe_value']);
+          $item['value'] = scald_sas_to_rendered($item['value'], $instances[$id]['settings']['context']);
+          $item['safe_value'] = scald_sas_to_rendered($item['safe_value'], $instances[$id]['settings']['context']);
         }
       }
     }
@@ -222,7 +222,7 @@ function mee_field_widget_form_alter(&$element, &$form_state, $context) {
   // In any case, convert SAS into rendered for format textarea
   if ($context['field']['type'] === 'text_with_summary') {
     if (variable_get('mee_store_sas', TRUE)) {
-      $element['#default_value'] = scald_sas_to_rendered($element['#default_value']);
+      $element['#default_value'] = scald_sas_to_rendered($element['#default_value'], $context['instance']['settings']['context']);
     }
   }
 
