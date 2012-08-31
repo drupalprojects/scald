@@ -99,17 +99,14 @@ attach: function(context, settings) {
 
   Drupal.ajax.prototype.commands.dnd_refresh = Drupal.dnd.refreshLibraries;
 
-  if ($(".node-form:not(.dnd-processed)").length) {
-    $(".node-form")
-      .addClass('dnd-processed')
-      .append('<div class="dnd-library-wrapper"></div>');
-    var wrapper = $('.node-form .dnd-library-wrapper');
+  $('body').once('dnd', function() {
+    var wrapper = $('<div class="dnd-library-wrapper"></div>').appendTo('body');
     $editor = $("<a />");
     wrapper.library_url = Drupal.settings.dnd.url;
     $.getJSON(wrapper.library_url, function(data) {
       Drupal.behaviors.dndLibrary.renderLibrary.call(wrapper, data, $editor);
     });
-  }
+  });
 },
 
 renderLibrary: function(data, editor) {
