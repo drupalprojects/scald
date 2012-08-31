@@ -1,0 +1,15 @@
+/**
+ * @file
+ * Stylesheet used by richtext editors.
+ *
+ * Include this file into your editor CSS so that Atom wrappers have a better
+ * visualisation.
+ * To configure the RTE CSS using WYSIWYG module, go to
+ * admin/config/content/wysiwyg/profile/YOUR_FILTER/edit, in the CSS section
+ * choose "Define CSS" then enter CSS filepaths in the below textfield.
+ */
+
+.dnd-atom-wrapper {
+  outline: 3px #ccc solid;
+}
+
