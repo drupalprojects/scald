@@ -50,11 +50,6 @@ function mee_form_alter(&$form, &$form_state, $form_id) {
     return;
   }
 
-  // MEE currently supports only node.
-  if (!isset($form['#field']['bundles']['node'])) {
-    return;
-  }
-
   $settings = $form['#instance']['settings'];
 
   $context_options = array();
@@ -112,8 +107,10 @@ function text_field_insert($entity_type, $entity, $field, $instance, $langcode, 
     return;
   }
 
+  list($id, $revision_id) = _mee_extract_id($entity_type, $entity);
+
   foreach ($items as $delta => $item) {
-    list($sids, $copyrights) = _mee_process_item_value($item, $entity, $field);
+    list($sids, $copyrights) = _mee_process_item_value($item, $entity_type, $entity, $field, $delta);
 
     // Normalize the weight, putting our separator at 0.
     $separator = $item['mee']['resource_manager'][0]['weight'];
@@ -122,9 +119,12 @@ function text_field_insert($entity_type, $entity, $field, $instance, $langcode, 
       $resource = $item['mee']['resource_manager'][$sid];
       db_insert('mee_resource')
           ->fields(array(
-            'content_nid' => $entity->nid,
+            'entity_type' => $entity_type,
+            'entity_id' => $id,
+            'revision_id' => $revision_id,
             'atom_sid' => $sid,
             'field' => $field['field_name'],
+            'delta' => $delta,
             'weight' => $resource['weight'] - $separator,
             'required' => (int) $resource['required'],
             'copyright' => isset($copyrights[$sid]) ? $copyrights[$sid] : '',
@@ -144,15 +144,20 @@ function text_field_update($entity_type, $entity, $field, $instance, $langcode, 
     return;
   }
 
+  list($id, $revision_id) = _mee_extract_id($entity_type, $entity);
+
   foreach ($items as $delta => $item) {
-    list($sids, $copyrights) = _mee_process_item_value($item, $entity, $field);
+    list($sids, $copyrights) = _mee_process_item_value($item, $entity_type, $entity, $field, $delta);
 
     // In fact, we'll delete all the associations and recreate afterwards
     // the needed one, to be sure that new resources are correctly
     // registered, and that no longer used one are removed.
     db_delete('mee_resource')
-        ->condition('content_nid', $entity->nid)
+        ->condition('entity_type', $entity_type)
+        ->condition('entity_id', $id)
+        ->condition('revision_id', $revision_id)
         ->condition('field', $field['field_name'])
+        ->condition('delta', $delta)
         ->execute();
 
     // Normalize the weight, putting our separator at 0.
@@ -162,9 +167,12 @@ function text_field_update($entity_type, $entity, $field, $instance, $langcode, 
       $resource = $item['mee']['resource_manager'][$sid];
       db_insert('mee_resource')
           ->fields(array(
-            'content_nid' => $entity->nid,
+            'entity_type' => $entity_type,
+            'entity_id' => $id,
+            'revision_id' => $revision_id,
             'atom_sid' => $sid,
             'field' => $field['field_name'],
+            'delta' => $delta,
             'weight' => $resource['weight'] - $separator,
             'required' => isset($resource['required']) ? (int) $resource['required'] : 0,
             'copyright' => isset($copyrights[$sid]) ? $copyrights[$sid] : '',
@@ -184,13 +192,12 @@ function text_field_delete($entity_type, $entity, $field, $instance, $langcode, 
     return;
   }
 
-  foreach ($items as $delta => $item) {
-    scald_unregister_atom(scald_search(array('base_id' => $entity->nid . ':' . $delta), FALSE, TRUE));
-  }
+  list($id, ) = _mee_extract_id($entity_type, $entity);
 
   // Delete all resource associations for this field
   db_delete('mee_resource')
-      ->condition('content_nid', $entity->nid)
+      ->condition('entity_type', $entity_type)
+      ->condition('entity_id', $id)
       ->condition('field', $field['field_name'])
       ->execute();
 }
@@ -263,16 +270,10 @@ function mee_field_widget_form_alter(&$element, &$form_state, $context) {
   if (isset($form_state['input'][$context['field']['field_name']])) {
     $resource_manager = $form_state['input'][$context['field']['field_name']][$context['langcode']][$context['delta']]['mee']['resource_manager'];
   }
-  elseif (isset($element['#entity']->nid)) {
-    $result = db_select('mee_resource', 'r')
-        ->fields('r', array('atom_sid', 'weight', 'required'))
-        ->condition('content_nid', $element['#entity']->nid)
-        ->condition('field', $context['field']['field_name'])
-        ->orderBy('weight')
-        ->execute();
-    foreach ($result as $r) {
-      $resource_manager[$r->atom_sid] = (array) $r;
-    }
+  elseif (isset($element['#entity'])) {
+    $item = array();
+    _mee_load_resources($element['#entity_type'], $element['#entity'], $context['field']['field_name'][0], $context['delta'], $item);
+    $resource_manager = $item['mee']['resource_manager'];
   }
 
   foreach ($resource_manager as $sid => $item) {
@@ -387,11 +388,6 @@ function theme_mee_resource_manager($variables) {
 function _mee_field_instance_enabled($instance, $key = NULL) {
   $enables = array('mee' => FALSE, 'dnd' => FALSE);
 
-  if ($instance['entity_type'] !== 'node') {
-    // @todo support entities other than nodes.
-    return $key ? FALSE : $enables;
-  }
-
   if (!empty($instance['settings']['mee_enabled'])) {
     $enables['mee'] = TRUE;
   }
@@ -403,9 +399,25 @@ function _mee_field_instance_enabled($instance, $key = NULL) {
 }
 
 /**
+ * Extract entity id, santizing revision_id if necessary.
+ */
+function _mee_extract_id($entity_type, $entity) {
+  list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
+
+  // The revision_id is part of the primary key, and thus
+  // can't be NULL in some databases. Follow Field SQL Storage
+  // pattern and use the entity_id as a revision_id.
+  if (!isset($revision_id)) {
+    $revision_id = $entity_id;
+  }
+
+  return array($entity_id, $revision_id);
+}
+
+/**
  * Extracts sids and copyright from $item. Updates $item if necessary.
  */
-function _mee_process_item_value(&$item, $entity, $field) {
+function _mee_process_item_value(&$item, $entity_type, $entity, $field, $delta) {
   // $sids contients the list of atom sid actually used in the item.
   $sas = scald_rendered_to_sas($item['value']);
   $scald_included = scald_included($sas);
@@ -416,7 +428,7 @@ function _mee_process_item_value(&$item, $entity, $field) {
 
   // If $item['mee'] does not hold anything, load default data into it.
   if (empty($item['mee']) || !is_array($item['mee']['resource_manager'])) {
-    _mee_load_resources($entity, $field, $item);
+    _mee_load_resources($entity_type, $entity, $field, $delta, $item);
   }
 
   // Finally, if there was unknown client-side problem, we might not have new
@@ -431,15 +443,19 @@ function _mee_process_item_value(&$item, $entity, $field) {
 }
 
 /**
- * Load used resource in a node into an array.
+ * Load used resource in an entity into an array.
  *
  * @param $item renderable array to render the field
  */
-function _mee_load_resources($node, $field, &$item) {
+function _mee_load_resources($entity_type, $entity, $field, $delta, &$item) {
+  list($id, $revision_id) = _mee_extract_id($entity_type, $entity);
   $result = db_select('mee_resource', 'r')
       ->fields('r', array('atom_sid', 'weight'))
-      ->condition('content_nid', $node->nid)
+      ->condition('entity_type', $entity_type)
+      ->condition('entity_id', $id)
+      ->condition('revision_id', $revision_id)
       ->condition('field', $field['field_name'])
+      ->condition('delta', $delta)
       ->execute();
   $item['mee']['resource_manager'] = array();
   foreach ($result as $r) {

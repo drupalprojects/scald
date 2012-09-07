@@ -10,7 +10,19 @@
 function mee_schema() {
   $schema['mee_resource'] = array(
     'fields' => array(
-      'content_nid' => array(
+      'entity_type' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'entity_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'revision_id' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -28,6 +40,12 @@ function mee_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
+      'delta' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
       'weight' => array(
         'type' => 'int',
         'not null' => TRUE,
@@ -40,7 +58,7 @@ function mee_schema() {
       ),
       'copyright' => array('type' => 'text'),
     ),
-    'primary key' => array('content_nid', 'atom_sid', 'field'),
+    'primary key' => array('entity_type', 'entity_id', 'atom_sid', 'field', 'delta'),
   );
 
   return $schema;
@@ -55,3 +73,76 @@ function mee_update_7000() {
   // @todo Migrate MEE CCK fields to text_with_summary
 }
 
+/**
+ * Change the mee_ressource schema to support all entity types.
+ */
+function mee_update_7001(&$sandbox) {
+  if (!isset($sandbox['progress'])) {
+    db_drop_primary_key('mee_resource');
+    db_add_field('mee_resource', 'entity_type', array(
+      'type' => 'varchar',
+      'length' => 128,
+      'not null' => TRUE,
+      'default' => '',
+    ));
+    db_add_field('mee_resource', 'revision_id', array(
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => FALSE
+    ));
+    db_change_field('mee_resource', 'content_nid', 'entity_id', array(
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 0,
+    ));
+    db_add_field('mee_resource', 'delta', array(
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 0,
+    ));
+
+    $sandbox['progress'] = 0;
+    $sandbox['current_nid'] = 0;
+    $sandbox['max'] = db_query("SELECT COUNT(DISTINCT entity_id) FROM {mee_resource}")->fetchField();
+
+    var_dump($sandbox);
+  }
+
+  $query = db_select('mee_resource', 'm');
+
+  $query
+    ->leftJoin('node', 'n', 'm.entity_id=n.nid');
+
+  $ids = $query
+    ->fields('m', array('entity_id'))
+    ->fields('n', array('vid'))
+    ->condition('m.entity_id', $sandbox['current_nid'], '>')
+    ->orderBy('m.entity_id', 'ASC')
+    ->distinct()
+    ->range(0, 50)
+    ->execute()
+    ->fetchAllKeyed(0, 1);
+
+  foreach ($ids as $nid => $vid) {
+    db_update('mee_resource')
+      ->fields(array(
+        'entity_type' => 'node',
+        'revision_id' => $vid,
+      ))
+      ->condition('entity_id', $nid)
+      ->execute();
+
+    $sandbox['progress']++;
+    $sandbox['current_nid'] = $nid;
+  }
+
+  $finished = empty($sandbox['max']) ? TRUE : ($sandbox['progress'] == $sandbox['max']);
+
+  if ($finished) {
+    db_add_primary_key('mee_resource', array('entity_type', 'entity_id', 'revision_id', 'atom_sid', 'field', 'delta'));
+  }
+
+  $sandbox['#finished'] = $finished;
+}
