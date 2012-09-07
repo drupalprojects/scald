@@ -203,7 +203,7 @@ function text_field_delete($entity_type, $entity, $field, $instance, $langcode, 
 function text_field_formatter_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items, $display) {
   if (variable_get('mee_store_sas', TRUE)) {
     foreach ($entities as $id => $entity) {
-      if ($instances[$id]['settings']['text_processing']) {
+      if (!empty($instances[$id]['settings']['dnd_enabled'])) {
         foreach ($items[$id] as $delta => &$item) {
           $item['value'] = scald_sas_to_rendered($item['value'], $instances[$id]['settings']['context']);
           $item['safe_value'] = scald_sas_to_rendered($item['safe_value'], $instances[$id]['settings']['context']);
