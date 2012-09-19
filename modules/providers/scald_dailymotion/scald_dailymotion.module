@@ -266,20 +266,23 @@ function scald_dailymotion_direct_import($video) {
   if ($thumb->code == 200 && file_prepare_directory($dir, FILE_CREATE_DIRECTORY)) {
     $dest = $dir . '/' . $infos->id . '.jpg';
     $file = file_save_data($thumb->data, $dest);
-  }
 
-  // Set the file status to temporary
-  $query = db_update('file_managed')
-    ->condition('fid', $file->fid)
-    ->fields(array('status' => 0))
-    ->execute();  
-  
-  $atom->scald_thumbnail[LANGUAGE_NONE][0] = (array)$file;
+    if ($file) {
+      // Set the file status to temporary
+      $query = db_update('file_managed')
+        ->condition('fid', $file->fid)
+        ->fields(array('status' => 0))
+        ->execute();
+
+      $atom->scald_thumbnail[LANGUAGE_NONE][0] = (array)$file;
+    }
+  }
 
   // And save it
   $atom_sid = scald_atom_save($atom);
+
   // Finally, return this id
-  return $atom_sid; 
+  return $atom_sid;
 }
 
 
