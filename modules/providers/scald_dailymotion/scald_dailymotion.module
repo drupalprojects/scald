@@ -38,9 +38,14 @@ function scald_dailymotion_scald_add_form(&$form, &$form_state) {
   );
   
   if(!$identifier) {
+    $attributes = array();
+    if (!empty($form_state['ajax'])) {
+      $attributes['target'] = '_blank';
+      $attributes['class'][] = 'overlay-exclude';
+    }
     $form['search'] = array(
       '#type' => 'item',
-      '#markup' => l(t('Search on Dailymotion'), 'atoms/dailymotion/search'),
+      '#markup' => l(t('Search on Dailymotion'), 'atoms/dailymotion/search', array('attributes' => $attributes)),
     );
   }
   
