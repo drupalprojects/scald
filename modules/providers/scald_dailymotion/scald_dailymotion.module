@@ -88,15 +88,15 @@ function scald_dailymotion_scald_add_form_fill(&$atom, $form, $form_state) {
   if ($thumb->code == 200 && file_prepare_directory($dir, FILE_CREATE_DIRECTORY)) {
     $dest = $dir . '/' . $infos->id . '.jpg';
     $file = file_save_data($thumb->data, $dest);
-  }
 
-  // Set the file status to temporary
-  $query = db_update('file_managed')
-    ->condition('fid', $file->fid)
-    ->fields(array('status' => 0))
-    ->execute();  
-  
-  $atom->scald_thumbnail[LANGUAGE_NONE][0] = (array)$file;
+    // Set the file status to temporary
+    $query = db_update('file_managed')
+      ->condition('fid', $file->fid)
+      ->fields(array('status' => 0))
+      ->execute();
+
+    $atom->scald_thumbnail[LANGUAGE_NONE][0] = (array)$file;
+  }
 }
 
 /**
