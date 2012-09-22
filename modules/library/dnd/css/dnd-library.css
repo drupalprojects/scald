@@ -449,11 +449,7 @@ body {
   box-shadow: 2px 2px 5px 0px #999;
   padding: 3px;
   width: 266px;
-  /**
-   * This prevents unnecessary scrollbar, but causes problem with BT plugin. We
-   * temporarily disable it.
   overflow: auto;
-  */
 }
 
 .scald-library .summary-filters {
@@ -545,15 +541,14 @@ body {
   background-image: url("../icons/library-dark.png");
 }
 
-/** BeautyTips **/
-.bt-content img {
-  max-width: 100%;
-  height: auto;
+/* qTip */
+.ui-tooltip-scald-dnd {
+  max-width: 550px;
+  border-radius: 5px;
 }
 
-/**
- * @todo
- * summary scrollbar: jScrollPane?
- * bt: look for a better alternative + theming
- */
-
+.ui-tooltip-scald-dnd .ui-tooltip-content,
+.ui-tooltip-scald-dnd .ui-tooltip-titlebar {
+  background-color: #fff;
+  border-color: #6bf;
+}

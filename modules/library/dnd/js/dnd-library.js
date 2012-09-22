@@ -29,6 +29,24 @@ Drupal.dnd = {
     'closeWhenOthersOpen': true
   },
 
+  qTipSettings: {
+    position: {
+      my: 'right center',
+      at: 'left center',
+      event: 'click'
+    },
+    hide: {
+      fixed: true,
+      delay: 200
+    },
+    show: {
+      solo: true
+    },
+    style: {
+      classes: 'ui-tooltip-scald-dnd'
+    }
+  },
+
   // Refresh the library.
   refreshLibraries: function() {
     $('.dnd-library-wrapper .view-filters input[type=submit]').click();
@@ -149,8 +167,15 @@ renderLibrary: function(data, editor) {
   for (atom_id in data.atoms) {
     // Store the atom data in our object
     Drupal.dnd.Atoms[atom_id] = data.atoms[atom_id];
-    // And add a nice preview behavior thanks to BeautyTips
-    $("#sdl-" + atom_id).bt(Drupal.dnd.Atoms[atom_id].preview, Drupal.dnd.btSettings);
+    // And add a nice preview behavior if qTip is present
+    if ($.prototype.qtip) {
+      var settings = $.extend(Drupal.dnd.qTipSettings, {
+        content: {
+          text: Drupal.dnd.Atoms[atom_id].preview
+        }
+      });
+      $("#sdl-" + atom_id).qtip(settings);
+    }
   }
 
   // Preload images in editor representations
@@ -193,8 +218,6 @@ renderLibrary: function(data, editor) {
   });
   // Makes pager links refresh the library instead of opening it in the browser window
   $('.pager a', $this).click(function() {
-    // At page switching, close all opened BeautyTips.
-    $('.editor-item.bt-active').btOff();
     $this.get(0).library_url = this.href;
     $.getJSON(this.href, function(data) {
       Drupal.behaviors.dndLibrary.renderLibrary.call($this.get(0), data, $(editor));
@@ -274,8 +297,6 @@ renderLibrary: function(data, editor) {
 
   // Deals with Views Saved Searches search links
   $('#views-savedsearches-delete-search-form label a', $this).click(function() {
-    // At page switching, close all opened BeautyTips.
-    $('.editor-item.bt-active').btOff();
     $this.get(0).library_url = this.href;
     $.getJSON(this.href, function(data) {
       Drupal.behaviors.dndLibrary.renderLibrary.call($this.get(0), data, $(editor));
