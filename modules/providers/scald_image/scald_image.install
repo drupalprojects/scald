@@ -11,13 +11,23 @@
  * Implementation of hook_install().
  */
 function scald_image_install() {
-  // @@@TODO: Pre-populate appropriate variables/configuration
   scald_add_type('image', 'Image', 'Resource image');
   $instance = field_read_instance('scald_atom', 'scald_thumbnail', 'image');
   if ($instance) {
     $instance['label'] = 'Image';
     field_update_instance($instance);
   }
+
+  // Associate the image atom type to the "library" image  style
+  // in the library context.
+  db_insert('scald_context_type_transcoder')
+    ->fields(array(
+      'context'     => 'sdl_library_item',
+      'type'        => 'image',
+      'file_format' => 'passthrough',
+      'transcoder'  => 'style-Library',
+    ))
+    ->execute();
 }
 
 
@@ -27,24 +37,6 @@ function scald_image_install() {
  */
 function scald_image_uninstall() {
   // @@@TODO: Delete all variables/configs/blocks/etc.
-}
-
-
-
-/**
- * Implementation of hook_enable().
- */
-function scald_image_enable() {
-  // @@@TODO: Batch-register any existing Atoms
-}
-
-
-
-/**
- * Implementation of hook_disable().
- */
-function scald_image_disable() {
-  // @@@TODO: Determine if any settings/variables need to be unset upon disable.  NOTE: Unregistering all Atoms happens automagically.
 }
 
 /**
