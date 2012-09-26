@@ -2,26 +2,28 @@
 
 /**
  * @file
- * Scald Soundcloud Installation
+ * Scald SoundCloud Installation
  */
 
 
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  */
 function scald_soundcloud_install() {
-  // @@@TODO: Pre-populate appropriate variables/configuration
   scald_add_type('audio', 'Audio', 'Resource audio');
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function scald_soundcloud_uninstall() {
   // @@@TODO: Delete all variables/configs/blocks/etc.
 }
 
+/**
+ * Implements hook_requirements.
+ */
 function scald_soundcloud_requirements($phase) {
   $requirements = array();
   if ($phase == 'runtime') {
