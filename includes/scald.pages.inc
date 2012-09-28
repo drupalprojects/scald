@@ -327,3 +327,32 @@ function scald_atom_edit_page($js, $atom) {
   return scald_atom_add_page($js, $types[$atom->type], 'options', $atom->sid);
 }
 
+/**
+ * Handles the delete of an existing atom.
+ */
+function scald_atom_delete_confirm($form, &$form_state, $atom) {
+  // Always provide entity id in the same form key as in the entity edit form.
+  $form['sid'] = array('#type' => 'value', '#value' => $atom->sid);
+  return confirm_form($form,
+    t('Are you sure you want to delete %title?', array('%title' => $atom->title)),
+    'admin/content/atoms',
+    t('<p>Note that unchecking the Fetch checkbox in the "<em>Openly available actions</em>" field of this atom <a href="!url">edit form</a> makes the atom disapears for everyone but scald administrators, and is usally a better idea.</p><p>This action cannot be undone.</p>', array('!url' => url('atoms/edit/' . $atom->sid))),
+    t('Delete'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Execute atom deletion.
+ */
+function scald_atom_delete_confirm_submit($form, &$form_state) {
+  if ($form_state['values']['confirm']) {
+    $atom = scald_atom_load($form_state['values']['sid']);
+    scald_atom_delete($atom->sid);
+    watchdog('scald_atom', '@type: deleted %title.', array('@type' => $atom->type, '%title' => $atom->title));
+    $types = scald_type_get_names();
+    drupal_set_message(t('@type %title has been deleted.', array('@type' => $types[$atom->type], '%title' => $atom->title)));
+  }
+
+  $form_state['redirect'] = 'admin/content/atoms';
+}

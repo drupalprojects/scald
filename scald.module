@@ -1872,6 +1872,14 @@ function scald_menu() {
     'access arguments' => array(3, 'edit'),
     'file' => 'includes/scald.pages.inc'
   );
+  $items['atoms/delete/%scald_atom'] = array(
+    'title' => 'Delete Atom',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('scald_atom_delete_confirm', 2),
+    'access callback' => 'scald_action_permitted',
+    'access arguments' => array(2, 'delete'),
+    'file' => 'includes/scald.pages.inc'
+  );
 
   return $items;
 } // end scald_menu()
@@ -2112,7 +2120,7 @@ function scald_permissions_submit($form, &$form_state) {
  */
 function scald_atom_user_build_actions_links($atom, $query = NULL) {
   $actions = scald_actions();
-  $supported_actions = array('view', 'edit');
+  $supported_actions = array('view', 'edit', 'delete');
   $current_actions = scald_user_actions($atom);
 
   $links = array();
