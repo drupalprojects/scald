@@ -203,17 +203,18 @@ function text_field_delete($entity_type, $entity, $field, $instance, $langcode, 
 }
 
 /**
- * Implements hook_field_formatter_prepare_view() on behalf of Text module.
+ * Implements hook_field_attach_view_alter.
  *
- * @see text_field_presave()
+ * Converts the SAS representation to the rendered representation.
  */
-function text_field_formatter_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items, $display) {
+function mee_field_attach_view_alter(&$output, $context) {
   if (variable_get('mee_store_sas', TRUE)) {
-    foreach ($entities as $id => $entity) {
-      if (!empty($instances[$id]['settings']['dnd_enabled'])) {
-        foreach ($items[$id] as $delta => &$item) {
-          $item['value'] = scald_sas_to_rendered($item['value'], $instances[$id]['settings']['context']);
-          $item['safe_value'] = scald_sas_to_rendered($item['safe_value'], $instances[$id]['settings']['context']);
+    list($id, $revision_id, $bundle) = entity_extract_ids($context['entity_type'], $context['entity']);
+    $fields = field_info_instances($context['entity_type'], $bundle);
+    foreach ($fields as $name => $field) {
+      if (!empty($field['settings']['dnd_enabled'])) {
+        foreach (element_children($output[$name]) as $key) {
+          $output[$name][$key]['#markup'] = scald_sas_to_rendered($output[$name][$key]['#markup'], $field['settings']['context']);
         }
       }
     }
