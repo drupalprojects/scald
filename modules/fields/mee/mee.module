@@ -32,9 +32,11 @@ function mee_theme($existing, $type, $theme, $path) {
  * Implements hook_field_info_alter().
  */
 function mee_field_info_alter(&$info) {
-  $info['text_with_summary']['instance_settings']['dnd_enabled'] = 0;
-  $info['text_with_summary']['instance_settings']['mee_enabled'] = 0;
-  $info['text_with_summary']['instance_settings']['context'] = '';
+  foreach (mee_field_types() as $name) {
+    $info[$name]['instance_settings']['dnd_enabled'] = 0;
+    $info[$name]['instance_settings']['mee_enabled'] = 0;
+    $info[$name]['instance_settings']['context'] = '';
+  }
 }
 
 /**
@@ -46,7 +48,7 @@ function mee_field_info_alter(&$info) {
  */
 function mee_form_alter(&$form, &$form_state, $form_id) {
   // Verify if we are in the instance settings form.
-  if ($form_id !== 'field_ui_field_edit_form' || $form['#field']['type'] !== 'text_with_summary') {
+  if ($form_id !== 'field_ui_field_edit_form' || !in_array($form['#field']['type'], mee_field_types())) {
     return;
   }
 
@@ -228,7 +230,7 @@ function mee_field_widget_form_alter(&$element, &$form_state, $context) {
   $enables = _mee_field_instance_enabled($context['instance']);
 
   // In any case, convert SAS into rendered for format textarea
-  if ($context['field']['type'] === 'text_with_summary') {
+  if (in_array($context['field']['type'], mee_field_types())) {
     if (variable_get('mee_store_sas', TRUE)) {
       $element['#default_value'] = scald_sas_to_rendered($element['#default_value'], $context['instance']['settings']['context']);
     }
@@ -329,6 +331,16 @@ function mee_field_text_validate($element, &$form_state) {
       }
     }
   }
+}
+
+/**
+ * Helper function to return a list of supported field.
+ *
+ * Note that only fields defined in the core Text module (text, text_long,
+ * text_with_summary) are eligible due to the actual implementation.
+ */
+function mee_field_types() {
+  return variable_get('mee_field_types', array('text_with_summary'));
 }
 
 /**
