@@ -1244,7 +1244,7 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
   // In the event of an invalid Context, initiate fallbacks.  Immediate return
   //  avoids caching a different rendering as the specified Context.
   if (empty($contexts[$context])) {
-    return scald_render($atom, _scald_context_fallback($type, $context), $options, $rebuild);
+    return scald_render($atom, _scald_context_fallback($atom->type, $context), $options, $rebuild);
   }
 
   // Check the cache unless explicitly rebuilding the rendering of the Atom
