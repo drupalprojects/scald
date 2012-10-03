@@ -31,7 +31,7 @@ function scald_soundcloud_requirements($phase) {
     $t = get_t();
     $severity = $ok ? REQUIREMENT_OK : REQUIREMENT_ERROR;
     $value = $ok ? $t('Enabled') : $t('Disabled');
-    $requirements['curl'] = array(
+    $requirements['scald_soundcloud_curl'] = array(
       'title' => $t('PHP curl extension'),
       'value' => $value,
       'description' => 'SoundCloud PHP library relies on the php curl extension to retrieve data',
