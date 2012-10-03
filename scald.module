@@ -394,7 +394,14 @@ function scald_atom_save(&$atom) {
   }
 
   $op = empty($atom->sid) ? 'insert' : 'update';
-  $hook = ($op == 'insert') ? 'scald_register_atom' : 'scald_update_atom';
+
+  if ($op == 'update') {
+    $hook = 'scald_update_atom';
+    $atom->original = entity_load_unchanged('scald_atom', $atom->sid);
+  }
+  else {
+    $hook = 'scald_register_atom';
+  }
 
   // The Type Provider can implement some other defaults at this point, but
   //  the Atom Provider may override them.
