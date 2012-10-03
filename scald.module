@@ -181,7 +181,10 @@ function scald_scald_contexts_alter(&$contexts) {
     ->execute();
 
   while ($row = $result->fetchAssoc()) {
-    $contexts[$row['context']]['type_format'][$row['type']] = $row;
+    // Only add formats informations to context that got exposed.
+    if (!empty($contexts[$row['context']])) {
+      $contexts[$row['context']]['type_format'][$row['type']] = $row;
+    }
   }
 }
 
