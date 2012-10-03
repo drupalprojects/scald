@@ -1558,9 +1558,18 @@ function scald_scald_render($atom, $context, $options = NULL) {
       return theme('scald_render_error', array('context' => $context, 'message' => t('Atom deleted!')));
       break;
 
-    case 'title':
     default:
-      return $atom->rendered->title;
+      // If this is a custom context created through the UI, we use a special
+      // render.
+      if (!in_array($context, _scald_system_contexts())) {
+        module_load_include('inc', 'scald', 'includes/scald.pages');
+        $content = scald_atom_view($atom, $context, $options);
+        return drupal_render($content);
+      }
+      // Else, returns the title as we don't know what to render.
+      else {
+        return $atom->rendered->title;
+      }
       break;
   }
 } // end scald_scald_render()
@@ -1872,7 +1881,7 @@ function scald_menu() {
 
   $items['atoms/view/%scald_atom'] = array(
     'title' => 'View Atom',
-    'page callback' => 'scald_atom_view',
+    'page callback' => 'scald_atom_page_view',
     'page arguments' => array(2),
     'access callback' => 'scald_action_permitted',
     'access arguments' => array(2, 'view'),
