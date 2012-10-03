@@ -47,6 +47,36 @@ function scald_admin_dashboard() {
 
   $content .= theme('table', $table);
 
+  // Prepare a list of contexts.
+  $contexts = scald_contexts();
+
+  $content .= '<h3>' . t('Scald Contexts') . '</h3>';
+  $content .= '<p>' . t('List of all Scald Contexts, thoses created through the UI and even those hidden or defined by other modules.') . '</p>';
+
+  $list = array('type' => 'ul', 'items' => array());
+  $table = array(
+    'header' =>  array(
+      t('Context name'),
+      t('Atom type'),
+      t('Property'),
+      t('Actions'),
+    ),
+    'rows' => array(),
+  );
+
+  foreach (scald_contexts() as $name => $context) {
+    $table['rows'][] = array(
+      check_plain($context['title']) . '<div class="description">' . filter_xss_admin($context['description']) . '</div>',
+      empty($context['formats']) ? '<em>' . t('not specified') . '</em>' : check_plain(implode(', ', array_keys($context['formats']))),
+      // @todo add more when the UI created context comes
+      empty($context['hidden']) ? '' : t('hidden'),
+      // @todo add more when the UI created context comes
+      '',
+    );
+  }
+
+  $content .= theme('table', $table);
+
   return $content;
 } // end scald_admin_dashboard()
 
