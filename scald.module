@@ -1848,8 +1848,8 @@ function scald_menu() {
 
   $items['atoms/view/%scald_atom'] = array(
     'title' => 'View Atom',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('scald_atom_view', 2),
+    'page callback' => 'scald_atom_view',
+    'page arguments' => array(2),
     'access callback' => 'scald_action_permitted',
     'access arguments' => array(2, 'view'),
     'file' => 'includes/scald.pages.inc'

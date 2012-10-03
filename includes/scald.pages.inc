@@ -290,7 +290,7 @@ function scald_atom_add_wizard_cancel(&$form_state) {
 /**
  * Handles the view of an atom
  */
-function scald_atom_view($form, &$form_state, $atom) {
+function scald_atom_view($atom) {
   drupal_set_title(t('View: @title', array('@title' => $atom->title)));
 
   // Rendering content of atom
@@ -299,16 +299,7 @@ function scald_atom_view($form, &$form_state, $atom) {
   entity_prepare_view('scald_atom', array($atom->sid => $atom));
   $content = field_attach_view('scald_atom', $atom, $view_mode);
 
-  $form = array();
-  $form['view'] = array(
-    '#type' => 'markup',
-    '#markup' => drupal_render($content)
-  );
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Ok')
-  );
-  return $form;
+  return $content;
 }
 
 /**
