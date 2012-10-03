@@ -288,16 +288,40 @@ function scald_atom_add_wizard_cancel(&$form_state) {
 }
 
 /**
- * Handles the view of an atom
+ * Page callback for the view of an atom.
  */
-function scald_atom_view($atom) {
+function scald_atom_page_view($atom) {
   drupal_set_title(t('View: @title', array('@title' => $atom->title)));
 
+  return scald_render($atom, 'full');
+}
+
+/**
+ * Handles the view of an atom within a context.
+ *
+ * Contrary to scald_rendered(), which displays basically a "player", this
+ * function displays the player and all atom fields. Fields are reorderable and
+ * customisable in the Field UI as usual.
+ *
+ * @param $atom
+ *   Atom to be rendered
+ * @param $context
+ *   Name of the context
+ * @param $options
+ *   (optional) List of options
+ */
+function scald_atom_view($atom, $context, $options = NULL) {
   // Rendering content of atom
-  $view_mode = 'full';
-  field_attach_prepare_view('scald_atom', array($atom->sid => $atom), $view_mode);
+  field_attach_prepare_view('scald_atom', array($atom->sid => $atom), $context);
   entity_prepare_view('scald_atom', array($atom->sid => $atom));
-  $content = field_attach_view('scald_atom', $atom, $view_mode);
+  $content = field_attach_view('scald_atom', $atom, $context);
+
+  // It would be better with an extra_fields, as it allow to customize/reorder
+  // the display.
+  $content['atom'] = array(
+    '#markup' => $atom->rendered->player,
+    '#weight' => -50,
+  );
 
   return $content;
 }
