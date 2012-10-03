@@ -47,11 +47,10 @@ function scald_admin_dashboard() {
 
   $content .= theme('table', $table);
 
-  // Prepare a list of contexts.
-  $contexts = scald_contexts();
-
+  // Display a context listing.
   $content .= '<h3>' . t('Scald Contexts') . '</h3>';
   $content .= '<p>' . t('List of all Scald Contexts, thoses created through the UI and even those hidden or defined by other modules.') . '</p>';
+  $content .= '<ul class="action-links"><li>' . l(t('Add context'), 'admin/structure/scald/context/add') . '</li></ul>';
 
   $list = array('type' => 'ul', 'items' => array());
   $table = array(
@@ -205,6 +204,127 @@ function scald_admin_type_form_submit($form, &$form_state) {
   scald_types(TRUE);
 } // end scald_admin_types_form_submit()
 
+/**
+ * Form constructor for the context editing form.
+ *
+ * @param $context
+ *   (optional) context name, when editing an existing Scald context. However we
+ *   do not manage to get the edit form yet, so it is always NULL.
+ */
+function scald_admin_context_form($form, &$form_state, $context = NULL) {
+  // Default setting for the new context.
+  $context = array(
+    'name' => '',
+    'title' => '',
+    'description' => '',
+    'render_language' => 'XHTML',
+    'parseable' => TRUE,
+    'hidden' => FALSE,
+    'transcoder' => 'passthrough',
+    'formats' => array(),
+  );
+
+  // Make the context arrary available to implementations of hook_form_alter.
+  $form['#context'] = $context;
+
+  $form['title'] = array(
+    '#title' => t('Title'),
+    '#type' => 'textfield',
+    '#default_value' => $context['title'],
+    '#description' => t('The title of this context. This text will be displayed as part of the list on the <em>Scald Dashboard</em> and on the <em>Atom type Contexts</em> pages. It is recommended that this name begin with a capital letter and contain only letters, numbers, and spaces..'),
+    '#required' => TRUE,
+    '#size' => 30,
+  );
+
+  $form['name'] = array(
+    '#type' => 'machine_name',
+    '#default_value' => $context['name'],
+    '#maxlength' => 32,
+    '#machine_name' => array(
+      'source' => array('title'),
+      'exists' => 'scald_context_load',
+    ),
+    '#description' => t('A unique machine-readable name for this context. It must only contain lowercase letters, numbers, and underscores.'),
+  );
+
+  $form['description'] = array(
+    '#title' => t('Description'),
+    '#type' => 'textarea',
+    '#default_value' => $context['description'],
+    '#description' => t('Describe this context. The text will be displayed on the <em>Scald Dashboard</em> page.'),
+  );
+
+  $form['additional_settings'] = array(
+    '#type' => 'vertical_tabs',
+    // @todo provide a JavaScript to do Vertical Tabs summary stuffs.
+    '#attached' => array(
+    ),
+  );
+
+  $form['system'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('System settings'),
+    '#collapsible' => TRUE,
+    '#group' => 'additional_settings',
+  );
+  $form['system']['parseable'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Make parseable'),
+    '#default_value'  => (bool) $context['parseable'],
+  );
+
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => $context['name'] ? t('Save context') : t('Add context'),
+    '#weight' => 40,
+  );
+
+  // @todo allow to delete context
+  if (FALSE) {
+    if (!empty($type->type)) {
+      $form['actions']['delete'] = array(
+        '#type' => 'submit',
+        '#value' => t('Delete context'),
+        '#weight' => 45,
+      );
+    }
+  }
+
+  return $form;
+}
+
+/**
+ * Form validation handler for scald_admin_context_form().
+ */
+function scald_admin_context_form_validate($form, &$form_state) {
+  // There is still nothing to do here.
+}
+
+/**
+ * Form submission handler for scald_admin_context_form().
+ */
+function scald_admin_context_form_submit($form, &$form_state) {
+  $op = isset($form_state['values']['op']) ? $form_state['values']['op'] : '';
+
+  if (!$context = scald_context_load($form_state['values']['name'])) {
+    $context  = array();
+  }
+
+  $context = array(
+    'name' => $form_state['values']['name'],
+    'title' => $form_state['values']['title'],
+    'description' => $form_state['values']['description'],
+    'render_language' => 'XHTML',
+    'parseable' => (bool) $form_state['values']['parseable'],
+    'formats' => array(),
+  ) + $context;
+
+  scald_context_save($context);
+
+  $form_state['redirect'] = 'admin/structure/scald';
+  return;
+}
 
 
 /**

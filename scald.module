@@ -1357,17 +1357,12 @@ function _scald_context_fallback($type, $context) {
 
 
 
-
-
-
-/*******************************************************************************
- * SCALD HOOK IMPLEMENTATIONS
- ******************************************************************************/
-
 /**
- * Implements hook_scald_contexts.
+ * Defines a list of built-in contexts for internal used.
+ *
+ * Those contexts are different from that are created through the UI.
  */
-function scald_scald_contexts() {
+function _scald_system_contexts() {
   return array(
     'debug' => array(
       'title'           => t('Debuging Display'),
@@ -1418,6 +1413,18 @@ function scald_scald_contexts() {
       'formats'         => array(),
     ),
   );
+}
+
+
+/*******************************************************************************
+ * SCALD HOOK IMPLEMENTATIONS
+ ******************************************************************************/
+
+/**
+ * Implements hook_scald_contexts.
+ */
+function scald_scald_contexts() {
+  return array_merge(_scald_system_contexts(), variable_get('scald_custom_contexts', array()));
 }
 
 /**
@@ -1784,6 +1791,13 @@ function scald_menu() {
     'file'              => 'includes/scald.admin.inc',
     'type'              => MENU_NORMAL_ITEM,
   );
+  $items['admin/structure/scald/context/add'] = array(
+    'title'             => 'Add Scald context',
+    'page callback'     => 'drupal_get_form',
+    'page arguments'    => array('scald_admin_context_form'),
+    'access arguments'  => array('administer scald'),
+    'file'              => 'includes/scald.admin.inc',
+  );
   $items['admin/structure/scald/%scald_type'] = array(
     'title'             => 'Type',
     'title callback'    => 'scald_type_name',
@@ -1909,6 +1923,34 @@ function scald_type_load($type) {
  */
 function scald_type_name($type) {
   return $type->title;
+}
+
+/**
+ * Load callback for the %scald_context placeholder.
+ *
+ * Currently not yet used in the menu system, but only used to check in
+ * #machine_name elements.
+ */
+function scald_context_load($context) {
+  $contexts = scald_contexts();
+  if (isset($contexts[$context])) {
+    return $contexts[$context];
+  }
+  return FALSE;
+}
+
+/**
+ * Saves a custom context.
+ *
+ * This function saves the context in a centralized variable. It is only used
+ * for contexts created through the Scald UI.
+ *
+ * @param array $context
+ */
+function scald_context_save($context) {
+  $contexts = variable_get('scald_custom_contexts', array());
+  $contexts[$context['name']] = $context;
+  variable_set('scald_custom_contexts', $contexts);
 }
 
 /**
