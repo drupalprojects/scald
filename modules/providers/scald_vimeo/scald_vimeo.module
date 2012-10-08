@@ -84,7 +84,7 @@ function scald_vimeo_scald_add_form_fill(&$atom, $form, $form_state) {
  * Implements hook_scald_fetch.
  */
 function scald_vimeo_scald_fetch($atom, $type) {
-  $file = 'public://vimeo/'. $atom->base_id .'.jpg';
+  $file = $atom->scald_thumbnail[LANGUAGE_NONE][0]['uri'];
   if (file_exists($file)) {
     $atom->file_source = $atom->thumbnail_source = $file;
   }
