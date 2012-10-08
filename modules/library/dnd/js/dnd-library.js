@@ -15,20 +15,6 @@ Drupal.dnd = {
   Atoms: {
   },
 
-  btSettings: {
-    'trigger': ['click'],
-    'width': 480,
-    'spikeLength': 7,
-    'spikeGirth': 9,
-    'corner-radius' : 3,
-    'strokeWidth': 1,
-    'fill': '#fff',
-    'shadow': true,
-    'shadowColor': '#666',
-    'strokeStyle': '#999',
-    'closeWhenOthersOpen': true
-  },
-
   qTipSettings: {
     position: {
       my: 'right center',
