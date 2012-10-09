@@ -1,5 +1,7 @@
 <?php
 /**
+ * @file
+ *   Default theme implementation for the Scald Dailymotion player.
  */
 ?>
 <object width="<?php print $vars['video_width'] ?>" height="<?php print $vars['video_height'] ?>" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000">

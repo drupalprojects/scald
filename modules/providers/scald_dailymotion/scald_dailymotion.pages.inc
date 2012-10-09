@@ -8,7 +8,6 @@
  * Generates the search and search results form.
  */
 function scald_dailymotion_search_form($form, &$form_state) {
-  
   $terms = '';
 
   // Check if storage contains a value. A value is set only after the form is submitted and 'rebuild' is set to TRUE.
@@ -35,7 +34,7 @@ function scald_dailymotion_search_form($form, &$form_state) {
     '#value' => t('Search'),
     '#submit' => array('scald_dailymotion_search_form_search_submit')
   );
-  
+
   // If we have specified terms, execute the search and display the results
   if (!empty($terms)) {
     $form['results'] = array(
@@ -51,7 +50,7 @@ function scald_dailymotion_search_form($form, &$form_state) {
       foreach ($items as $video) {
         // Prepare variables for theme_image()
         $image_variables = array(
-          'path' => str_replace('large', 'small', $video->thumbnail['src']), 
+          'path' => str_replace('large', 'small', $video->thumbnail['src']),
           'alt' => $video->title,
           'title' => $video->title,
         );
@@ -113,17 +112,17 @@ function scald_dailymotion_search_form_search_submit($form, &$form_state) {
  */
 function scald_dailymotion_search_form_submit($form, &$form_state) {
   $identifier = $form_state['values']['identifier'];
-  if(!$identifier) {
+  if (!$identifier) {
     drupal_set_message(t('No video selected for import'));
     $form_state['rebuild'] = TRUE; // Present again the list of results
     return;
   }
-  
+
   // End the multistep search workflow
   unset($form_state['storage']);
   $form_state['rebuild'] = FALSE;
-  
-  // Redirect user to the import form (special page) 
+
+  // Redirect user to the import form (special page)
   $form_state['redirect'] = array(
     'atoms/dailymotion/import',
     array(
@@ -131,8 +130,8 @@ function scald_dailymotion_search_form_submit($form, &$form_state) {
         'dm-id' => $identifier
       )
     )
-  ); 
-  
+  );
+
 /*
   // Import video immediately (no UI)
   $sid = scald_dailymotion_register($identifier);
@@ -159,7 +158,7 @@ function theme_scald_dailymotion_search_results_table($variables) {
         drupal_render($form['videos'][$key]['id']),
       ),
     );
-  } 
+  }
   $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'scald-dailymotion-videos')));
   $output .= drupal_render_children($form);
   return $output;

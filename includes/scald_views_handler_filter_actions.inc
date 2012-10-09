@@ -55,7 +55,7 @@ class scald_views_handler_filter_actions extends views_handler_filter {
     else {
       $this->value = $this->options['value'];
     }
-    $this->operator = ' & '. $this->value . ' = ';
+    $this->operator = ' & ' . $this->value . ' = ';
     parent::query();
   }
 

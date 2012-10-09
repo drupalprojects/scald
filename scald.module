@@ -98,7 +98,7 @@ function scald_add_type($type, $title, $description) {
     'label' => 'Thumbnail',
     'required' => FALSE,
   );
-  if(!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
+  if (!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
     field_create_instance($instance);
   }
 
@@ -113,7 +113,7 @@ function scald_add_type($type, $title, $description) {
       'type' => 'taxonomy_autocomplete',
     ),
   );
-  if(!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
+  if (!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
     field_create_instance($instance);
   }
 
@@ -128,7 +128,7 @@ function scald_add_type($type, $title, $description) {
       'type' => 'taxonomy_autocomplete',
     ),
   );
-  if(!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
+  if (!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
     field_create_instance($instance);
   }
 
@@ -445,7 +445,7 @@ function scald_atom_save(&$atom) {
   module_invoke_all('entity_presave', $atom, 'scald_atom');
 
   // Put the basic data in the Scald Atom Registry
-  if($op == 'update') {
+  if ($op == 'update') {
     $written = drupal_write_record('scald_atoms', $atom, array('sid'));
   }
   else {
@@ -781,10 +781,10 @@ function scald_search($query = array(), $fuzzy = FALSE, $singular = FALSE) {
         else {
           $placeholder = ":" . $field;
           if ($fuzzy) {
-            $wheres[] = $field ." LIKE '%%" . $placeholder . "%%'";
+            $wheres[] = $field . " LIKE '%%" . $placeholder . "%%'";
           }
           else {
-            $wheres[] = $field ." = " . $placeholder;
+            $wheres[] = $field . " = " . $placeholder;
           }
           $data[$placeholder] = $value;
         }
@@ -819,15 +819,15 @@ function scald_search($query = array(), $fuzzy = FALSE, $singular = FALSE) {
 
   // Compose and return result
   $sids = array();
-  foreach($search_results as $result) {
+  foreach ($search_results as $result) {
     $sids[] = $result->sid;
   }
 
-  if(!count($sids)) {
+  if (!count($sids)) {
     return FALSE;
   }
 
-  if($singular) {
+  if ($singular) {
     return $sids[0];
   }
   else {
@@ -987,7 +987,7 @@ function scald_user_actions($atom, $account = NULL) {
 
   // Argument validation
   if (is_null($account)) {
-  	global $user;
+    global $user;
     $account = $user;
   }
 
@@ -1066,7 +1066,7 @@ function scald_action_permitted($atom, $action = 'fetch', $account = NULL) {
  */
 function scald_user_load($users) {
   // For each loaded user get combined scald_actions
-  foreach($users as $uid => $account) {
+  foreach ($users as $uid => $account) {
     $account->scald_actions = _scald_user_combine_actions($account);
   }
 } // end scald_user_load()
@@ -1083,9 +1083,9 @@ function _scald_user_combine_actions($account) {
   );
 
   // Fetch action bitstring components by User Role and combine
-  foreach($account->roles as $rid => $role_name) {
+  foreach ($account->roles as $rid => $role_name) {
     $cache = cache_get('scald_actions_bitstring_for_rid_' . $rid, 'cache_scald');
-    if(empty($cache)) {
+    if (empty($cache)) {
       // cache miss
       $role_actions = scald_compute_role_actions(array($rid => $role_name));      
     }
@@ -1259,9 +1259,9 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
 
   // Check the cache unless explicitly rebuilding the rendering of the Atom
   $cache_id = $sid
-	    . ':' . $context
-	    . ':' . scald_user_actions($atom)
-	    . (is_null($options) ? '' : ':' . $options);
+      . ':' . $context
+      . ':' . scald_user_actions($atom)
+      . (is_null($options) ? '' : ':' . $options);
   if (!$rebuild && !variable_get('scald_always_rebuild', FALSE)) {
     $cache = cache_get($cache_id, 'cache_scald');
     if (!empty($cache)) {
@@ -1564,7 +1564,7 @@ function scald_scald_render($atom, $context, $options = NULL) {
  * Implementation of hook_scald_action().
  */
 function scald_scald_action($atom, $action) {
-  switch($action) {
+  switch ($action) {
     case 'fetch':
       // No specific functionality necessary here
       break;
@@ -1696,7 +1696,7 @@ function scald_entity_property_info() {
 /**
  * Implements hook_field_extra_fields.
  */
-function scald_field_extra_fields () {
+function scald_field_extra_fields() {
   $extra = array();
   foreach (scald_types() as $slug => $type) {
     $extra['scald_atom'][$slug] = array(
@@ -1740,7 +1740,7 @@ function scald_permission() {
   );
 
   // "Create" action for each types
-  foreach(scald_types() as $type) {
+  foreach (scald_types() as $type) {
     $permissions['create atom of ' . $type->type . ' type'] = array(
       'title' => t('Create atom of %type type', array('%type' => $type->type)),
     );
@@ -2046,7 +2046,7 @@ function scald_filter_tips($delta, $format, $long = FALSE) {
 function scald_views_api() {
   return array(
     'api' => 2,
-    'path' => drupal_get_path('module', 'scald') .'/includes/',
+    'path' => drupal_get_path('module', 'scald') . '/includes/',
   );
 }
 
@@ -2057,8 +2057,8 @@ function scald_flush_caches() {
   return array('cache_scald');
 }
 
-function theme_scald_render_error($vars){
-	return '<h3>' . $vars['message'] . '</h3>';
+function theme_scald_render_error($vars) {
+  return '<h3>' . $vars['message'] . '</h3>';
 }
 
 
@@ -2091,13 +2091,13 @@ function scald_compute_role_actions($role) {
   $role_permissions = $permissions[$rid];
 
   // Foreach action
-  foreach($scald_actions as $key => $action) {
+  foreach ($scald_actions as $key => $action) {
     // Foreach permission
-    foreach($role_permissions as $perm => $enabled) {
-      if(!strcmp($perm, $key . ' own atom')) {
+    foreach ($role_permissions as $perm => $enabled) {
+      if (!strcmp($perm, $key . ' own atom')) {
         $role_actions['own'] |= $action['bitmask'];
       }
-      else if(!strcmp($perm, $key . ' any atom')) {
+      elseif (!strcmp($perm, $key . ' any atom')) {
         $role_actions['any'] |= $action['bitmask'];
       }
     }
@@ -2120,7 +2120,7 @@ function scald_form_user_admin_permissions_alter(&$form, &$form_state, $form_id)
 }
 function scald_permissions_submit($form, &$form_state) {
   // Recompute actions bitstrings for all Drupal roles
-  foreach(user_roles() as $rid => $role_name) {
+  foreach (user_roles() as $rid => $role_name) {
     scald_compute_role_actions(array($rid => $role_name));
   }
 }
@@ -2135,7 +2135,7 @@ function scald_atom_user_build_actions_links($atom, $query = NULL) {
 
   $links = array();
   foreach ($actions as $action => $details) {
-    if(in_array($action, $supported_actions) && ($current_actions & $details['bitmask'])) {
+    if (in_array($action, $supported_actions) && ($current_actions & $details['bitmask'])) {
       $links[$action] = array(
         'title' => $details['title'],
         'href' => 'atoms/' . $action . '/' . $atom->sid,
@@ -2148,7 +2148,7 @@ function scald_atom_user_build_actions_links($atom, $query = NULL) {
         $links[$action]['href'] = 'atoms/nojs/' . $action . '/' . $atom->sid;
       }
 
-      if($query) {
+      if ($query) {
         $links[$action]['query'] = $query;
       }
     }

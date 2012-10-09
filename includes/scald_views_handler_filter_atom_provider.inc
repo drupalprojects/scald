@@ -1,6 +1,7 @@
 <?php
 /**
- * Filter by node type
+ * @file
+ *   Views filter handler to filter by Atom provider.
  */
 class scald_views_handler_filter_atom_provider extends views_handler_filter_in_operator {
   function get_value_options() {

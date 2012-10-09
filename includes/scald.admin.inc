@@ -75,7 +75,7 @@ function scald_admin_type_form($form, $form_state, $type) {
     '#description'  => t('Every Atom must have certain data associated with it.  If an Atom Provider fails to supply that data, these defaults are used.  If nothing is specified here, Scald Core will supply generic defaults.'),
     '#collapsible'  => FALSE,
   );
-  $form['defaults']['type_' . $type_name. '_thumb'] = array(
+  $form['defaults']['type_' . $type_name . '_thumb'] = array(
     '#type'           => 'textfield',
     '#title'          => t('Default Thumbnail Image'),
     '#description'    => t('Specify a path relative to the Drupal install directory.  This image file will be automatically resized and transcoded as appropriate when generating the actual thumbnail image.'),
@@ -227,8 +227,8 @@ function scald_admin_contexts_form($form, $form_state, $type) {
     $default = !empty($contexts[$name]['type_format'][$type->type]['transcoder']) ? $contexts[$name]['type_format'][$type->type]['transcoder'] : NULL;
     $form[$name] = array(
       '#type'         => 'fieldset',
-      '#title'        => $context['title'],
-      '#description'  => $context['description'] . '<br>' . t('Provided by <code>@module.module</code>.', array('@module' => $context['provider'])),
+      '#title'        => check_plain($context['title']),
+      '#description'  => check_plain($context['description']) . '<br>' . t('Provided by <code>@module.module</code>.', array('@module' => $context['provider'])),
       '#collapsible'  => TRUE,
       '#collapsed'    => TRUE,
     );
@@ -325,7 +325,7 @@ function scald_settings_form() {
   // Scald tags vocabulary
   $options = array();
   $vocabularies = taxonomy_get_vocabularies();
-  foreach($vocabularies as $vid => $vocabulary) {
+  foreach ($vocabularies as $vid => $vocabulary) {
     $options[$vid] = $vocabulary->name;
   }
   $form['scald_tags_vocabulary'] = array(

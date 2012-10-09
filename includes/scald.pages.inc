@@ -7,7 +7,7 @@
 
 function scald_atom_add() {
   $types = scald_types();
-  if(empty($types)) {
+  if (empty($types)) {
     return '<p>' . t('You have not installed any Scald providers yet. Go to the <a href="@admin-modules">modules administration page</a> to install a Scald provider.', array('@admin-modules' => url('admin/modules'))) . '</p>';
   }
 
@@ -119,7 +119,7 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
       $commands[] = array('command' => 'dnd_refresh');
       $commands[] = ctools_modal_command_dismiss();
     }
-    else if (!empty($form_state['cancel'])) {
+    elseif (!empty($form_state['cancel'])) {
       // If cancelling, return to the activity.
       $commands[] = ctools_modal_command_dismiss();
     }

@@ -2,7 +2,7 @@
 // Define the WYSIWYG plugin.
 Drupal.wysiwyg.plugins.sas = {
   invoke: function (data, settings, instanceId) {
-    alert('This button does nothing. The conversion happens on attach/detach.');
+    alert(Drupal.t('This button does nothing. The conversion happens on attach/detach.'));
   },
 
   /**

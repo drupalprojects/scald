@@ -21,17 +21,9 @@ function scald_dnd_library_permission() {
  */
 function scald_dnd_library_theme() {
   return array(
-    'sdl_header' => array(
-      'variables' => array('page' => NULL, 'count' => 0, 'form' => NULL),
-      'template' => 'sdl-header',
-    ),
     'sdl_library' => array(
       'variables' => array('page' => NULL, 'library_items' => NULL),
       'template' => 'sdl-library',
-    ),
-    'sdl_footer' => array(
-      'variables' => array('page' => NULL, 'count' => 0, 'pager' => NULL),
-      'template' => 'sdl-footer',
     ),
     'sdl_library_item' => array(
       'variables' => array('informations' => array(), 'image' => NULL),

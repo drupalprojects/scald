@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ *   MEE wysiwyg plugins definitions.
+ */
 
 /**
  * Implements hook_wysiwyg_plugin().

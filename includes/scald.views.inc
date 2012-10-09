@@ -154,7 +154,7 @@ function scald_views_data() {
 function scald_views_handlers() {
   return array(
     'info' => array(
-      'path' => drupal_get_path('module', 'scald') .'/includes',
+      'path' => drupal_get_path('module', 'scald') . '/includes',
     ),
     'handlers' => array(
       'scald_views_handler_filter_atom_type' => array(
