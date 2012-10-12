@@ -60,13 +60,19 @@ function scald_dnd_library_add_item(&$library, $sid) {
     'meta' => array(
       'title' => $atom->title,
       'type' => $atom->type,
-      'legend' => empty($atom->omit_legend) ? theme('sdl_editor_legend', array('atom' => $atom)) : '',
+      'legend' => '',
     ),
     'sas' =>  '[scald=' . $atom->sid . ':sdl_editor_representation]',
     'editor' => scald_render($atom, 'sdl_editor_representation'),
     'preview' => scald_render($atom, 'sdl_preview'),
-    'library' => scald_render($atom, 'sdl_library_item')
+    'library' => scald_render($atom, 'sdl_library_item'),
   );
+
+  // theme_sdl_editor_legend() requires a rendered atom. We call it only here to
+  // make sure that $atom is rendered.
+  if (empty($atom->omit_legend)) {
+    $library['atoms'][$sid]['meta']['legend'] = theme('sdl_editor_legend', array('atom' => $atom));
+  }
 }
 
 /**
@@ -245,11 +251,6 @@ function theme_sdl_editor_item($variables) {
  */
 function theme_sdl_editor_legend($variables) {
   $atom = $variables['atom'];
-  $sid = $atom->sid;
-
-  if ($atom && empty($atom->rendered)) {
-    scald_render($atom, 'title');
-  }
 
   if (!empty($atom->rendered->authors)) {
     foreach ($atom->rendered->authors as $author) {
@@ -258,12 +259,12 @@ function theme_sdl_editor_legend($variables) {
     $by = implode(', ', $links);
   }
   else {
-    $by = $informations->publisher['link'];
+    $by = $atom->rendered->publisher['link'];
   }
   $by = t('by !name', array('!name' => $by));
   return "
   <div class='meta'>
-    <!--copyright={$sid}-->{$informations->title}, {$by}<!--END copyright={$sid}-->
+    <!--copyright={$atom->sid}-->{$atom->rendered->title}, {$by}<!--END copyright={$atom->sid}-->
   </div>
   ";
 }
