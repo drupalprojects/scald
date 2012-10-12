@@ -241,19 +241,16 @@ function theme_sdl_editor_item($variables) {
 }
 
 /**
- * Returns HTML for the legend of an atom, used in the Editor Representation context.
+ * Returns HTML for the legend of an atom.
  */
 function theme_sdl_editor_legend($variables) {
   $atom = $variables['atom'];
   $sid = $atom->sid;
+
   if ($atom && empty($atom->rendered)) {
-    $clone = clone $atom;
-    scald_prerender($clone, 'sdl_editor_representation');
-    $informations = $clone->rendered;
+    scald_render($atom, 'title');
   }
-  else {
-    $informations = $atom->rendered;
-  }
+
   if (!empty($atom->rendered->authors)) {
     foreach ($atom->rendered->authors as $author) {
       $links[] = $author->link;

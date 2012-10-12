@@ -1264,8 +1264,12 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
       . (is_null($options) ? '' : ':' . $options);
   if (!$rebuild && !variable_get('scald_always_rebuild', FALSE)) {
     $cache = cache_get($cache_id, 'cache_scald');
+    // If cache data is available, we attach 'rendered' property into atom as it
+    // could be used by other functions, and we return the rendered text.
     if (!empty($cache)) {
-      return $cache->data;
+      $data = $cache->data;
+      $atom->rendered = $data['rendered'];
+      return $data['content'];
     }
   }
 
@@ -1302,7 +1306,11 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
     //  scald_update_atom() is called on the Atom.  This is usually the
     //  responsibility of the Atom Provider as it has the best idea when the base
     //  entity is changing.
-    cache_set($cache_id, $rendered, 'cache_scald', CACHE_PERMANENT);
+    $data = array(
+      'content' => $rendered,
+      'rendered' => $atom->rendered,
+    );
+    cache_set($cache_id, $data, 'cache_scald', CACHE_PERMANENT);
   }
 
   return $rendered;
