@@ -123,6 +123,19 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['filters']['uid']['expose']['identifier'] = 'uid';
   $handler->display->display_options['filters']['uid']['expose']['required'] = FALSE;
   $handler->display->display_options['filters']['uid']['expose']['reduce'] = 0;
+  /* Filter criterion: Atoms: Authors (scald_authors) */
+  $handler->display->display_options['filters']['scald_authors_tid']['id'] = 'scald_authors_tid';
+  $handler->display->display_options['filters']['scald_authors_tid']['table'] = 'field_data_scald_authors';
+  $handler->display->display_options['filters']['scald_authors_tid']['field'] = 'scald_authors_tid';
+  $handler->display->display_options['filters']['scald_authors_tid']['value'] = '';
+  $handler->display->display_options['filters']['scald_authors_tid']['group'] = 1;
+  $handler->display->display_options['filters']['scald_authors_tid']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['scald_authors_tid']['expose']['operator_id'] = 'scald_authors_tid_op';
+  $handler->display->display_options['filters']['scald_authors_tid']['expose']['label'] = 'Authors';
+  $handler->display->display_options['filters']['scald_authors_tid']['expose']['operator'] = 'scald_authors_tid_op';
+  $handler->display->display_options['filters']['scald_authors_tid']['expose']['identifier'] = 'scald_authors_tid';
+  $handler->display->display_options['filters']['scald_authors_tid']['expose']['remember_roles'] = array();
+  $handler->display->display_options['filters']['scald_authors_tid']['vocabulary'] = 'scald_authors';
   /* Filter criterion: Atom: Type */
   $handler->display->display_options['filters']['type']['id'] = 'type';
   $handler->display->display_options['filters']['type']['table'] = 'scald_atoms';
@@ -135,6 +148,19 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['filters']['type']['expose']['identifier'] = 'type';
   $handler->display->display_options['filters']['type']['expose']['required'] = FALSE;
   $handler->display->display_options['filters']['type']['expose']['reduce'] = 0;
+  /* Filter criterion: Atoms: Tags (scald_tags) */
+  $handler->display->display_options['filters']['scald_tags_tid']['id'] = 'scald_tags_tid';
+  $handler->display->display_options['filters']['scald_tags_tid']['table'] = 'field_data_scald_tags';
+  $handler->display->display_options['filters']['scald_tags_tid']['field'] = 'scald_tags_tid';
+  $handler->display->display_options['filters']['scald_tags_tid']['value'] = '';
+  $handler->display->display_options['filters']['scald_tags_tid']['group'] = 1;
+  $handler->display->display_options['filters']['scald_tags_tid']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['scald_tags_tid']['expose']['operator_id'] = 'scald_tags_tid_op';
+  $handler->display->display_options['filters']['scald_tags_tid']['expose']['label'] = 'Tags';
+  $handler->display->display_options['filters']['scald_tags_tid']['expose']['operator'] = 'scald_tags_tid_op';
+  $handler->display->display_options['filters']['scald_tags_tid']['expose']['identifier'] = 'scald_tags_tid';
+  $handler->display->display_options['filters']['scald_tags_tid']['expose']['remember_roles'] = array();
+  $handler->display->display_options['filters']['scald_tags_tid']['vocabulary'] = 'scald_tags';
   /* Filter criterion: Atom: Actions */
   $handler->display->display_options['filters']['actions']['id'] = 'actions';
   $handler->display->display_options['filters']['actions']['table'] = 'scald_atoms';
@@ -221,8 +247,10 @@ function scald_dnd_library_views_default_views() {
     t('Master'),
     t('Atoms'),
     t('Atoms Library'),
+    t('Authors'),
     t('Scald Library'),
     t('No atom found.'),
+    t('Tags'),
     t('Title'),
     t('Type'),
     t('Publisher'),
