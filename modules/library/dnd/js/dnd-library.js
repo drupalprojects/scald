@@ -15,11 +15,11 @@ Drupal.dnd = {
   Atoms: {
   },
 
+  // Setting for the qTip v2 library
   qTipSettings: {
     position: {
       my: 'right center',
-      at: 'left center',
-      event: 'click'
+      at: 'left center'
     },
     hide: {
       fixed: true,
@@ -32,6 +32,21 @@ Drupal.dnd = {
       classes: 'ui-tooltip-scald-dnd'
     }
   },
+
+  // Additional settings for the deprecated qTip v1
+  qTip1Settings: {
+    position: {
+      corner: {
+        target: 'leftMiddle',
+        tooltip: 'rightMiddle'
+      }
+    },
+    style: {
+      width: 550,
+      classes: {tooltip: 'ui-tooltip-scald-dnd'}
+    }
+  },
+
 
   // Refresh the library.
   refreshLibraries: function() {
@@ -160,6 +175,17 @@ renderLibrary: function(data, editor) {
           text: Drupal.dnd.Atoms[atom_id].preview
         }
       });
+
+      // When using the deprecated qTip v1 library,
+      // add some additional settings.
+      try {
+        $.fn.qtip.styles.defaults.width.min;
+        $.extend(settings, Drupal.dnd.qTip1Settings);
+      }
+      catch(err) {
+        // On qTip 2, everything's ok
+      }
+
       $("#sdl-" + atom_id).qtip(settings);
     }
   }
