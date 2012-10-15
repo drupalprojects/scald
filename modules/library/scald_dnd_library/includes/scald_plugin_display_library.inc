@@ -50,7 +50,7 @@ class scald_plugin_display_library extends views_plugin_display_page {
           // When migrating to D7, use the very useful _multiple variant
           // to reduce the number of queries.
           foreach ($value as $tid) {
-            $term = taxonomy_get_term($tid);
+            $term = taxonomy_term_load($tid);
             $names[] = $term->name;
           }
           $value = $names;
