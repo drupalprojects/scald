@@ -120,8 +120,10 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
 
   params = {};
 
-  editor.trigger('wysiwygDetach', params);
-  editor.trigger('wysiwygAttach', params);
+  if (editor) {
+    editor.trigger('wysiwygDetach', params);
+    editor.trigger('wysiwygAttach', params);
+  }
 
   for (atom_id in data.atoms) {
     // Store the atom data in our object
@@ -471,12 +473,9 @@ Drupal.behaviors.dndLibrary.countElements = function(target, representation_id, 
  * Refresh the library.
  */
 Drupal.dnd.refreshLibraries = function() {
-  var settings = Drupal.settings.dndDropAreas;
-  for (editor_id in settings) {
-    var elem = $("#" + settings[editor_id].library_id).get(0);
-    var $editor = $("#" + editor_id);
-    $.getJSON(elem.library_url, function (data) {
-      Drupal.behaviors.dndLibrary.renderLibrary.call(elem, data, $editor);
-    });
-  }
+  elem = $("div.dnd-library-wrapper").get(0);
+  editor = false;
+  $.getJSON(Drupal.settings.dnd.url, function (data) {
+    Drupal.behaviors.dndLibrary.renderLibrary.call(elem, data, editor);
+  });
 }
