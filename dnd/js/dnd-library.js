@@ -416,7 +416,7 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
       // If the previous element is also an editor representation, we need to
       // put a dummy paragraph between the elements to prevent editor errors.
       if (previous ) {
-        $inserted.before('<p></p>');
+        $inserted.before('<p>&nbsp;</p>');
       }
 
       // Look ahead in the DOM
