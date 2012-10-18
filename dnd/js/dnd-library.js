@@ -289,10 +289,7 @@ Drupal.behaviors.dndLibrary.attach_none = function(data, settings) {
       Drupal.behaviors.dndLibrary.countElements.call(target, representation_id);
 
       var atom = Drupal.dnd.Atoms[representation_id];
-      var snippet = '<div class="dnd-drop-wrapper">' + atom.editor + '</div>';
-      if (atom.meta.legend) {
-        snippet += atom.meta.legend;
-      }
+      var snippet = Drupal.theme('scaldSnippet', atom, {});
       $target.replaceSelection(snippet, true);
     }
   }, settings);
@@ -347,8 +344,7 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
     processIframeDrop: function(drop, id_selector) {
       var representation_id = id_selector.call(this, drop);
       if (!Drupal.dnd.Atoms[representation_id]) return;
-      var representation = Drupal.dnd.Atoms[representation_id].editor;
-      var legend = Drupal.dnd.Atoms[representation_id].meta.legend;
+      var atom = Drupal.dnd.Atoms[representation_id];
       var target = this, $target = $(target), $drop = $(drop), block;
 
       // Update element count
@@ -369,10 +365,7 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
       $drop.remove();
 
       // Create an element to insert
-      var snippet = '<div class="dnd-drop-wrapper" id="dnd-inserted">' + representation + '</div>';
-      if (legend) {
-        snippet += legend;
-      }
+      var snippet = Drupal.theme('scaldSnippet', atom, {attrs: {id: 'dnd-inserted'}});
 
       // The no-parent case
       if ($(block).is('body')) {
@@ -479,3 +472,30 @@ Drupal.dnd.refreshLibraries = function() {
     Drupal.behaviors.dndLibrary.renderLibrary.call(elem, data, editor);
   });
 }
+
+/**
+ * Theme the atom snippet
+ */
+Drupal.theme.prototype.scaldSnippet = function(atom, options) {
+  var attrs = options.attrs || {}, defaultClass = 'dnd-drop-wrapper atom-type-' + atom.meta.type;
+
+  // Append the dnd-drop-wrapper class to the attributes
+
+  if (attrs['class']) {
+    attrs['class'] += defaultClass;
+  }
+  else {
+    attrs['class'] = defaultClass;
+  }
+
+  var wrapper = jQuery('<wrapper><div /></wrapper>')
+    .find('div')
+    .attr(attrs)
+    .append(atom.editor);
+
+  if (atom.meta.legend) {
+    wrapper.after(atom.meta.legend);
+  }
+
+  return wrapper.end().html();
+};
