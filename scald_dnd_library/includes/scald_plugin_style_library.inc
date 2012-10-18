@@ -20,7 +20,14 @@ class scald_plugin_style_library extends views_plugin_style {
   }
 
   function build_sort_post() {
-    $this->options['default'] = 'sid';
+    $default_sort = 'sid';
+    foreach ($this->view->field as $name => $field) {
+        if ($field->definition['click sortable']) {
+          $default_sort = $name;
+          break;
+        }
+    }
+    $this->options['default'] = $default_sort;
     $this->options['order'] = 'desc';
     if (!isset($_GET['order'])) {
       // check for a 'default' clicksort. If there isn't one, exit gracefully.
