@@ -345,6 +345,9 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
       // Create an element to insert
       var snippet = Drupal.theme('scaldSnippet', atom, {attrs: {id: 'dnd-inserted'}});
 
+      // And append a paragraph where the caret will be set.
+      snippet += "<p><span id='__caret' /></p>";
+
       // The no-parent case
       if ($(block).is('body')) {
         $(block).append(snippet);
@@ -382,26 +385,12 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
       var inserted = $inserted.get(0);
 
       // Look behind in the DOM
-      var previous = $inserted.prev().get(0);
+      var $previous = $inserted.prev();
 
       // If the previous element is also an editor representation, we need to
       // put a dummy paragraph between the elements to prevent editor errors.
-      if (previous ) {
+      if ($previous) {
         $inserted.before('<p>&nbsp;</p>');
-      }
-
-      // Look ahead in the DOM
-      var next = $inserted.next().get(0);
-
-      // If the next item exists and isn't an editor representation, drop the
-      // caret at the beginning of the element, otherwise make a new paragraph
-      // to advance the caret to.
-      if (next && !$(next).hasClass('dnd-drop-wrapper')) {
-        $(next).prepend('<span id="__caret">_</span>');
-      }
-      else if (!$(next).hasClass('dnd-drop-wrapper')) {
-        var after = dom.create('p', {}, '<span id="__caret">_</span>');
-        dom.insertAfter(after, 'dnd-inserted');
       }
 
       // Force selection to reset the caret
@@ -417,7 +406,6 @@ Drupal.behaviors.dndLibrary._attach_tinymce = function(data, settings, tiny_inst
       $inserted
         .removeAttr('id')
         .attr('dnd_id', representation_id);
-
     }
   }, settings);
 
