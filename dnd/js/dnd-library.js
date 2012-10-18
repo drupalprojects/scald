@@ -71,15 +71,14 @@ Drupal.behaviors.dndLibrary = function(context) {
       .addClass('dnd-processed')
       .append('<div class="dnd-library-wrapper"></div>');
     var wrapper = $('#node-form .dnd-library-wrapper');
-    $editor = $("<a />");
     wrapper.library_url = Drupal.settings.dnd.url;
     $.getJSON(wrapper.library_url, function(data) {
-      Drupal.behaviors.dndLibrary.renderLibrary.call(wrapper, data, $editor);
+      Drupal.behaviors.dndLibrary.renderLibrary.call(wrapper, data);
     });
   }
 }
 
-Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
+Drupal.behaviors.dndLibrary.renderLibrary = function(data) {
   $this = $(this);
 
   // Save the current status
@@ -120,33 +119,12 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
 
   params = {};
 
-  if (editor) {
-    editor.trigger('wysiwygDetach', params);
-    editor.trigger('wysiwygAttach', params);
-  }
-
   for (atom_id in data.atoms) {
     // Store the atom data in our object
     Drupal.dnd.Atoms[atom_id] = data.atoms[atom_id];
     // And add a nice preview behavior thanks to BeautyTips
     $("#sdl-" + atom_id).bt(Drupal.dnd.Atoms[atom_id].preview, Drupal.dnd.btSettings);
   }
-
-  // Preload images in editor representations
-  var cached = $.data($(editor), 'dnd_preload') || {};
-  for (editor_id in Drupal.dnd.Atoms) {
-    if (!cached[editor_id]) {
-      $representation = $(Drupal.dnd.Atoms[editor_id].editor);
-      if ($representation.is('img') && $representation.get(0).src) {
-        $representation.attr('src', $representation.get(0).src);
-      } else {
-        $('img', $representation).each(function() {
-          $(this).attr('src', this.src);
-        });
-      }
-    }
-  }
-  $.data($(editor), 'dnd_preload', cached);
 
   // Set up drag & drop data
   $('.editor-item .drop').each(function(i) {
@@ -176,7 +154,7 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
     $('.editor-item.bt-active').btOff();
     $this.get(0).library_url = this.href;
     $.getJSON(this.href, function(data) {
-      Drupal.behaviors.dndLibrary.renderLibrary.call($this.get(0), data, $(editor));
+      Drupal.behaviors.dndLibrary.renderLibrary.call($this.get(0), data);
     });
     return false;
   });
@@ -191,7 +169,7 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
       'success' : function(data) {
         var target = submit.parents('div.dnd-library-wrapper').get(0);
         target.library_url = this.url;
-        Drupal.behaviors.dndLibrary.renderLibrary.call(target, data, $(editor));
+        Drupal.behaviors.dndLibrary.renderLibrary.call(target, data);
       }
     });
     e.preventDefault();
@@ -208,7 +186,7 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
       'success' : function(data) {
         var target = reset.parents('div.dnd-library-wrapper').get(0);
         target.library_url = Drupal.settings.dnd.url;
-        Drupal.behaviors.dndLibrary.renderLibrary.call(target, data, $(editor));
+        Drupal.behaviors.dndLibrary.renderLibrary.call(target, data);
       },
       'beforeSubmit': function (data, form, options) {
         // Can't use data = [], otherwise we're creating a new array
@@ -230,7 +208,7 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
       'success' : function(data) {
         var target = submit.parents('div.dnd-library-wrapper').get(0);
         target.library_url = this.url;
-        Drupal.behaviors.dndLibrary.renderLibrary.call(target, data, $(editor));
+        Drupal.behaviors.dndLibrary.renderLibrary.call(target, data);
       }
     });
     return false;
@@ -245,7 +223,7 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
       'success' : function(data) {
         var target = submit.parents('div.dnd-library-wrapper').get(0);
         target.library_url = this.url;
-        Drupal.behaviors.dndLibrary.renderLibrary.call(target, data, $(editor));
+        Drupal.behaviors.dndLibrary.renderLibrary.call(target, data);
       }
     });
     return false;
@@ -257,7 +235,7 @@ Drupal.behaviors.dndLibrary.renderLibrary = function(data, editor) {
     $('.editor-item.bt-active').btOff();
     $this.get(0).library_url = this.href;
     $.getJSON(this.href, function(data) {
-      Drupal.behaviors.dndLibrary.renderLibrary.call($this.get(0), data, $(editor));
+      Drupal.behaviors.dndLibrary.renderLibrary.call($this.get(0), data);
     });
     return false;
   });
@@ -467,9 +445,8 @@ Drupal.behaviors.dndLibrary.countElements = function(target, representation_id, 
  */
 Drupal.dnd.refreshLibraries = function() {
   elem = $("div.dnd-library-wrapper").get(0);
-  editor = false;
   $.getJSON(Drupal.settings.dnd.url, function (data) {
-    Drupal.behaviors.dndLibrary.renderLibrary.call(elem, data, editor);
+    Drupal.behaviors.dndLibrary.renderLibrary.call(elem, data);
   });
 }
 
