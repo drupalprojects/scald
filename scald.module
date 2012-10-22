@@ -506,17 +506,22 @@ function scald_atom_delete_multiple($sids) {
   $atoms = scald_atom_load_multiple($sids);
   if ($atoms) {
     $transaction = db_transaction();
-    // Delete the Scald atoms.
-    db_delete('scald_atoms')
-      ->condition('sid', array_keys($atoms), 'IN')
-      ->execute();
     try {
-      foreach ($sids as $sid) {
-        $atom = scald_atom_load($sid);
-        field_attach_delete('scald_atom', $atom);
+      // Unregister the atom
+      $atoms = scald_atom_load_multiple($sids);
+      foreach ($atoms as $atom) {
+        // First, unregister the atom, which will mark it as unavailable
+        scald_unregister_atom($atom);
+        // Notify all modules that the atom is going to be fully deleted
         module_invoke_all('scald_atom_delete', $atom);
         module_invoke_all('entity_delete', $atom, 'scald_atom');
+        // Then invoke Field delete handlers
+        field_attach_delete('scald_atom', $atom);
       }
+      // Finally, delete the Scald atoms.
+      db_delete('scald_atoms')
+        ->condition('sid', array_keys($atoms), 'IN')
+        ->execute();
     }
     catch (Exception $e) {
       $transaction->rollback();
@@ -524,6 +529,9 @@ function scald_atom_delete_multiple($sids) {
       throw $e;
     }
   }
+
+  // And end up clearing up our static load cache.
+  entity_get_controller('scald_atom')->resetCache();
 }
 
 /**
@@ -560,12 +568,12 @@ function scald_unregister_atom($sid) {
 
   // Revoke all permissions on the Atom, making it inaccessible.
   db_update('scald_atoms')
-    ->fields(array('actions', 0))
+    ->fields(array('actions' => 0))
     ->condition('sid', $sid)
     ->execute();
 
   // Alert the Providers that this Atom is gone
-  module_invoke($types[$atom->type]['provider'], 'scald_unregister_atom', $atom, 'type');
+  module_invoke($types[$atom->type]->provider, 'scald_unregister_atom', $atom, 'type');
   module_invoke($atom->provider, 'scald_unregister_atom', $atom, 'atom');
 
   foreach (scald_contexts() as $context => $details) {
