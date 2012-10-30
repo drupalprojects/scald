@@ -214,7 +214,7 @@ function mee_field_attach_view_alter(&$output, $context) {
     list($id, $revision_id, $bundle) = entity_extract_ids($context['entity_type'], $context['entity']);
     $fields = field_info_instances($context['entity_type'], $bundle);
     foreach ($fields as $name => $field) {
-      if (!empty($field['settings']['dnd_enabled'])) {
+      if (!empty($field['settings']['dnd_enabled']) && isset($output[$name])) {
         foreach (element_children($output[$name]) as $key) {
           $output[$name][$key]['#markup'] = scald_sas_to_rendered($output[$name][$key]['#markup'], $field['settings']['context']);
         }
