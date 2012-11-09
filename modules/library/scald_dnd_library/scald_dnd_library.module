@@ -137,6 +137,9 @@ function scald_dnd_library_scald_render($atom, $context, $options = array()) {
   if ($atom->rendered->file_transcoded_url) {
     $path = $atom->rendered->file_transcoded_url;
   }
+  elseif ($atom->rendered->thumbnail_transcoded_url) {
+    $path = $atom->rendered->thumbnail_transcoded_url;
+  }
   else {
     $path = $atom->rendered->thumbnail_source_url;
   }
@@ -153,19 +156,6 @@ function scald_dnd_library_scald_render($atom, $context, $options = array()) {
   }
   else {
     $attributes += array('class' => 'dnd-dropped');
-  }
-  // Try to get the image size.
-  if ($atom->rendered->file_transcoded_url && $atom->file_transcoded) {
-    list($width, $height, $type, $attr) = @getimagesize($atom->file_transcoded);
-  }
-  elseif ($atom->thumbnail_source) {
-    list($width, $height, $type, $attr) = @getimagesize($atom->thumbnail_source);
-  }
-  if ($width && $height) {
-    $attributes += array(
-      'width' => $width,
-      'height' => $height
-    );
   }
   $image = "<img src='$path' alt='' ". drupal_attributes($attributes) . ' />';
   switch ($context) {
