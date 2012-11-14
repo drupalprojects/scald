@@ -318,10 +318,12 @@ function scald_atom_view($atom, $context, $options = NULL) {
 
   // It would be better with an extra_fields, as it allow to customize/reorder
   // the display.
-  $content['atom'] = array(
-    '#markup' => $atom->rendered->player,
-    '#weight' => -50,
-  );
+  if (!empty($atom->rendered->player)) {
+    $content['atom'] = array(
+      '#markup' => $atom->rendered->player,
+      '#weight' => -50,
+    );
+  }
 
   return $content;
 }
