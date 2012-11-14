@@ -84,10 +84,10 @@ function scald_dailymotion_search_form($form, &$form_state) {
     }
     else {
       // No need to show a table
-      unset($form['results']['#theme']);  
+      unset($form['results']['#theme']);
 
       // No results message
-      $form['results']['empty'] = array(  
+      $form['results']['empty'] = array(
         '#type' => 'item',
         '#markup' => t('No results')
       );
@@ -139,7 +139,7 @@ function scald_dailymotion_search_form_submit($form, &$form_state) {
     $video = scald_fetch($sid);
     drupal_set_message(t('Created video %title', array('%title' => $video->title)));
   }
-*/
+ */
 }
 
 /**
