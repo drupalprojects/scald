@@ -8,7 +8,7 @@
 
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  */
 function scald_youtube_install() {
   // @@@TODO: Pre-populate appropriate variables/configuration
@@ -18,7 +18,7 @@ function scald_youtube_install() {
 
 
 /**
- * Implementation of hook_uninstall().
+ * Implementats hook_uninstall().
  */
 function scald_youtube_uninstall() {
   // @@@TODO: Delete all variables/configs/blocks/etc.
