@@ -168,8 +168,8 @@ function scald_admin_type_form_submit($form, &$form_state) {
 
 
   foreach ($form_state['values'] as $key => $value) {
-    if (substr($key, 0, 5) == 'type_') {
-      switch (substr($key, -6)) {
+    if (drupal_substr($key, 0, 5) == 'type_') {
+      switch (drupal_substr($key, -6)) {
         case '_title':
           db_update('scald_types')
             ->fields(array('title' => $value))
@@ -378,7 +378,7 @@ function scald_admin_contexts_form($form, $form_state, $type) {
     $form[$name] = array(
       '#type'         => 'fieldset',
       '#title'        => check_plain($context['title']),
-      '#description'  => check_plain($context['description']) . '<br>' . t('Provided by <code>@module.module</code>.', array('@module' => $context['provider'])),
+      '#description'  => check_plain($context['description']) . '<br />' . t('Provided by <code>@module.module</code>.', array('@module' => $context['provider'])),
       '#collapsible'  => TRUE,
       '#collapsed'    => TRUE,
     );
@@ -418,10 +418,10 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
   drupal_set_message(t('Context transcoders settings saved'));
   $typename = $form_state['build_info']['args'][0]->type;
   foreach ($form_state['values'] as $key => $value) {
-    switch (substr($key, -6)) {
+    switch (drupal_substr($key, -6)) {
       // Transcoders
       case '_trans':
-        $context = substr($key, 0, -6);
+        $context = drupal_substr($key, 0, -6);
         $transcoder = $value;
         if ($value == '@none') {
           db_delete('scald_context_type_transcoder')
@@ -483,7 +483,7 @@ function scald_settings_form() {
     '#title' => t('Vocabulary used for tags storing'),
     '#description' => t('By default, Scald uses its own vocabulary to store atoms tags, you can override it here.'),
     '#options' => $options,
-    '#default_value' => variable_get('scald_tags_vocabulary', 0), 
+    '#default_value' => variable_get('scald_tags_vocabulary', 0),
   );
 
   // Add our custom submit handler

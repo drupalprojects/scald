@@ -62,15 +62,15 @@ class scald_views_handler_filter_actions extends views_handler_filter {
   /**
    * Overrides admin_summary: display user friendly label.
    */
-   function admin_summary() {
-     $actions = scald_actions();
-     $names = array();
-     foreach ($actions as $name => $action) {
-       if (!empty($this->options['value'][$name])) {
-         $names[] = $action['title'];
-       }
-     }
-     return implode(',', $names);
-   }
+function admin_summary() {
+  $actions = scald_actions();
+  $names = array();
+  foreach ($actions as $name => $action) {
+    if (!empty($this->options['value'][$name])) {
+      $names[] = $action['title'];
+    }
+  }
+  return implode(',', $names);
+}
 }
 
