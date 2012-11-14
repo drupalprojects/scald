@@ -283,17 +283,10 @@ function scald_twitter_parse_id($string, $check) {
  *   twitter ID
  */
 function scald_twitter_resolve_url($tweet_url) {
+  $options = array('timeout' => 5);
+  $response = drupal_http_request($tweet_url, $options);
 
-  $c = curl_init();
-  curl_setopt($c, CURLOPT_URL, $tweet_url);
-  curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
-  curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 3);
-  curl_setopt($c, CURLOPT_TIMEOUT, 5);
-  $response = curl_exec($c);
-  $responseInfo = curl_getinfo($c);
-  curl_close($c);
-
-  if (intval($responseInfo['http_code']) == 200) {
+  if ($response->code == 200) {
     //@TODO : make a better test to be sure we get a tweet
     $api_url_full = $tweet_url;
     $api_url_parts = explode('/', $api_url_full);
