@@ -134,10 +134,10 @@ function scald_dnd_library_scald_contexts() {
  * Implements hook_scald_render.
  */
 function scald_dnd_library_scald_render($atom, $context, $options = array()) {
-  if ($atom->rendered->file_transcoded_url) {
+  if (!empty($atom->rendered->file_transcoded_url)) {
     $path = $atom->rendered->file_transcoded_url;
   }
-  elseif ($atom->rendered->thumbnail_transcoded_url) {
+  elseif (!empty($atom->rendered->thumbnail_transcoded_url)) {
     $path = $atom->rendered->thumbnail_transcoded_url;
   }
   else {
