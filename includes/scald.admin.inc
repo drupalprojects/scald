@@ -348,7 +348,7 @@ function scald_admin_contexts($type) {
   $content .= '<p>' . t('Scald Rendering Contexts are something like themes for Scald Atoms.  Any Atom can be rendered in any Context and the Context determines what that rendering looks like and what language it is in.') . '</p>';
   $content .= '<p>' . t('If a Context is "parseable", that means that its output is wrapped in HTML comments (currently this feature only works reliably for Contexts which have a render language of XHTML) which make it possible for Scald Core to uniquely identify the Atom based on the rendering.  For instance, if a WYSIWYG editor is being used in some text areas and Scald Atoms should be included in the WYSIWYG preview of the text, a Context can be chosen and specified as parseable.  That ensures that when the textarea is submitted, Scald Core will be able to determine which Atoms are present in the textarea, convert the rendered versions to Scald Atom Shorthand and ensure proper parsing by the Scald Atom Shorthand Input Filter.') . '</p>';
 
-  $output[] = $content;
+  $output[] = array('#markup' => $content);
   $output[] = drupal_get_form('scald_admin_contexts_form', $type);
 
   return $output;
