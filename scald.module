@@ -22,7 +22,7 @@ require_once('includes/scald.constants.inc');
 
 /*******************************************************************************
  * SCALD PROVIDERS & CONFIGURATION
- ******************************************************************************/
+ */
 
 /**
  * Get the available Scald Unified Types
@@ -170,7 +170,7 @@ function scald_contexts($reset = FALSE) {
 }
 
 /**
- * Implements hook_scald_contexts_alter.
+ * Implements hook_scald_contexts_alter().
  *
  * Adds informations on the configured transcoder formats to
  * the standard info hook output.
@@ -212,7 +212,7 @@ function scald_actions($reset = FALSE) {
 }
 
 /**
- * Implements hook_scald_actions_alter.
+ * Implements hook_scald_actions_alter().
  *
  * Assigns each actions an unique bitmask.
  */
@@ -329,7 +329,7 @@ function scald_atom_defaults($type) {
 
 /*******************************************************************************
  * SCALD ATOM CRUD
- ******************************************************************************/
+ */
 
 /**
  * Load a Scald Atom
@@ -846,7 +846,7 @@ function scald_search($query = array(), $fuzzy = FALSE, $singular = FALSE) {
 
 /*******************************************************************************
  * SCALD CONVERSION UTILITIES
- ******************************************************************************/
+ */
 
 /**
  * Process a text string and replace Scald Atom Shorthand (SAS) with rendered
@@ -854,7 +854,7 @@ function scald_search($query = array(), $fuzzy = FALSE, $singular = FALSE) {
  *
  * Looks for strings along the lines of [scald=SID:context-slug options].
  *
- * @see scald_rendered_to_sas
+ * @see scald_rendered_to_sas()
  *
  * @param $string
  *   A text string to be processed.
@@ -925,7 +925,7 @@ function scald_included($string) {
  * Process a text string and replace rendered Scald Atoms with Scald Atom
  *  Shorthand (SAS).
  *
- * @see scald_sas_to_rendered
+ * @see scald_sas_to_rendered()
  *
  * NOTE: Scald Core only contains an implementation for parsing Scald Atoms
  *  rendered in XHTML.  Additional implementations can be supplied by
@@ -977,7 +977,7 @@ function scald_rendered_to_sas($string, $render_language = 'XHTML') {
 
 /*******************************************************************************
  * SCALD ACTIONS & LICENSES
- ******************************************************************************/
+ */
 
 /**
  * Determine the Scald Actions Bitstring for a given Atom for a given User.
@@ -1017,8 +1017,8 @@ function scald_user_actions($atom, $account = NULL) {
 
   // Check for the "bypass atom access restrictions" permission for this user
   //  if it is set, OR the  "Atom" and the "User Action" rather than ANDing them.
-  return user_access('bypass atom access restrictions') 
-    ? ($atom->actions | $account->scald_actions[$actions_key]) 
+  return user_access('bypass atom access restrictions')
+    ? ($atom->actions | $account->scald_actions[$actions_key])
     : ($atom->actions & $account->scald_actions[$actions_key]);
 } // end scald_actions()
 
@@ -1070,7 +1070,7 @@ function scald_action_permitted($atom, $action = 'fetch', $account = NULL) {
 
 
 /**
- * Implementation of hook_user_load().
+ * Implements hook_user_load().
  */
 function scald_user_load($users) {
   // For each loaded user get combined scald_actions
@@ -1081,7 +1081,7 @@ function scald_user_load($users) {
 
 
 /**
- * Implementation of hook_user_load().
+ * Implementats hook_user_load().
  * Fetch action bitstring components by User Role and combine
  */
 function _scald_user_combine_actions($account) {
@@ -1095,7 +1095,7 @@ function _scald_user_combine_actions($account) {
     $cache = cache_get('scald_actions_bitstring_for_rid_' . $rid, 'cache_scald');
     if (empty($cache)) {
       // cache miss
-      $role_actions = scald_compute_role_actions(array($rid => $role_name));      
+      $role_actions = scald_compute_role_actions(array($rid => $role_name));
     }
     else {
       $role_actions = $cache->data;
@@ -1117,7 +1117,7 @@ function _scald_user_combine_actions($account) {
 
 /*******************************************************************************
  * SCALD CONTEXTS AND RENDERING
- ******************************************************************************/
+ */
 
 /**
  * Prepare a Scald Atom for rendering
@@ -1444,17 +1444,17 @@ function _scald_system_contexts() {
 
 /*******************************************************************************
  * SCALD HOOK IMPLEMENTATIONS
- ******************************************************************************/
+ */
 
 /**
- * Implements hook_scald_contexts.
+ * Implements hook_scald_contexts().
  */
 function scald_scald_contexts() {
   return array_merge(_scald_system_contexts(), variable_get('scald_custom_contexts', array()));
 }
 
 /**
- * Implements hook_scald_transcoders.
+ * Implements hook_scald_transcoders().
  */
 function scald_scald_transcoders() {
   return array(
@@ -1471,7 +1471,7 @@ function scald_scald_transcoders() {
 }
 
 /**
- * Implements hook_scald_actions.
+ * Implements hook_scald_actions().
  */
 function scald_scald_actions() {
   return array(
@@ -1499,7 +1499,7 @@ function scald_scald_actions() {
 }
 
 /**
- * Implementation of hook_scald_prerender().
+ * Implements hook_scald_prerender().
  *
  * Scald Core implements this hook for its role as a Scald Atom Provider of
  *  Atoms of Scald Unified Type 'composite', for its role as a Scald Context
@@ -1554,7 +1554,7 @@ function scald_scald_prerender($atom, $mode, $context = NULL, $options = NULL) {
 
 
 /**
- * Implementation of hook_scald_render().
+ * Implements hook_scald_render().
  */
 function scald_scald_render($atom, $context, $options = NULL) {
   switch ($context) {
@@ -1593,7 +1593,7 @@ function scald_scald_render($atom, $context, $options = NULL) {
 
 
 /**
- * Implementation of hook_scald_action().
+ * Implements hook_scald_action().
  */
 function scald_scald_action($atom, $action) {
   switch ($action) {
@@ -1614,10 +1614,10 @@ function scald_scald_action($atom, $action) {
 
 /*******************************************************************************
  * DRUPAL HOOK IMPLEMENTATIONS
- ******************************************************************************/
+ */
 
 /**
- * Implements hook_entity_info.
+ * Implements hook_entity_info().
  *
  * Define a new entity type for the Atoms.
  */
@@ -1668,7 +1668,7 @@ function scald_entity_info() {
 }
 
 /**
- * Implements hook_entity_property_info.
+ * Implements hook_entity_property_info().
  */
 function scald_entity_property_info() {
   $info = array();
@@ -1726,7 +1726,7 @@ function scald_entity_property_info() {
 }
 
 /**
- * Implements hook_field_extra_fields.
+ * Implements hook_field_extra_fields().
  */
 function scald_field_extra_fields() {
   $extra = array();
@@ -1793,7 +1793,7 @@ function scald_permission() {
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function scald_menu() {
   $items = array();
@@ -2015,7 +2015,7 @@ function scald_atom_add_access($type = NULL) {
 
 
 /**
- * Implementation of hook_theme()
+ * Implements hook_theme().
  */
 function scald_theme($existing, $type, $theme, $path) {
   return array(
@@ -2027,7 +2027,7 @@ function scald_theme($existing, $type, $theme, $path) {
 
 
 /**
- * Implementation of hook_filter().
+ * Implements hook_filter().
  */
 function scald_filter($op, $delta = 0, $format = -1, $text = '', $cache_id = 0) {
   switch ($op) {
@@ -2096,7 +2096,7 @@ function scald_filter($op, $delta = 0, $format = -1, $text = '', $cache_id = 0) 
 
 
 /**
- * Implementation of hook_filter_tips().
+ * Implements hook_filter_tips().
  */
 function scald_filter_tips($delta, $format, $long = FALSE) {
   if ($long) {
@@ -2108,7 +2108,7 @@ function scald_filter_tips($delta, $format, $long = FALSE) {
 
 
 /**
- * Implementation of hook_views_api()
+ * Implements hook_views_api().
  */
 function scald_views_api() {
   return array(
@@ -2118,7 +2118,7 @@ function scald_views_api() {
 }
 
 /**
- * Implementation of hook_flush_caches()
+ * Implements hook_flush_caches().
  */
 function scald_flush_caches() {
   return array('cache_scald');
@@ -2178,7 +2178,7 @@ function scald_compute_role_actions($role) {
 
 
 /**
- * Implementation of hook_form_FORM_ID_alter()
+ * Implements hook_form_FORM_ID_alter().
  * Hook into the permissions submit form to compute our bitstrings
  */
 function scald_form_user_admin_permissions_alter(&$form, &$form_state, $form_id) {
@@ -2221,7 +2221,7 @@ function scald_atom_user_build_actions_links($atom, $query = NULL) {
     }
   }
 
-  return $links;  
+  return $links;
 }
 
 /**

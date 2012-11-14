@@ -34,7 +34,7 @@ class scald_plugin_style_library extends views_plugin_style {
     else {
       $sort = $_GET['order'];
       // Store the $order for later use.
-      $this->order = !empty($_GET['sort']) ? strtolower($_GET['sort']) : 'desc';
+      $this->order = !empty($_GET['sort']) ? drupal_strtolower($_GET['sort']) : 'desc';
     }
 
     // If a sort we don't know anything about gets through, exit gracefully.

@@ -22,7 +22,7 @@ function scald_soundcloud_uninstall() {
 }
 
 /**
- * Implements hook_requirements.
+ * Implements hook_requirements().
  */
 function scald_soundcloud_requirements($phase) {
   $requirements = array();

@@ -128,7 +128,7 @@ class scald_plugin_display_library extends views_plugin_display_page {
       if (user_access('create atom of ' . $type->type . ' type')) {
         $buttons['items'][] = array(
           'data' => ctools_modal_text_button(t($type->type), 'atoms/nojs/add/' . $type->type, '', 'ctools-modal-custom-style'),
-          'class' => array('add-' . strtolower($type->type)),
+          'class' => array('add-' . drupal_strtolower($type->type)),
         );
       }
     }
