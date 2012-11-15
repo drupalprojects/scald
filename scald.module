@@ -18,6 +18,7 @@
  */
 
 require_once('includes/scald.constants.inc');
+require_once('includes/scald.atom.inc');
 
 
 /*******************************************************************************
@@ -1578,8 +1579,7 @@ function scald_scald_render($atom, $context, $options = NULL) {
       // If this is a custom context created through the UI, we use a special
       // render.
       if (!in_array($context, _scald_system_contexts())) {
-        module_load_include('inc', 'scald', 'includes/scald.pages');
-        $content = scald_atom_view($atom, $context, $options);
+        $content = scald_atom_view($atom, $context);
         return drupal_render($content);
       }
       // Else, returns the title as we don't know what to render.
@@ -1737,8 +1737,15 @@ function scald_field_extra_fields() {
           'label' => t('Title'),
           'description' => t('Atom title - Scald module element'),
           'weight' => -5,
-        )
-      )
+        ),
+      ),
+      'display' => array(
+        'atom' => array(
+          'label' => t('Atom'),
+          'description' => t('Scald atom principal element'),
+          'weight' => -2,
+        ),
+      ),
     );
   }
   return $extra;
@@ -1797,16 +1804,6 @@ function scald_permission() {
  */
 function scald_menu() {
   $items = array();
-
-  $items['scald/debug/%'] = array(
-    'title'            => 'Scald Debugging Console',
-    'page callback'    => 'scald_debug_console',
-    'page arguments'   => array(2),
-    'access callback'  => 'user_access',
-    'access arguments' => array('administer scald'),
-    'file'             => 'includes/scald.debug.inc',
-    'type'             => MENU_NORMAL_ITEM,
-  );
 
   $items['admin/content/atoms'] = array(
     'title'             => 'Atoms',
@@ -1869,14 +1866,14 @@ function scald_menu() {
     'access arguments'  => array('administer scald'),
     'file'              => 'includes/scald.admin.inc',
   );
-  $items['atoms/add'] = array(
+  $items['atom/add'] = array(
     'title' => 'Create Atom',
     'page callback' => 'scald_atom_add',
     'access callback' => 'scald_atom_add_access',
     'file' => 'includes/scald.pages.inc'
   );
   // The following two items do the same thing. We can consider them aliases.
-  $items['atoms/add/%scald_type'] = array(
+  $items['atom/add/%scald_type'] = array(
     'title' => 'Create Atom',
     'page callback' => 'scald_atom_add_page',
     'page arguments' => array(FALSE, 2),
@@ -1885,50 +1882,101 @@ function scald_menu() {
     'file' => 'includes/scald.pages.inc',
     'type' => MENU_CALLBACK,
   );
-  $items['atoms/%ctools_js/add/%scald_type'] = array(
+  $items['atom/add/%scald_type/%ctools_js'] = array(
     'title' => 'Create Atom',
     'page callback' => 'scald_atom_add_page',
-    'page arguments' => array(1, 3),
+    'page arguments' => array(3, 2),
     'access callback' => 'scald_atom_add_access',
-    'access arguments' => array(3),
+    'access arguments' => array(2),
     'file' => 'includes/scald.pages.inc',
     'type' => MENU_CALLBACK,
   );
 
-  $items['atoms/view/%scald_atom'] = array(
-    'title' => 'View Atom',
+  $items['atom/%scald_atom'] = array(
+    'title callback' => 'entity_label',
+    'title arguments' => array('scald_atom', 1),
     'page callback' => 'scald_atom_page_view',
-    'page arguments' => array(2),
+    'page arguments' => array(1),
     'access callback' => 'scald_action_permitted',
-    'access arguments' => array(2, 'view'),
-    'file' => 'includes/scald.pages.inc'
+    'access arguments' => array(1, 'view'),
+    'file' => 'includes/scald.pages.inc',
   );
-  // The following two items do the same thing. We can consider them aliases.
-  $items['atoms/edit/%scald_atom'] = array(
-    'title' => 'Edit Atom',
-    'page callback' => 'scald_atom_edit_page',
-    'page arguments' => array(FALSE, 2),
-    'access callback' => 'scald_action_permitted',
-    'access arguments' => array(2, 'edit'),
-    'file' => 'includes/scald.pages.inc'
+  $items['atom/%scald_atom/view'] = array(
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
   );
 
-  $items['atoms/%ctools_js/edit/%scald_atom'] = array(
+  // The following two items do the same thing. We can consider them aliases.
+  $items['atom/%scald_atom/edit'] = array(
+    'title' => 'Edit',
+    'page callback' => 'scald_atom_edit_page',
+    'page arguments' => array(FALSE, 1),
+    'access callback' => 'scald_action_permitted',
+    'access arguments' => array(1, 'edit'),
+    'file' => 'includes/scald.pages.inc',
+    'weight' => 0,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+  );
+  $items['atom/%scald_atom/edit/%ctools_js'] = array(
     'title' => 'Edit Atom',
     'page callback' => 'scald_atom_edit_page',
-    'page arguments' => array(1, 3),
+    'page arguments' => array(3, 1),
     'access callback' => 'scald_action_permitted',
-    'access arguments' => array(3, 'edit'),
-    'file' => 'includes/scald.pages.inc'
+    'access arguments' => array(1, 'edit'),
+    'file' => 'includes/scald.pages.inc',
   );
-  $items['atoms/delete/%scald_atom'] = array(
-    'title' => 'Delete Atom',
+
+  $items['atom/%scald_atom/delete'] = array(
+    'title' => 'Delete',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('scald_atom_delete_confirm', 2),
+    'page arguments' => array('scald_atom_delete_confirm', 1),
     'access callback' => 'scald_action_permitted',
-    'access arguments' => array(2, 'delete'),
-    'file' => 'includes/scald.pages.inc'
+    'access arguments' => array(1, 'delete'),
+    'file' => 'includes/scald.pages.inc',
+    'weight' => 50,
+    'type' => MENU_LOCAL_TASK,
   );
+
+  $items['atom/%/debug'] = array(
+    'title' => 'Debug',
+    'page callback' => 'scald_debug_console',
+    'page arguments' => array(1),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer scald'),
+    'file' => 'includes/scald.debug.inc',
+    'weight' => 90,
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  // Optional devel module integration
+  if (module_exists('devel')) {
+    $items['atom/%scald_atom/devel'] = array(
+      'title' => 'Devel',
+      'page callback' => 'devel_load_object',
+      'page arguments' => array('scald_atom', 1),
+      'access arguments' => array('access devel information'),
+      'type' => MENU_LOCAL_TASK,
+      'file' => 'devel.pages.inc',
+      'file path' => drupal_get_path('module', 'devel'),
+      'weight' => 100,
+    );
+    $items['atom/%scald_atom/devel/load'] = array(
+      'title' => 'Load',
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+    );
+    $items['atom/%scald_atom/devel/render'] = array(
+      'title' => 'Render',
+      'page callback' => 'devel_render_object',
+      'page arguments' => array('scald_atom', 1),
+      'access arguments' => array('access devel information'),
+      'file' => 'devel.pages.inc',
+      'file path' => drupal_get_path('module', 'devel'),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 100,
+    );
+  }
 
   return $items;
 } // end scald_menu()
@@ -2205,14 +2253,15 @@ function scald_atom_user_build_actions_links($atom, $query = NULL) {
     if (in_array($action, $supported_actions) && ($current_actions & $details['bitmask'])) {
       $links[$action] = array(
         'title' => $details['title'],
-        'href' => 'atoms/' . $action . '/' . $atom->sid,
+        'href' => 'atom/' . $atom->sid . ($action == 'view' ? '' : "/$action"),
       );
+
       // The 'edit' action supports CTools Modal
       if ($action == 'edit') {
         $links[$action]['attributes'] = array(
           'class' => array('ctools-use-modal', 'ctools-modal-custom-style'),
         );
-        $links[$action]['href'] = 'atoms/nojs/' . $action . '/' . $atom->sid;
+        $links[$action]['href'] .= '/nojs';
       }
 
       if ($query) {

@@ -333,7 +333,7 @@ function scald_admin_context_form_submit($form, &$form_state) {
 function scald_admin_atoms() {
   $count = db_query("SELECT COUNT(*) FROM {scald_atoms}")->fetchField();
   $content = '<h3>' . t('Scald Atoms') . '</h3>';
-  $content .= '<ul class="action-links"><li>' . l(t('Add atom'), 'atoms/add') . '</li></ul>';
+  $content .= '<ul class="action-links"><li>' . l(t('Add atom'), 'atom/add') . '</li></ul>';
   $content .= '<h4>' . format_plural($count, 'Currently, there is 1 atom registered with Scald Core.', 'Currently, there are @count atoms registered with Scald Core.') . '</h4>';
   $content .= '<p>' . t('Enable the Views module to get an handy paginated table with filters which will allow you to browse your atoms.') . '</p>';
 

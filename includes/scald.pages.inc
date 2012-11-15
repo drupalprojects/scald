@@ -22,7 +22,7 @@ function scald_atom_add() {
     }
     $content[] = array(
       'title' => $type->title,
-      'href'  => 'atoms/add/' . $name,
+      'href'  => 'atom/add/' . $name,
       'localized_options' => array(),
       'description' => ''
     );
@@ -78,7 +78,7 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
 
   $form_info = array(
     'id' => 'scald-atom-add',
-    'path' => 'atoms/' . ($js ? 'ajax' : 'nojs') . '/add/' . $type->type . '/%step',
+    'path' => 'atom/add/' . $type->type . '/' . ($js ? 'ajax' : 'nojs') . '/%step',
     'show trail' => TRUE,
     'show back' => FALSE,
     'show cancel' => TRUE,
@@ -133,10 +133,10 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
     if ($output === FALSE || !empty($form_state['complete'])) {
       // @todo should we display a confirmation instead?
       //return 'confirm message';
-      drupal_goto('atoms/add');
+      drupal_goto('atom/add');
     }
     elseif (!empty($form_state['cancel'])) {
-      drupal_goto('atoms/add');
+      drupal_goto('atom/add');
     }
     else {
       return $output;
@@ -291,41 +291,7 @@ function scald_atom_add_wizard_cancel(&$form_state) {
  * Page callback for the view of an atom.
  */
 function scald_atom_page_view($atom) {
-  drupal_set_title(t('View: @title', array('@title' => $atom->title)));
-
   return scald_render($atom, 'full');
-}
-
-/**
- * Handles the view of an atom within a context.
- *
- * Contrary to scald_rendered(), which displays basically a "player", this
- * function displays the player and all atom fields. Fields are reorderable and
- * customisable in the Field UI as usual.
- *
- * @param $atom
- *   Atom to be rendered
- * @param $context
- *   Name of the context
- * @param $options
- *   (optional) List of options
- */
-function scald_atom_view($atom, $context, $options = NULL) {
-  // Rendering content of atom
-  field_attach_prepare_view('scald_atom', array($atom->sid => $atom), $context);
-  entity_prepare_view('scald_atom', array($atom->sid => $atom));
-  $content = field_attach_view('scald_atom', $atom, $context);
-
-  // It would be better with an extra_fields, as it allow to customize/reorder
-  // the display.
-  if (!empty($atom->rendered->player)) {
-    $content['atom'] = array(
-      '#markup' => $atom->rendered->player,
-      '#weight' => -50,
-    );
-  }
-
-  return $content;
 }
 
 /**
@@ -353,7 +319,7 @@ function scald_atom_delete_confirm($form, &$form_state, $atom) {
   return confirm_form($form,
     t('Are you sure you want to delete %title?', array('%title' => $atom->title)),
     'admin/content/atoms',
-    t('<p>Note that unchecking the Fetch checkbox in the "<em>Openly available actions</em>" field of this atom <a href="!url">edit form</a> makes the atom disapears for everyone but scald administrators, and is usally a better idea.</p><p>This action cannot be undone.</p>', array('!url' => url('atoms/edit/' . $atom->sid))),
+    t('<p>Note that unchecking the Fetch checkbox in the "<em>Openly available actions</em>" field of this atom <a href="!url">edit form</a> makes the atom disapears for everyone but scald administrators, and is usally a better idea.</p><p>This action cannot be undone.</p>', array('!url' => url("atom/{$atom->sid}/edit"))),
     t('Delete'),
     t('Cancel')
   );
@@ -373,3 +339,4 @@ function scald_atom_delete_confirm_submit($form, &$form_state) {
 
   $form_state['redirect'] = 'admin/content/atoms';
 }
+

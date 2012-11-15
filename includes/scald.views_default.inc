@@ -181,7 +181,7 @@ function scald_views_default_views() {
   $handler->display->display_options['header']['area']['table'] = 'views';
   $handler->display->display_options['header']['area']['field'] = 'area';
   $handler->display->display_options['header']['area']['empty'] = TRUE;
-  $handler->display->display_options['header']['area']['content'] = '<ul class="action-links"><li>' . l(t('Add atom'), 'atoms/add') . '</li></ul>';
+  $handler->display->display_options['header']['area']['content'] = '<ul class="action-links"><li>' . l(t('Add atom'), 'atom/add') . '</li></ul>';
   $handler->display->display_options['header']['area']['format'] = 'filtered_html';
   $handler->display->display_options['header']['area']['tokenize'] = 0;
   $handler->display->display_options['path'] = 'admin/content/atoms';
