@@ -20,6 +20,9 @@ function scald_soundcloud_scald_atom_providers() {
   return array(
     'audio' => 'Audio hosted on SoundCloud'
   );
+  // This code will never be hit, but is necessary to mark the string
+  // for translation on localize.d.o
+  t('Audio hosted on SoundCloud');
 }
 
 /**

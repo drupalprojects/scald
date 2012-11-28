@@ -151,6 +151,11 @@ function scald_atom_add_form_source($form, &$form_state) {
   $providers = scald_atom_providers();
   $sources = $providers[$form_state['storage']->type->type];
 
+  // Localize the source names. Note that all the strings
+  // have been marked for extraction in their corresponding
+  // modules, so this call is safe.
+  $sources = array_map('t', $sources);
+
   $form_state['title'] = t('Source');
   $form['source'] = array(
     '#title' => t('Source'),

@@ -17,6 +17,9 @@ function scald_twitter_scald_atom_providers() {
   return array(
     'twitter' => 'Tweets hosted on twitter'
   );
+  // This code will never be hit, but is necessary to mark the string
+  // for translation on localize.d.o
+  t('Tweets hosted on Twitter');
 }
 
 /**

@@ -17,6 +17,9 @@ function scald_dailymotion_scald_atom_providers() {
   return array(
     'video' => 'Video hosted on Dailymotion'
   );
+  // This code will never be hit, but is necessary to mark the string
+  // for translation on localize.d.o
+  t('Video hosted on Dailymotion');
 }
 
 /**

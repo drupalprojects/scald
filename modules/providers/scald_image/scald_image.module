@@ -16,6 +16,9 @@ function scald_image_scald_atom_providers() {
   return array(
     'image' => 'Image upload'
   );
+  // This code will never be hit, but is necessary to mark the string
+  // for translation on localize.d.o
+  t('Image upload');
 }
 
 /**
