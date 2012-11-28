@@ -106,8 +106,6 @@ function mee_update_7001(&$sandbox) {
     $sandbox['progress'] = 0;
     $sandbox['current_nid'] = 0;
     $sandbox['max'] = db_query("SELECT COUNT(DISTINCT entity_id) FROM {mee_resource}")->fetchField();
-
-    var_dump($sandbox);
   }
 
   $query = db_select('mee_resource', 'm');
