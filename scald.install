@@ -19,7 +19,7 @@ require_once('includes/scald.constants.inc');
 
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function scald_schema() {
   $schema = array();
@@ -87,7 +87,7 @@ function scald_schema() {
         'size'        => 'big',
         'not null'    => TRUE,
         'serialize'   => TRUE,
-      ),      
+      ),
     ),
     'primary key' => array('sid'),
     'unique keys' => array(
@@ -211,7 +211,7 @@ function scald_schema() {
 
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  *
  * Installs the schema and then ensure that the hooks implemented by Scald Core
  *  will fire before those implemented by any Scald Providers (a direct
@@ -225,7 +225,7 @@ function scald_install() {
 
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  *
  * Removes the database tables and persistant variables managed through Drupal.
  *  Anything set in the Scald Admin Interface will be forgotten.
@@ -238,12 +238,13 @@ function scald_uninstall() {
   variable_del('scald_atom_defaults');
   variable_del('scald_context_fallbacks');
   variable_del('scald_actions_publisher');
+  variable_del('scald_custom_contexts');
 }
 
 
 
 /**
- * Implementation of hook_enable().
+ * Implements hook_enable().
  *
  * Ensures that various configuration options are set so that Scald Core can
  *  make certain assumptions about the contents of variables.
@@ -259,7 +260,7 @@ function scald_enable() {
 
 
 /**
- * Implementation of hook_disable().
+ * Implements hook_disable().
  *
  * Settings configured in the Scald Admin Interface should remain.  Lower-levl
  *  configurations, however, are removed as they will need to be rebuilt if the
@@ -285,7 +286,7 @@ function scald_update_7000() {
   // Better solutions for this problems exists in Contrib, now
   // that we're going for an entity-based solutions
   db_drop_table('scald_atom_relationships');
-  
+
   // Convert the 'scald_atom_types' variable, whose format changed
   // between 6.x and 7.x
   $defaults = variable_get('scald_atom_defaults', NULL);
@@ -407,7 +408,6 @@ function _scald_create_tags_vocabulary() {
     taxonomy_vocabulary_save($vocabulary);
     variable_set('scald_tags_vocabulary', $vocabulary->vid);
   }
-  
 
   // Create the scald_tags field
   if (!field_info_field('scald_tags')) {

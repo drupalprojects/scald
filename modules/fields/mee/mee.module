@@ -32,9 +32,11 @@ function mee_theme($existing, $type, $theme, $path) {
  * Implements hook_field_info_alter().
  */
 function mee_field_info_alter(&$info) {
-  $info['text_with_summary']['instance_settings']['dnd_enabled'] = 0;
-  $info['text_with_summary']['instance_settings']['mee_enabled'] = 0;
-  $info['text_with_summary']['instance_settings']['context'] = '';
+  foreach (mee_field_types() as $name) {
+    $info[$name]['instance_settings']['dnd_enabled'] = 0;
+    $info[$name]['instance_settings']['mee_enabled'] = 0;
+    $info[$name]['instance_settings']['context'] = '';
+  }
 }
 
 /**
@@ -46,7 +48,7 @@ function mee_field_info_alter(&$info) {
  */
 function mee_form_alter(&$form, &$form_state, $form_id) {
   // Verify if we are in the instance settings form.
-  if ($form_id !== 'field_ui_field_edit_form' || $form['#field']['type'] !== 'text_with_summary') {
+  if ($form_id !== 'field_ui_field_edit_form' || !in_array($form['#field']['type'], mee_field_types())) {
     return;
   }
 
@@ -203,17 +205,18 @@ function text_field_delete($entity_type, $entity, $field, $instance, $langcode, 
 }
 
 /**
- * Implements hook_field_formatter_prepare_view() on behalf of Text module.
+ * Implements hook_field_attach_view_alter.
  *
- * @see text_field_presave()
+ * Converts the SAS representation to the rendered representation.
  */
-function text_field_formatter_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items, $display) {
+function mee_field_attach_view_alter(&$output, $context) {
   if (variable_get('mee_store_sas', TRUE)) {
-    foreach ($entities as $id => $entity) {
-      if (!empty($instances[$id]['settings']['dnd_enabled'])) {
-        foreach ($items[$id] as $delta => &$item) {
-          $item['value'] = scald_sas_to_rendered($item['value'], $instances[$id]['settings']['context']);
-          $item['safe_value'] = scald_sas_to_rendered($item['safe_value'], $instances[$id]['settings']['context']);
+    list($id, $revision_id, $bundle) = entity_extract_ids($context['entity_type'], $context['entity']);
+    $fields = field_info_instances($context['entity_type'], $bundle);
+    foreach ($fields as $name => $field) {
+      if (!empty($field['settings']['dnd_enabled']) && isset($output[$name])) {
+        foreach (element_children($output[$name]) as $key) {
+          $output[$name][$key]['#markup'] = scald_sas_to_rendered($output[$name][$key]['#markup'], $field['settings']['context']);
         }
       }
     }
@@ -227,7 +230,7 @@ function mee_field_widget_form_alter(&$element, &$form_state, $context) {
   $enables = _mee_field_instance_enabled($context['instance']);
 
   // In any case, convert SAS into rendered for format textarea
-  if ($context['field']['type'] === 'text_with_summary') {
+  if (in_array($context['field']['type'], mee_field_types())) {
     if (variable_get('mee_store_sas', TRUE)) {
       $element['#default_value'] = scald_sas_to_rendered($element['#default_value'], $context['instance']['settings']['context']);
     }
@@ -272,7 +275,7 @@ function mee_field_widget_form_alter(&$element, &$form_state, $context) {
   }
   elseif (isset($element['#entity'])) {
     $item = array();
-    _mee_load_resources($element['#entity_type'], $element['#entity'], $context['field']['field_name'][0], $context['delta'], $item);
+    _mee_load_resources($element['#entity_type'], $element['#entity'], $context['field'], $context['delta'], $item);
     $resource_manager = $item['mee']['resource_manager'];
   }
 
@@ -328,6 +331,16 @@ function mee_field_text_validate($element, &$form_state) {
       }
     }
   }
+}
+
+/**
+ * Helper function to return a list of supported field.
+ *
+ * Note that only fields defined in the core Text module (text, text_long,
+ * text_with_summary) are eligible due to the actual implementation.
+ */
+function mee_field_types() {
+  return variable_get('mee_field_types', array('text_with_summary'));
 }
 
 /**
@@ -450,7 +463,7 @@ function _mee_process_item_value(&$item, $entity_type, $entity, $field, $delta) 
 function _mee_load_resources($entity_type, $entity, $field, $delta, &$item) {
   list($id, $revision_id) = _mee_extract_id($entity_type, $entity);
   $result = db_select('mee_resource', 'r')
-      ->fields('r', array('atom_sid', 'weight'))
+      ->fields('r', array('atom_sid', 'weight', 'required'))
       ->condition('entity_type', $entity_type)
       ->condition('entity_id', $id)
       ->condition('revision_id', $revision_id)
@@ -458,10 +471,8 @@ function _mee_load_resources($entity_type, $entity, $field, $delta, &$item) {
       ->condition('delta', $delta)
       ->execute();
   $item['mee']['resource_manager'] = array();
-  foreach ($result as $r) {
-    $item['mee']['resource_manager'][$r->atom_sid] = array('weight' => $r->weight);
-  }
-  $item['mee']['resource_manager'][0] = array('weight' => 0);
+  $item['mee']['resource_manager'] = $result->fetchAllAssoc('atom_sid', PDO::FETCH_ASSOC);
+  $item['mee']['resource_manager'][0] = array('weight' => 0, 'required' => FALSE);
 }
 
 /**

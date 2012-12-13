@@ -47,6 +47,35 @@ function scald_admin_dashboard() {
 
   $content .= theme('table', $table);
 
+  // Display a context listing.
+  $content .= '<h3>' . t('Scald Contexts') . '</h3>';
+  $content .= '<p>' . t('List of all Scald Contexts, thoses created through the UI and even those hidden or defined by other modules.') . '</p>';
+  $content .= '<ul class="action-links"><li>' . l(t('Add context'), 'admin/structure/scald/context/add') . '</li></ul>';
+
+  $list = array('type' => 'ul', 'items' => array());
+  $table = array(
+    'header' =>  array(
+      t('Context name'),
+      t('Atom type'),
+      t('Property'),
+      t('Actions'),
+    ),
+    'rows' => array(),
+  );
+
+  foreach (scald_contexts() as $name => $context) {
+    $table['rows'][] = array(
+      check_plain($context['title']) . '<div class="description">' . filter_xss_admin($context['description']) . '</div>',
+      empty($context['formats']) ? '<em>' . t('not specified') . '</em>' : check_plain(implode(', ', array_keys($context['formats']))),
+      // @todo add more when the UI created context comes
+      empty($context['hidden']) ? '' : t('hidden'),
+      // @todo add more when the UI created context comes
+      '',
+    );
+  }
+
+  $content .= theme('table', $table);
+
   return $content;
 } // end scald_admin_dashboard()
 
@@ -75,7 +104,7 @@ function scald_admin_type_form($form, $form_state, $type) {
     '#description'  => t('Every Atom must have certain data associated with it.  If an Atom Provider fails to supply that data, these defaults are used.  If nothing is specified here, Scald Core will supply generic defaults.'),
     '#collapsible'  => FALSE,
   );
-  $form['defaults']['type_' . $type_name. '_thumb'] = array(
+  $form['defaults']['type_' . $type_name . '_thumb'] = array(
     '#type'           => 'textfield',
     '#title'          => t('Default Thumbnail Image'),
     '#description'    => t('Specify a path relative to the Drupal install directory.  This image file will be automatically resized and transcoded as appropriate when generating the actual thumbnail image.'),
@@ -139,8 +168,8 @@ function scald_admin_type_form_submit($form, &$form_state) {
 
 
   foreach ($form_state['values'] as $key => $value) {
-    if (substr($key, 0, 5) == 'type_') {
-      switch (substr($key, -6)) {
+    if (drupal_substr($key, 0, 5) == 'type_') {
+      switch (drupal_substr($key, -6)) {
         case '_title':
           db_update('scald_types')
             ->fields(array('title' => $value))
@@ -175,6 +204,127 @@ function scald_admin_type_form_submit($form, &$form_state) {
   scald_types(TRUE);
 } // end scald_admin_types_form_submit()
 
+/**
+ * Form constructor for the context editing form.
+ *
+ * @param $context
+ *   (optional) context name, when editing an existing Scald context. However we
+ *   do not manage to get the edit form yet, so it is always NULL.
+ */
+function scald_admin_context_form($form, &$form_state, $context = NULL) {
+  // Default setting for the new context.
+  $context = array(
+    'name' => '',
+    'title' => '',
+    'description' => '',
+    'render_language' => 'XHTML',
+    'parseable' => TRUE,
+    'hidden' => FALSE,
+    'transcoder' => 'passthrough',
+    'formats' => array(),
+  );
+
+  // Make the context arrary available to implementations of hook_form_alter.
+  $form['#context'] = $context;
+
+  $form['title'] = array(
+    '#title' => t('Title'),
+    '#type' => 'textfield',
+    '#default_value' => $context['title'],
+    '#description' => t('The title of this context. This text will be displayed as part of the list on the <em>Scald Dashboard</em> and on the <em>Atom type Contexts</em> pages. It is recommended that this name begin with a capital letter and contain only letters, numbers, and spaces..'),
+    '#required' => TRUE,
+    '#size' => 30,
+  );
+
+  $form['name'] = array(
+    '#type' => 'machine_name',
+    '#default_value' => $context['name'],
+    '#maxlength' => 32,
+    '#machine_name' => array(
+      'source' => array('title'),
+      'exists' => 'scald_context_load',
+    ),
+    '#description' => t('A unique machine-readable name for this context. It must only contain lowercase letters, numbers, and underscores.'),
+  );
+
+  $form['description'] = array(
+    '#title' => t('Description'),
+    '#type' => 'textarea',
+    '#default_value' => $context['description'],
+    '#description' => t('Describe this context. The text will be displayed on the <em>Scald Dashboard</em> page.'),
+  );
+
+  $form['additional_settings'] = array(
+    '#type' => 'vertical_tabs',
+    // @todo provide a JavaScript to do Vertical Tabs summary stuffs.
+    '#attached' => array(
+    ),
+  );
+
+  $form['system'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('System settings'),
+    '#collapsible' => TRUE,
+    '#group' => 'additional_settings',
+  );
+  $form['system']['parseable'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Make parseable'),
+    '#default_value'  => (bool) $context['parseable'],
+  );
+
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => $context['name'] ? t('Save context') : t('Add context'),
+    '#weight' => 40,
+  );
+
+  // @todo allow to delete context
+  if (FALSE) {
+    if (!empty($type->type)) {
+      $form['actions']['delete'] = array(
+        '#type' => 'submit',
+        '#value' => t('Delete context'),
+        '#weight' => 45,
+      );
+    }
+  }
+
+  return $form;
+}
+
+/**
+ * Form validation handler for scald_admin_context_form().
+ */
+function scald_admin_context_form_validate($form, &$form_state) {
+  // There is still nothing to do here.
+}
+
+/**
+ * Form submission handler for scald_admin_context_form().
+ */
+function scald_admin_context_form_submit($form, &$form_state) {
+  $op = isset($form_state['values']['op']) ? $form_state['values']['op'] : '';
+
+  if (!$context = scald_context_load($form_state['values']['name'])) {
+    $context  = array();
+  }
+
+  $context = array(
+    'name' => $form_state['values']['name'],
+    'title' => $form_state['values']['title'],
+    'description' => $form_state['values']['description'],
+    'render_language' => 'XHTML',
+    'parseable' => (bool) $form_state['values']['parseable'],
+    'formats' => array(),
+  ) + $context;
+
+  scald_context_save($context);
+
+  $form_state['redirect'] = 'admin/structure/scald';
+  return;
+}
 
 
 /**
@@ -198,7 +348,7 @@ function scald_admin_contexts($type) {
   $content .= '<p>' . t('Scald Rendering Contexts are something like themes for Scald Atoms.  Any Atom can be rendered in any Context and the Context determines what that rendering looks like and what language it is in.') . '</p>';
   $content .= '<p>' . t('If a Context is "parseable", that means that its output is wrapped in HTML comments (currently this feature only works reliably for Contexts which have a render language of XHTML) which make it possible for Scald Core to uniquely identify the Atom based on the rendering.  For instance, if a WYSIWYG editor is being used in some text areas and Scald Atoms should be included in the WYSIWYG preview of the text, a Context can be chosen and specified as parseable.  That ensures that when the textarea is submitted, Scald Core will be able to determine which Atoms are present in the textarea, convert the rendered versions to Scald Atom Shorthand and ensure proper parsing by the Scald Atom Shorthand Input Filter.') . '</p>';
 
-  $output[] = $content;
+  $output[] = array('#markup' => $content);
   $output[] = drupal_get_form('scald_admin_contexts_form', $type);
 
   return $output;
@@ -227,8 +377,8 @@ function scald_admin_contexts_form($form, $form_state, $type) {
     $default = !empty($contexts[$name]['type_format'][$type->type]['transcoder']) ? $contexts[$name]['type_format'][$type->type]['transcoder'] : NULL;
     $form[$name] = array(
       '#type'         => 'fieldset',
-      '#title'        => $context['title'],
-      '#description'  => $context['description'] . '<br>' . t('Provided by <code>@module.module</code>.', array('@module' => $context['provider'])),
+      '#title'        => check_plain($context['title']),
+      '#description'  => check_plain($context['description']) . '<br />' . t('Provided by <code>@module.module</code>.', array('@module' => $context['provider'])),
       '#collapsible'  => TRUE,
       '#collapsed'    => TRUE,
     );
@@ -268,10 +418,10 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
   drupal_set_message(t('Context transcoders settings saved'));
   $typename = $form_state['build_info']['args'][0]->type;
   foreach ($form_state['values'] as $key => $value) {
-    switch (substr($key, -6)) {
+    switch (drupal_substr($key, -6)) {
       // Transcoders
       case '_trans':
-        $context = substr($key, 0, -6);
+        $context = drupal_substr($key, 0, -6);
         $transcoder = $value;
         if ($value == '@none') {
           db_delete('scald_context_type_transcoder')
@@ -325,7 +475,7 @@ function scald_settings_form() {
   // Scald tags vocabulary
   $options = array();
   $vocabularies = taxonomy_get_vocabularies();
-  foreach($vocabularies as $vid => $vocabulary) {
+  foreach ($vocabularies as $vid => $vocabulary) {
     $options[$vid] = $vocabulary->name;
   }
   $form['scald_tags_vocabulary'] = array(
@@ -333,7 +483,7 @@ function scald_settings_form() {
     '#title' => t('Vocabulary used for tags storing'),
     '#description' => t('By default, Scald uses its own vocabulary to store atoms tags, you can override it here.'),
     '#options' => $options,
-    '#default_value' => variable_get('scald_tags_vocabulary', 0), 
+    '#default_value' => variable_get('scald_tags_vocabulary', 0),
   );
 
   // Add our custom submit handler

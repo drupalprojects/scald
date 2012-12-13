@@ -21,8 +21,8 @@ function scald_views_data() {
     'field' => array(
       'handler' => 'views_handler_field_numeric',
       'click sortable' => TRUE,
-     ),
-    'sort' => array(
+    ),
+     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
     'filter' => array(
@@ -41,7 +41,7 @@ function scald_views_data() {
     'field' => array(
       'handler' => 'scald_views_handler_field_representation',
       'click sortable' => FALSE,
-     )
+    )
   );
 
   // provider
@@ -51,7 +51,7 @@ function scald_views_data() {
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
-     ),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -70,7 +70,7 @@ function scald_views_data() {
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
-     ),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -89,7 +89,7 @@ function scald_views_data() {
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
-     ),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -120,7 +120,7 @@ function scald_views_data() {
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
-     ),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -154,7 +154,7 @@ function scald_views_data() {
 function scald_views_handlers() {
   return array(
     'info' => array(
-      'path' => drupal_get_path('module', 'scald') .'/includes',
+      'path' => drupal_get_path('module', 'scald') . '/includes',
     ),
     'handlers' => array(
       'scald_views_handler_filter_atom_type' => array(

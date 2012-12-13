@@ -1,20 +1,20 @@
 <?php
 /**
  * @file
- *   Provides default views for the Scald DnD Library module.
+ *   Default views for the Scald module.
  */
 
 /**
  * Implements hook_views_default_views().
  */
-function scald_dnd_library_views_default_views() {
+function scald_views_default_views() {
   $views = array();
 
-  // Library view
+  // Atoms listing view
 
   $view = new view;
-  $view->name = 'scald_library';
-  $view->description = t('Library view provided by Scald to access atoms.');
+  $view->name = 'scald_atoms';
+  $view->description = t('Atoms listing view provided by Scald to access atoms.');
   $view->tag = '';
   $view->base_table = 'scald_atoms';
   $view->human_name = '';
@@ -173,59 +173,21 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['filters']['actions']['group'] = '0';
   $handler->display->display_options['filters']['actions']['expose']['operator'] = FALSE;
 
-  /* Display: Scald Library */
-  $handler = $view->new_display('dnd_library', 'Scald Library', 'dnd_library_2');
-  $handler->display->display_options['defaults']['access'] = FALSE;
-  $handler->display->display_options['access']['type'] = 'perm';
-  $handler->display->display_options['access']['perm'] = 'access scald dnd library';
-  $handler->display->display_options['defaults']['style_plugin'] = FALSE;
-  $handler->display->display_options['style_plugin'] = 'scald_library';
-  $handler->display->display_options['defaults']['style_options'] = FALSE;
-  $handler->display->display_options['defaults']['row_plugin'] = FALSE;
-  $handler->display->display_options['defaults']['row_options'] = FALSE;
-  $handler->display->display_options['defaults']['fields'] = FALSE;
-  /* Field: Atom: Representation */
-  $handler->display->display_options['fields']['representation']['id'] = 'representation';
-  $handler->display->display_options['fields']['representation']['table'] = 'scald_atoms';
-  $handler->display->display_options['fields']['representation']['field'] = 'representation';
-  $handler->display->display_options['fields']['representation']['label'] = '';
-  $handler->display->display_options['fields']['representation']['alter']['alter_text'] = 0;
-  $handler->display->display_options['fields']['representation']['alter']['make_link'] = 0;
-  $handler->display->display_options['fields']['representation']['alter']['word_boundary'] = 1;
-  $handler->display->display_options['fields']['representation']['alter']['ellipsis'] = 1;
-  $handler->display->display_options['fields']['representation']['alter']['strip_tags'] = 0;
-  $handler->display->display_options['fields']['representation']['alter']['trim'] = 0;
-  $handler->display->display_options['fields']['representation']['alter']['html'] = 0;
-  $handler->display->display_options['fields']['representation']['hide_empty'] = 0;
-  $handler->display->display_options['fields']['representation']['empty_zero'] = 0;
-  /* Field: Atom: Title */
-  $handler->display->display_options['fields']['title']['id'] = 'title';
-  $handler->display->display_options['fields']['title']['table'] = 'scald_atoms';
-  $handler->display->display_options['fields']['title']['field'] = 'title';
-  $handler->display->display_options['fields']['title']['label'] = 'Titre';
-  $handler->display->display_options['fields']['title']['alter']['alter_text'] = 0;
-  $handler->display->display_options['fields']['title']['alter']['make_link'] = 0;
-  $handler->display->display_options['fields']['title']['alter']['word_boundary'] = 1;
-  $handler->display->display_options['fields']['title']['alter']['ellipsis'] = 1;
-  $handler->display->display_options['fields']['title']['alter']['strip_tags'] = 0;
-  $handler->display->display_options['fields']['title']['alter']['trim'] = 0;
-  $handler->display->display_options['fields']['title']['alter']['html'] = 0;
-  $handler->display->display_options['fields']['title']['hide_empty'] = 0;
-  $handler->display->display_options['fields']['title']['empty_zero'] = 0;
-  /* Field: Atom: Scald ID */
-  $handler->display->display_options['fields']['sid']['id'] = 'sid';
-  $handler->display->display_options['fields']['sid']['table'] = 'scald_atoms';
-  $handler->display->display_options['fields']['sid']['field'] = 'sid';
-  $handler->display->display_options['fields']['sid']['alter']['alter_text'] = 0;
-  $handler->display->display_options['fields']['sid']['alter']['make_link'] = 0;
-  $handler->display->display_options['fields']['sid']['alter']['word_boundary'] = 1;
-  $handler->display->display_options['fields']['sid']['alter']['ellipsis'] = 1;
-  $handler->display->display_options['fields']['sid']['alter']['strip_tags'] = 0;
-  $handler->display->display_options['fields']['sid']['alter']['trim'] = 0;
-  $handler->display->display_options['fields']['sid']['alter']['html'] = 0;
-  $handler->display->display_options['fields']['sid']['hide_empty'] = 0;
-  $handler->display->display_options['fields']['sid']['empty_zero'] = 0;
-  $handler->display->display_options['path'] = 'scald/library_dnd';
+  /* Display: Page */
+  $handler = $view->new_display('page', 'Page', 'page_1');
+  $handler->display->display_options['defaults']['header'] = FALSE;
+  /* Header: Global: Text area */
+  $handler->display->display_options['header']['area']['id'] = 'area';
+  $handler->display->display_options['header']['area']['table'] = 'views';
+  $handler->display->display_options['header']['area']['field'] = 'area';
+  $handler->display->display_options['header']['area']['empty'] = TRUE;
+  $handler->display->display_options['header']['area']['content'] = '<ul class="action-links"><li>' . l(t('Add atom'), 'atoms/add') . '</li></ul>';
+  $handler->display->display_options['header']['area']['format'] = 'filtered_html';
+  $handler->display->display_options['header']['area']['tokenize'] = 0;
+  $handler->display->display_options['path'] = 'admin/content/atoms';
+  $handler->display->display_options['menu']['type'] = 'tab';
+  $handler->display->display_options['menu']['title'] = 'Atoms';
+  $handler->display->display_options['menu']['weight'] = '-60';
 
   $translatables[$view->name] = array(
     t('Master'),

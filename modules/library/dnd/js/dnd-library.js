@@ -15,19 +15,38 @@ Drupal.dnd = {
   Atoms: {
   },
 
-  btSettings: {
-    'trigger': ['click'],
-    'width': 480,
-    'spikeLength': 7,
-    'spikeGirth': 9,
-    'corner-radius' : 3,
-    'strokeWidth': 1,
-    'fill': '#fff',
-    'shadow': true,
-    'shadowColor': '#666',
-    'strokeStyle': '#999',
-    'closeWhenOthersOpen': true
+  // Setting for the qTip v2 library
+  qTipSettings: {
+    position: {
+      my: 'right center',
+      at: 'left center'
+    },
+    hide: {
+      fixed: true,
+      delay: 200
+    },
+    show: {
+      solo: true
+    },
+    style: {
+      classes: 'ui-tooltip-scald-dnd'
+    }
   },
+
+  // Additional settings for the deprecated qTip v1
+  qTip1Settings: {
+    position: {
+      corner: {
+        target: 'leftMiddle',
+        tooltip: 'rightMiddle'
+      }
+    },
+    style: {
+      width: 550,
+      classes: {tooltip: 'ui-tooltip-scald-dnd'}
+    }
+  },
+
 
   // Refresh the library.
   refreshLibraries: function() {
@@ -149,8 +168,26 @@ renderLibrary: function(data, editor) {
   for (atom_id in data.atoms) {
     // Store the atom data in our object
     Drupal.dnd.Atoms[atom_id] = data.atoms[atom_id];
-    // And add a nice preview behavior thanks to BeautyTips
-    $("#sdl-" + atom_id).bt(Drupal.dnd.Atoms[atom_id].preview, Drupal.dnd.btSettings);
+    // And add a nice preview behavior if qTip is present
+    if ($.prototype.qtip) {
+      var settings = $.extend(Drupal.dnd.qTipSettings, {
+        content: {
+          text: Drupal.dnd.Atoms[atom_id].preview
+        }
+      });
+
+      // When using the deprecated qTip v1 library,
+      // add some additional settings.
+      try {
+        $.fn.qtip.styles.defaults.width.min;
+        $.extend(settings, Drupal.dnd.qTip1Settings);
+      }
+      catch(err) {
+        // On qTip 2, everything's ok
+      }
+
+      $("#sdl-" + atom_id).qtip(settings);
+    }
   }
 
   // Preload images in editor representations
@@ -193,8 +230,6 @@ renderLibrary: function(data, editor) {
   });
   // Makes pager links refresh the library instead of opening it in the browser window
   $('.pager a', $this).click(function() {
-    // At page switching, close all opened BeautyTips.
-    $('.editor-item.bt-active').btOff();
     $this.get(0).library_url = this.href;
     $.getJSON(this.href, function(data) {
       Drupal.behaviors.dndLibrary.renderLibrary.call($this.get(0), data, $(editor));
@@ -274,8 +309,6 @@ renderLibrary: function(data, editor) {
 
   // Deals with Views Saved Searches search links
   $('#views-savedsearches-delete-search-form label a', $this).click(function() {
-    // At page switching, close all opened BeautyTips.
-    $('.editor-item.bt-active').btOff();
     $this.get(0).library_url = this.href;
     $.getJSON(this.href, function(data) {
       Drupal.behaviors.dndLibrary.renderLibrary.call($this.get(0), data, $(editor));

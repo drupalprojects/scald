@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ *   Provides a new view display for the scald library.
+ */
 class scald_plugin_display_library extends views_plugin_display_page {
   /**
    * The library won't go through the normal theming / page rendering
@@ -24,11 +28,11 @@ class scald_plugin_display_library extends views_plugin_display_page {
           if ($filter->operator == 'between') {
             if ($value['min']) {
               $d = date_make_date($value['min']);
-              $dates['min'] = '>'. date_format($d, $filter->format);
+              $dates['min'] = '>' . date_format($d, $filter->format);
             }
             if ($value['max']) {
               $d = date_make_date($value['max']);
-              $dates['max'] = '<'. date_format($d, $filter->format);
+              $dates['max'] = '<' . date_format($d, $filter->format);
             }
           }
           else {
@@ -46,7 +50,7 @@ class scald_plugin_display_library extends views_plugin_display_page {
           // When migrating to D7, use the very useful _multiple variant
           // to reduce the number of queries.
           foreach ($value as $tid) {
-            $term = taxonomy_get_term($tid);
+            $term = taxonomy_term_load($tid);
             $names[] = $term->name;
           }
           $value = $names;
@@ -82,7 +86,7 @@ class scald_plugin_display_library extends views_plugin_display_page {
           $value = implode(', ', $value);
         }
         if ($value) {
-          $summary['criteria'][] = $filter->options['expose']['label'] .': '. $value;
+          $summary['criteria'][] = $filter->options['expose']['label'] . ': ' . $value;
         }
       }
     }
@@ -92,16 +96,16 @@ class scald_plugin_display_library extends views_plugin_display_page {
       $label = $this->view->field[$sort]->options['label'];
       $order = $this->view->style_plugin->order;
       $orders = array('asc' => t('Ascending'), 'desc' => t('Descending'));
-      $summary['sort'] = t('<span class="label">Sort:</span> @criteria', array('@criteria' => $label .' '. $orders[$order]));
+      $summary['sort'] = t('<span class="label">Sort:</span> @criteria', array('@criteria' => $label . ' ' . $orders[$order]));
     }
     $this->view->hide_admin_links = TRUE;
     $view = $this->view->render();
     $messages = theme('status_messages');
     $library['library'] = $messages . $view;
     $header = '<div class="summary">';
-    $header .= '<div class="toggle"></div><div class="title">'. t('search') .'</div>';
+    $header .= '<div class="toggle"></div><div class="title">' . t('search') . '</div>';
     if (!empty($summary['sort'])) {
-      $header .= '<div class="sort">'. $summary['sort'] .'</div>';
+      $header .= '<div class="sort">' . $summary['sort'] . '</div>';
     }
     if (!isset($summary['criteria'])) {
       // @todo remove this workaround. Normally is it always set.
@@ -124,11 +128,11 @@ class scald_plugin_display_library extends views_plugin_display_page {
       if (user_access('create atom of ' . $type->type . ' type')) {
         $buttons['items'][] = array(
           'data' => ctools_modal_text_button(t($type->type), 'atoms/nojs/add/' . $type->type, '', 'ctools-modal-custom-style'),
-          'class' => array('add-' . strtolower($type->type)),
+          'class' => array('add-' . drupal_strtolower($type->type)),
         );
       }
     }
-    $library['menu'] = '<div class="scald-menu"><div class="add-buttons">'. theme_item_list($buttons) .'</div></div>';
+    $library['menu'] = '<div class="scald-menu"><div class="add-buttons">' . theme_item_list($buttons) . '</div></div>';
     $library['library'] = '<div class="scald-library">' . $library['library'] . '</div>';
     $library['anchor'] = '<div class="scald-anchor"></div>';
     drupal_json_output($library);

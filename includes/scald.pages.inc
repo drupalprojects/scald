@@ -7,7 +7,7 @@
 
 function scald_atom_add() {
   $types = scald_types();
-  if(empty($types)) {
+  if (empty($types)) {
     return '<p>' . t('You have not installed any Scald providers yet. Go to the <a href="@admin-modules">modules administration page</a> to install a Scald provider.', array('@admin-modules' => url('admin/modules'))) . '</p>';
   }
 
@@ -119,7 +119,7 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
       $commands[] = array('command' => 'dnd_refresh');
       $commands[] = ctools_modal_command_dismiss();
     }
-    else if (!empty($form_state['cancel'])) {
+    elseif (!empty($form_state['cancel'])) {
       // If cancelling, return to the activity.
       $commands[] = ctools_modal_command_dismiss();
     }
@@ -288,27 +288,44 @@ function scald_atom_add_wizard_cancel(&$form_state) {
 }
 
 /**
- * Handles the view of an atom
+ * Page callback for the view of an atom.
  */
-function scald_atom_view($form, &$form_state, $atom) {
+function scald_atom_page_view($atom) {
   drupal_set_title(t('View: @title', array('@title' => $atom->title)));
 
-  // Rendering content of atom
-  $view_mode = 'full';
-  field_attach_prepare_view('scald_atom', array($atom->sid => $atom), $view_mode);
-  entity_prepare_view('scald_atom', array($atom->sid => $atom));
-  $content = field_attach_view('scald_atom', $atom, $view_mode);
+  return scald_render($atom, 'full');
+}
 
-  $form = array();
-  $form['view'] = array(
-    '#type' => 'markup',
-    '#markup' => drupal_render($content)
-  );
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Ok')
-  );
-  return $form;
+/**
+ * Handles the view of an atom within a context.
+ *
+ * Contrary to scald_rendered(), which displays basically a "player", this
+ * function displays the player and all atom fields. Fields are reorderable and
+ * customisable in the Field UI as usual.
+ *
+ * @param $atom
+ *   Atom to be rendered
+ * @param $context
+ *   Name of the context
+ * @param $options
+ *   (optional) List of options
+ */
+function scald_atom_view($atom, $context, $options = NULL) {
+  // Rendering content of atom
+  field_attach_prepare_view('scald_atom', array($atom->sid => $atom), $context);
+  entity_prepare_view('scald_atom', array($atom->sid => $atom));
+  $content = field_attach_view('scald_atom', $atom, $context);
+
+  // It would be better with an extra_fields, as it allow to customize/reorder
+  // the display.
+  if (!empty($atom->rendered->player)) {
+    $content['atom'] = array(
+      '#markup' => $atom->rendered->player,
+      '#weight' => -50,
+    );
+  }
+
+  return $content;
 }
 
 /**
@@ -327,3 +344,32 @@ function scald_atom_edit_page($js, $atom) {
   return scald_atom_add_page($js, $types[$atom->type], 'options', $atom->sid);
 }
 
+/**
+ * Handles the delete of an existing atom.
+ */
+function scald_atom_delete_confirm($form, &$form_state, $atom) {
+  // Always provide entity id in the same form key as in the entity edit form.
+  $form['sid'] = array('#type' => 'value', '#value' => $atom->sid);
+  return confirm_form($form,
+    t('Are you sure you want to delete %title?', array('%title' => $atom->title)),
+    'admin/content/atoms',
+    t('<p>Note that unchecking the Fetch checkbox in the "<em>Openly available actions</em>" field of this atom <a href="!url">edit form</a> makes the atom disapears for everyone but scald administrators, and is usally a better idea.</p><p>This action cannot be undone.</p>', array('!url' => url('atoms/edit/' . $atom->sid))),
+    t('Delete'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Execute atom deletion.
+ */
+function scald_atom_delete_confirm_submit($form, &$form_state) {
+  if ($form_state['values']['confirm']) {
+    $atom = scald_atom_load($form_state['values']['sid']);
+    scald_atom_delete($atom->sid);
+    watchdog('scald_atom', '@type: deleted %title.', array('@type' => $atom->type, '%title' => $atom->title));
+    $types = scald_type_get_names();
+    drupal_set_message(t('@type %title has been deleted.', array('@type' => $types[$atom->type], '%title' => $atom->title)));
+  }
+
+  $form_state['redirect'] = 'admin/content/atoms';
+}

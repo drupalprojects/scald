@@ -55,22 +55,22 @@ class scald_views_handler_filter_actions extends views_handler_filter {
     else {
       $this->value = $this->options['value'];
     }
-    $this->operator = ' & '. $this->value . ' = ';
+    $this->operator = ' & ' . $this->value . ' = ';
     parent::query();
   }
 
   /**
    * Overrides admin_summary: display user friendly label.
    */
-   function admin_summary() {
-     $actions = scald_actions();
-     $names = array();
-     foreach ($actions as $name => $action) {
-       if (!empty($this->options['value'][$name])) {
-         $names[] = $action['title'];
-       }
-     }
-     return implode(',', $names);
-   }
+function admin_summary() {
+  $actions = scald_actions();
+  $names = array();
+  foreach ($actions as $name => $action) {
+    if (!empty($this->options['value'][$name])) {
+      $names[] = $action['title'];
+    }
+  }
+  return implode(',', $names);
+}
 }
 

@@ -106,11 +106,6 @@ function dnd_library() {
     'website' => 'http://drupal.org/project/scald',
     'version' => '1.x',
     'js' => array(
-      // BeautyTips
-      $path . '/js/bt/other_libs/excanvas_0002/excanvas-compressed.js' => array(),
-      $path . '/js/bt/other_libs/jquery.hoverIntent.minified.js' => array(),
-      $path . '/js/bt/jquery.bt.js' => array(),
-
       // Dependencies
       $path . '/js/jquery.url.packed.js' => array(),
       $path . '/js/jquery.fieldselection.js' => array(),
@@ -133,6 +128,12 @@ function dnd_library() {
       ),
     ),
   );
+
+  // Add the qTip library as a dependency if it exists
+  if (module_exists('qtip')) {
+    $libraries['library']['dependencies'][] = array('qtip', 'qtip');
+  }
+
   return $libraries;
 }
 

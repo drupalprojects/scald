@@ -1,6 +1,7 @@
 <?php
 /**
- * This file contains the Scald Atom controller, which overrides DrupalDefaultEntityController for atoms.
+ * @file
+ *   This file contains the Scald Atom controller, which overrides DrupalDefaultEntityController for atoms.
  */
 
 class ScaldAtomController extends DrupalDefaultEntityController {

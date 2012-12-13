@@ -8,7 +8,7 @@
 
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  */
 function scald_twitter_install() {
   scald_add_type('twitter', 'Twitter', 'Resource twitter');
@@ -17,7 +17,7 @@ function scald_twitter_install() {
 
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function scald_twitter_uninstall() {
   // @@@TODO: Delete all variables/configs/blocks/etc.

@@ -7,19 +7,19 @@
 
 /*******************************************************************************
  * SCALD HOOK IMPLEMENTATIONS
- ******************************************************************************/
+ */
 
 /**
- * Implements hook_scald_atom_providers.
+ * Implements hook_scald_atom_providers().
  */
 function scald_image_scald_atom_providers() {
   return array(
-    'image' => 'Upload'
+    'image' => 'Image upload'
   );
 }
 
 /**
- * Implements hook_scald_add_form.
+ * Implements hook_scald_add_form().
  */
 function scald_image_scald_add_form(&$form, &$form_state) {
   $form['file'] = array(
@@ -30,7 +30,7 @@ function scald_image_scald_add_form(&$form, &$form_state) {
 }
 
 /**
- * Implements hook_scald_add_form_fill.
+ * Implements hook_scald_add_form_fill().
  */
 function scald_image_scald_add_form_fill(&$atom, $form, $form_state) {
   $file = file_load($form_state['values']['file']);
@@ -40,7 +40,7 @@ function scald_image_scald_add_form_fill(&$atom, $form, $form_state) {
 }
 
 /**
- * Implements hook_scald_transcoders.
+ * Implements hook_scald_transcoders().
  */
 function scald_image_scald_transcoders() {
   $transcoders = array();
@@ -57,7 +57,7 @@ function scald_image_scald_transcoders() {
 }
 
 /**
- * Implements hook_scald_fetch.
+ * Implements hook_scald_fetch().
  */
 function scald_image_scald_fetch($atom, $type) {
   if ($type == 'atom') {
@@ -72,15 +72,22 @@ function scald_image_scald_fetch($atom, $type) {
  * Implements hook_scald_prerender().
  */
 function scald_image_scald_prerender($atom, $context, $options, $mode) {
-  if ($mode == 'transcoder' && !empty($atom->file_source)) {
-    // Find out which transcoder to use. This seems unnecesarilly complex.
+  if ($mode == 'transcoder') {
+    // Find out which transcoder is in use. This seems unnecesarilly complex.
     $contexts = scald_contexts();
     $context_config = $contexts[$context]['type_format'][$atom->type];
     if (preg_match('/^style-(.*)$/', $context_config['transcoder'], $match)) {
       $preset = image_style_load($match[1]);
-      $path = str_replace('public://', 'public://styles/'. $preset['name'] . '/public/', $atom->file_source);
-      $atom->file_transcoded = $path;
-      $atom->rendered->file_transcoded_url = file_create_url($path);
+      if (!empty($atom->file_source)) {
+        $path = str_replace('public://', 'public://styles/' . $preset['name'] . '/public/', $atom->file_source);
+        $atom->file_transcoded = $path;
+        $atom->rendered->file_transcoded_url = file_create_url($path);
+      }
+      if (!empty($atom->thumbnail_source)) {
+        $path = str_replace('public://', 'public://styles/' . $preset['name'] . '/public/', $atom->thumbnail_source);
+        $atom->thumbnail_transcoded = $path;
+        $atom->rendered->thumbnail_transcoded_url = file_create_url($path);
+      }
     }
   }
 }

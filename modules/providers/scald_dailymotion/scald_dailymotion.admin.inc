@@ -17,7 +17,7 @@ function scald_dailymotion_imports_form() {
        '#title' => t('Current imports'),
        '#tree' => TRUE,
        '#theme' => 'scald_dailymotion_imports_table',
-     );
+    );
     foreach ($imports as $key => $import) {
       $form['imports'][$key] = array(
         'type' => array(

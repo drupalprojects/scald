@@ -6,7 +6,7 @@
  */
 
 /**
- * Implementation of hook_permission().
+ * Implements hook_permission().
  */
 function scald_dnd_library_permission() {
   return array(
@@ -21,17 +21,9 @@ function scald_dnd_library_permission() {
  */
 function scald_dnd_library_theme() {
   return array(
-    'sdl_header' => array(
-      'variables' => array('page' => NULL, 'count' => 0, 'form' => NULL),
-      'template' => 'sdl-header',
-    ),
     'sdl_library' => array(
       'variables' => array('page' => NULL, 'library_items' => NULL),
       'template' => 'sdl-library',
-    ),
-    'sdl_footer' => array(
-      'variables' => array('page' => NULL, 'count' => 0, 'pager' => NULL),
-      'template' => 'sdl-footer',
     ),
     'sdl_library_item' => array(
       'variables' => array('informations' => array(), 'image' => NULL),
@@ -49,7 +41,7 @@ function scald_dnd_library_theme() {
 }
 
 /**
- * Implements hook_dnd_libraries_info.
+ * Implements hook_dnd_libraries_info().
  */
 function scald_dnd_library_dnd_libraries_info() {
   $return = array();
@@ -68,17 +60,23 @@ function scald_dnd_library_add_item(&$library, $sid) {
     'meta' => array(
       'title' => $atom->title,
       'type' => $atom->type,
-      'legend' => empty($atom->omit_legend) ? theme('sdl_editor_legend', array('atom' => $atom)) : '',
+      'legend' => '',
     ),
     'sas' =>  '[scald=' . $atom->sid . ':sdl_editor_representation]',
     'editor' => scald_render($atom, 'sdl_editor_representation'),
     'preview' => scald_render($atom, 'sdl_preview'),
-    'library' => scald_render($atom, 'sdl_library_item')
+    'library' => scald_render($atom, 'sdl_library_item'),
   );
+
+  // theme_sdl_editor_legend() requires a rendered atom. We call it only here to
+  // make sure that $atom is rendered.
+  if (empty($atom->omit_legend)) {
+    $library['atoms'][$sid]['meta']['legend'] = theme('sdl_editor_legend', array('atom' => $atom));
+  }
 }
 
 /**
- * Implements hook_preprocess_sdl_library.
+ * Implements hook_preprocess_sdl_library().
  */
 function template_preprocess_sdl_library(&$variables) {
   if (is_object($variables['view'])) {
@@ -95,7 +93,7 @@ function template_preprocess_sdl_library(&$variables) {
 }
 
 /**
- * Implements hook_scald_contexts.
+ * Implements hook_scald_contexts().
  */
 function scald_dnd_library_scald_contexts() {
   return array(
@@ -133,11 +131,14 @@ function scald_dnd_library_scald_contexts() {
 }
 
 /**
- * Implements hook_scald_render.
+ * Implements hook_scald_render().
  */
 function scald_dnd_library_scald_render($atom, $context, $options = array()) {
-  if ($atom->rendered->file_transcoded_url) {
+  if (!empty($atom->rendered->file_transcoded_url)) {
     $path = $atom->rendered->file_transcoded_url;
+  }
+  elseif (!empty($atom->rendered->thumbnail_transcoded_url)) {
+    $path = $atom->rendered->thumbnail_transcoded_url;
   }
   else {
     $path = $atom->rendered->thumbnail_source_url;
@@ -145,31 +146,18 @@ function scald_dnd_library_scald_render($atom, $context, $options = array()) {
   $attributes = array();
   if ($context == 'sdl_library_item') {
     $path .= (strpos($path, '?') !== FALSE)? '&' : '?';
-    $path .= 'dnd_id='. $atom->sid;
+    $path .= 'dnd_id=' . $atom->sid;
     $attributes += array('class' => 'drop', 'draggable' => 'TRUE');
   }
   elseif ($context == 'sdl_preview') {
     $path .= (strpos($path, '?') !== FALSE)? '&' : '?';
-    $path .= 'dnd_id='. $atom->sid;
+    $path .= 'dnd_id=' . $atom->sid;
     $attributes += array('class' => 'drop');
   }
   else {
     $attributes += array('class' => 'dnd-dropped');
   }
-  // Try to get the image size.
-  if ($atom->rendered->file_transcoded_url && $atom->file_transcoded) {
-    list($width, $height, $type, $attr) = @getimagesize($atom->file_transcoded);
-  }
-  elseif ($atom->thumbnail_source) {
-    list($width, $height, $type, $attr) = @getimagesize($atom->thumbnail_source);
-  }
-  if ($width && $height) {
-    $attributes += array(
-      'width' => $width,
-      'height' => $height
-    );
-  }
-  $image = "<img src='$path' alt='' ". drupal_attributes($attributes) . ' />';
+  $image = "<img src='$path' alt='' " . drupal_attributes($attributes) . ' />';
   switch ($context) {
     case 'sdl_preview':
       $render = theme('sdl_preview_item', array('atom' => $atom, 'image' => $image));
@@ -195,7 +183,7 @@ function theme_sdl_library_item($variables) {
   // Action links
   $links = scald_atom_user_build_actions_links($atom, NULL);
   // Force all links to open in a new window
-  foreach($links as $action => $link) {
+  foreach ($links as $action => $link) {
     $links[$action]['attributes']['target'] = '_blank';
   }
   $links_element = array(
@@ -227,7 +215,7 @@ function theme_sdl_library_item($variables) {
   </div>";
   }
   $return .= "
-  <div class='meta type-" . strtolower($informations->type) ." clearfix'>
+  <div class='meta type-" . drupal_strtolower($informations->type) . " clearfix'>
     <div class='title'>{$informations->title}</div>
     <div class='author'>{$authors}</div>
     {$rendered_links}
@@ -249,19 +237,11 @@ function theme_sdl_editor_item($variables) {
 }
 
 /**
- * Returns HTML for the legend of an atom, used in the Editor Representation context.
+ * Returns HTML for the legend of an atom.
  */
 function theme_sdl_editor_legend($variables) {
   $atom = $variables['atom'];
-  $sid = $atom->sid;
-  if ($atom && empty($atom->rendered)) {
-    $clone = clone $atom;
-    scald_prerender($clone, 'sdl_editor_representation');
-    $informations = $clone->rendered;
-  }
-  else {
-    $informations = $atom->rendered;
-  }
+
   if (!empty($atom->rendered->authors)) {
     foreach ($atom->rendered->authors as $author) {
       $links[] = $author->link;
@@ -269,12 +249,12 @@ function theme_sdl_editor_legend($variables) {
     $by = implode(', ', $links);
   }
   else {
-    $by = $informations->publisher['link'];
+    $by = $atom->rendered->publisher['link'];
   }
   $by = t('by !name', array('!name' => $by));
   return "
   <div class='meta'>
-    <!--copyright={$sid}-->{$informations->title}, {$by}<!--END copyright={$sid}-->
+    <!--copyright={$atom->sid}-->{$atom->rendered->title}, {$by}<!--END copyright={$atom->sid}-->
   </div>
   ";
 }
@@ -356,7 +336,7 @@ function scald_dnd_library_form_alter(&$form, $form_state, $form_id) {
         $form['submit']['#weight'] = 1;
         $form['reset'] = array(
           '#type' => 'markup',
-          '#value' => "<input type='reset' value='". t('Reset') ."' />",
+          '#value' => "<input type='reset' value='" . t('Reset') . "' />",
           '#weight' => 2
         );
       }
@@ -377,15 +357,15 @@ function scald_dnd_library_views_api() {
 module_load_include('inc', 'scald_dnd_library', 'includes/scald_dnd_library.views');
 
 /**
- * Implements hook_image_default_styles.
+ * Implements hook_image_default_styles().
  */
 function scald_dnd_library_image_default_styles() {
   $presets = array();
-  $presets['Library'] = array (
-    'effects' => array (
-      array (
+  $presets['Library'] = array(
+    'effects' => array(
+      array(
         'name' => 'image_scale',
-        'data' => array (
+        'data' => array(
           'width' => '48',
           'height' => '',
           'upscale' => 0,

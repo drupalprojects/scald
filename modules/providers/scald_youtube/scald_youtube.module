@@ -12,7 +12,7 @@ define('YOUTUBE_RSS',         'http://gdata.youtube.com/feeds/api/videos/');
 define('YOUTUBE_MEDIA',       'http://search.yahoo.com/mrss/');
 
 /**
- * Implements hook_scald_atom_providers.
+ * Implements hook_scald_atom_providers().
  * Tell Scald that we'll be providing some video atoms.
  */
 function scald_youtube_scald_atom_providers() {
@@ -22,7 +22,7 @@ function scald_youtube_scald_atom_providers() {
 }
 
 /**
- * Implements hook_scald_add_form.
+ * Implements hook_scald_add_form().
  */
 function scald_youtube_scald_add_form(&$form, &$form_state) {
   $form['identifier'] = array(
@@ -34,7 +34,7 @@ function scald_youtube_scald_add_form(&$form, &$form_state) {
 }
 
 /**
- * Implements hook_scald_add_form_fill.
+ * Implements hook_scald_add_form_fill().
  */
 function scald_youtube_scald_add_form_fill(&$atom, $form, $form_state) {
 
@@ -54,7 +54,7 @@ function scald_youtube_scald_add_form_fill(&$atom, $form, $form_state) {
   );
 
   // Prefill tags
-  foreach($infos->tags as $index => $tag) {
+  foreach ($infos->tags as $index => $tag) {
     $atom->scald_tags[LANGUAGE_NONE][$index] = array(
       'tid' => $index,  // Beware, this is not a real tid, it's just an index
       'taxonomy_term' => (object)(array('name' => $tag))
@@ -62,7 +62,7 @@ function scald_youtube_scald_add_form_fill(&$atom, $form, $form_state) {
   }
 
   // Save video width and height
-  if(!isset($atom->data)) {
+  if (!isset($atom->data)) {
     $atom->data = array();
   }
   $atom->data['video_width'] = $infos->width;
@@ -75,29 +75,31 @@ function scald_youtube_scald_add_form_fill(&$atom, $form, $form_state) {
   if ($thumb->code == 200 && file_prepare_directory($dir, FILE_CREATE_DIRECTORY)) {
     $dest = $dir . '/' . $infos->id . '.jpg';
     $file = file_save_data($thumb->data, $dest);
+
+    if ($file) {
+      // Set the file status to temporary
+      $query = db_update('file_managed')
+        ->condition('fid', $file->fid)
+        ->fields(array('status' => 0))
+        ->execute();
+
+      $atom->scald_thumbnail[LANGUAGE_NONE][0] = (array)$file;
+    }
   }
-
-  // Set the file status to temporary
-  $query = db_update('file_managed')
-    ->condition('fid', $file->fid)
-    ->fields(array('status' => 0))
-    ->execute();
-
-  $atom->scald_thumbnail[LANGUAGE_NONE][0] = (array)$file;
 }
 
 /**
- * Implements hook_scald_fetch.
+ * Implements hook_scald_fetch().
  */
 function scald_youtube_scald_fetch($atom, $type) {
-  $file = 'public://youtube/'. $atom->base_id .'.jpg';
+  $file = $atom->scald_thumbnail[LANGUAGE_NONE][0]['uri'];
   if (file_exists($file)) {
     $atom->file_source = $atom->thumbnail_source = $file;
   }
 }
 
 /**
- * Implements hook_scald_prerender.
+ * Implements hook_scald_prerender().
  */
 function scald_youtube_scald_prerender($atom, $context, $options, $mode) {
   if ($mode == 'atom') {
@@ -117,7 +119,7 @@ function scald_youtube_scald_prerender($atom, $context, $options, $mode) {
 }
 
 /**
- * Implements hook_theme.
+ * Implements hook_theme().
  */
 function scald_youtube_theme() {
   return array(
@@ -186,10 +188,10 @@ function scald_youtube_register($video) {
  */
 function scald_youtube_feed($type, $id) {
   if ($type == 'user') {
-    $url = YOUTUBE_RSS . '?author='. $id;
+    $url = YOUTUBE_RSS . '?author=' . $id;
   }
   elseif ($type == 'tag') {
-    $url = YOUTUBE_RSS . '?category='. $id;
+    $url = YOUTUBE_RSS . '?category=' . $id;
   }
   else {
     $url = YOUTUBE_RSS . $id;
@@ -199,7 +201,7 @@ function scald_youtube_feed($type, $id) {
   if ($response->code >= 200 && $response->code < 400 && !empty($response->data)) {
     $dom = new DOMDocument();
     if ($dom->loadXML($response->data)) {
-      foreach($dom->getElementsByTagName('entry') as $item) {
+      foreach ($dom->getElementsByTagName('entry') as $item) {
         $items[] = scald_youtube_parse_item($item);
       }
     }
@@ -240,7 +242,7 @@ function scald_youtube_parse_item($item) {
   $info->width = 480;
   $info->height = 365;
   // Now we try to get the dimensions from the OEmbed API instead
-  if($oembed = scald_youtube_video_oembed($info->id)) {
+  if ($oembed = scald_youtube_video_oembed($info->id)) {
     $info->width = ($oembed->width ? $oembed->width : $info->width);
     $info->height = ($oembed->height ? $oembed->height : $info->height);
   }
@@ -255,7 +257,7 @@ function scald_youtube_parse_item($item) {
       'height' => $thumb->getAttribute('height')
     );
   }
-  
+
   // Video tags
   $tags = $item->getElementsByTagNameNS(YOUTUBE_MEDIA, 'keywords')->item(0)->nodeValue;
   $info->tags = explode(', ', $tags);
@@ -279,7 +281,7 @@ function scald_youtube_parse_item($item) {
 function scald_youtube_video_oembed($id) {
   $info = FALSE;
   // Build the full OEmbed URL
-  $url = YOUTUBE_OEMBED . '?url='. YOUTUBE_WEB . '?v=' . $id;
+  $url = YOUTUBE_OEMBED . '?url=' . YOUTUBE_WEB . '?v=' . $id;
   $response = drupal_http_request($url);
   if ($response->code >= 200 && $response->code < 400 && !empty($response->data)) {
     $data = json_decode($response->data);
@@ -294,7 +296,7 @@ function scald_youtube_video_oembed($id) {
     $info->width = $data->width;
     $info->height = $data->height;
     // Thumbnail
-    if($data->thumbnail_url) {
+    if ($data->thumbnail_url) {
       $info->thumbnail = array(
         'src'    => $data->thumbnail_url,
         'width'  => $data->thumbnail_width,
@@ -328,10 +330,10 @@ function scald_youtube_already_imported($id) {
  */
 function scald_youtube_validate_id($element, &$form_state) {
   $id = scald_youtube_parse_id($form_state['values']['identifier'], TRUE);
-  if(!$id) {
+  if (!$id) {
     form_error($element, t('Invalid YouTube video identifier.'));
   }
-  else if(scald_youtube_already_imported($id)) {
+  elseif (scald_youtube_already_imported($id)) {
     form_error($element, t('YouTube video already imported.'));
   }
 }
@@ -349,10 +351,10 @@ function scald_youtube_parse_id($string, $check) {
       // This string is a full YouTube URL
       $id = $m[1];
     }
-    else if(preg_match("/^http/", $string)) {
+    elseif (preg_match("/^http/", $string)) {
       // This string is a URL, most likely a shortened one. (http://dai.ly, http://bit.ly, etc...)
       $response = drupal_http_request($string);
-      if($response->code == 200 && isset($response->redirect_code) && ($response->redirect_code == 301 || $response->redirect_code == 302)) {
+      if ($response->code == 200 && isset($response->redirect_code) && ($response->redirect_code == 301 || $response->redirect_code == 302)) {
         return scald_youtube_parse_id($response->redirect_url, $check);
       }
     }
@@ -361,9 +363,9 @@ function scald_youtube_parse_id($string, $check) {
     $id = $string;
   }
 
-  if($id && $check) {
+  if ($id && $check) {
     // Last check to confirm this video really exists on YouTube
-    if(!scald_youtube_video($id)) {
+    if (!scald_youtube_video($id)) {
       $id = FALSE;
     }
   }
