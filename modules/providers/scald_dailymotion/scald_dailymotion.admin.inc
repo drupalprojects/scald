@@ -33,12 +33,12 @@ function scald_dailymotion_imports_form() {
         ),
       );
     }
-  }
 
-  $form['imports']['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save configuration')
-  );
+    $form['imports']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Save configuration')
+    );
+  }
 
 
   $form['add'] = array(
