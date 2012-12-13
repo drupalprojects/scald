@@ -1,0 +1,7 @@
+name = Scald Flash
+core = 7.x
+package = Scald
+description = Provider: Provides Flash atoms
+dependencies[] = scald
+stylesheets[all][] = scald_flash.css
+
