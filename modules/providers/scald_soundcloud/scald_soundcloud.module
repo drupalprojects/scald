@@ -62,6 +62,7 @@ function scald_soundcloud_scald_add_form_fill(&$atom, $form, $form_state) {
     );
   }
 
+  $no_thumb = TRUE;
   if (isset($infos->thumbnail)) {
     // Download a copy of the audio thumbnail. This makes it possible
     // to do interesting manipulation with image styles presets.
@@ -70,6 +71,7 @@ function scald_soundcloud_scald_add_form_fill(&$atom, $form, $form_state) {
       $dest = 'public://soundcloud/' . $infos->id . '.jpg';
       if (file_prepare_directory(dirname($dest), FILE_CREATE_DIRECTORY)) {
         $file = file_save_data($thumb->data, $dest);
+        $no_thumb = FALSE;
       }
     }
 
@@ -81,7 +83,6 @@ function scald_soundcloud_scald_add_form_fill(&$atom, $form, $form_state) {
 
     $atom->scald_thumbnail[LANGUAGE_NONE][0] = (array)$file;
   }
-
 
   $atom->data['kind'] = $infos->kind;
   $atom->data['track_count'] = $infos->track_count;
@@ -98,6 +99,10 @@ function scald_soundcloud_scald_fetch($atom, $type) {
     if (file_exists($file_item['uri'])) {
       $atom->file_source = $atom->thumbnail_source = $file_item['uri'];
     }
+  }
+  // If no uploaded thumbnail we default to the generic one
+  else {
+    $atom->thumbnail_source = file_create_url('sites/all/modules/slybud-scald/modules/providers/scald_soundcloud/images/soundcloud.png');
   }
 }
 
