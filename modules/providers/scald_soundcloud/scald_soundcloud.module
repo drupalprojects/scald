@@ -62,7 +62,6 @@ function scald_soundcloud_scald_add_form_fill(&$atom, $form, $form_state) {
     );
   }
 
-  $no_thumb = TRUE;
   if (isset($infos->thumbnail)) {
     // Download a copy of the audio thumbnail. This makes it possible
     // to do interesting manipulation with image styles presets.
