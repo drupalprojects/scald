@@ -71,5 +71,7 @@ function scald_atom_build_content($atom, $view_mode = 'full', $langcode = NULL) 
       '#markup' => $atom->rendered->player,
     );
   }
+
+  $atom->content += array('#view_mode' => $view_mode);
 }
 
