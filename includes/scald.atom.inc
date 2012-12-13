@@ -63,13 +63,15 @@ function scald_atom_build_content($atom, $view_mode = 'full', $langcode = NULL) 
 
   // Building content of atom.
   field_attach_prepare_view('scald_atom', array($atom->sid => $atom), $view_mode, $langcode);
-  entity_prepare_view('scald_atom', array($atom->sid => $atom));
-  $atom->content += field_attach_view('scald_atom', $atom, $view_mode);
+  entity_prepare_view('scald_atom', array($atom->sid => $atom), $langcode);
+  $atom->content += field_attach_view('scald_atom', $atom, $view_mode, $langcode);
 
   if (!empty($atom->rendered->player)) {
     $atom->content['atom'] = array(
       '#markup' => $atom->rendered->player,
     );
   }
+
+  $atom->content += array('#view_mode' => $view_mode);
 }
 
