@@ -101,7 +101,7 @@ function scald_soundcloud_scald_fetch($atom, $type) {
   }
   // If no uploaded thumbnail we default to the generic one
   else {
-    $atom->thumbnail_source = file_create_url('sites/all/modules/slybud-scald/modules/providers/scald_soundcloud/images/soundcloud.png');
+    $atom->thumbnail_source = file_create_url(drupal_get_path('module', 'scald_soundcloud') . '/images/soundcloud.png');
   }
 }
 
