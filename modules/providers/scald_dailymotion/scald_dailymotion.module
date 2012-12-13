@@ -156,10 +156,18 @@ function scald_dailymotion_theme() {
 }
 
 /**
- * Implements hook_perm().
+ * Implements hook_permission().
  */
-function scald_dailymotion_perm() {
-  return array('administer dailymotion imports', 'import dailymotion videos');
+function scald_dailymotion_permission() {
+  return array(
+    'administer dailymotion imports' => array(
+      'title' => t('Administer DailyMotion imports'),
+      'description' => t('Add or remove DailyMotion feeds of videos that should be imported automatically.'),
+    ),
+    'import dailymotion videos' => array(
+      'title' => t('Import DailyMotion videos'),
+    ),
+  );
 }
 
 /**
