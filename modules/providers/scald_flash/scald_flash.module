@@ -19,7 +19,7 @@ function scald_flash_scald_atom_providers() {
 function scald_flash_scald_add_form(&$form, &$form_state) {
   $form['file_swf'] = array(
     '#type' => 'managed_file',
-    '#title' => t('Fichier .swf'),
+    '#title' => t('File .swf'),
     '#upload_location' => 'public://atoms/swf/',
     '#upload_validators' => array('file_validate_extensions' => array('swf')),
   );
