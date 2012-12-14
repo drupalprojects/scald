@@ -11,8 +11,7 @@
  * Implements hook_install().
  */
 function scald_vimeo_install() {
-  // @@@TODO: Pre-populate appropriate variables/configuration
-  scald_add_type('video', 'Video', 'Resource video');
+  scald_add_type('video', 'Video', 'Video');
 }
 
 
@@ -21,5 +20,4 @@ function scald_vimeo_install() {
  * Implements hook_uninstall().
  */
 function scald_vimeo_uninstall() {
-  // @@@TODO: Delete all variables/configs/blocks/etc.
 }

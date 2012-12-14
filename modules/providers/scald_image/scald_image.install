@@ -11,7 +11,7 @@
  * Implements hook_install().
  */
 function scald_image_install() {
-  scald_add_type('image', 'Image', 'Resource image');
+  scald_add_type('image', 'Image', 'Image');
   $instance = field_read_instance('scald_atom', 'scald_thumbnail', 'image');
   if ($instance) {
     $instance['label'] = 'Image';

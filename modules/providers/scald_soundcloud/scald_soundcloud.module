@@ -85,7 +85,6 @@ function scald_soundcloud_scald_add_form_fill(&$atom, $form, $form_state) {
     $atom->scald_thumbnail[LANGUAGE_NONE][0] = (array)$file;
   }
 
-
   $atom->data['kind'] = $infos->kind;
   $atom->data['track_count'] = $infos->track_count;
   $atom->data['permalink_url'] = $infos->permalink_url;
@@ -95,9 +94,16 @@ function scald_soundcloud_scald_add_form_fill(&$atom, $form, $form_state) {
  * Implements hook_scald_fetch().
  */
 function scald_soundcloud_scald_fetch($atom, $type) {
-  $file = $atom->scald_thumbnail[LANGUAGE_NONE][0]['uri'];
-  if (file_exists($file)) {
-    $atom->file_source = $atom->thumbnail_source = $file;
+  $file_items = field_get_items('scald_atom', $atom, 'scald_thumbnail');
+  if (!empty($file_items)) {
+    $file_item = current($file_items);
+    if (file_exists($file_item['uri'])) {
+      $atom->file_source = $atom->thumbnail_source = $file_item['uri'];
+    }
+  }
+  // If no uploaded thumbnail we default to the generic one
+  else {
+    $atom->thumbnail_source = drupal_get_path('module', 'scald_soundcloud') . '/images/soundcloud.png';
   }
 }
 
