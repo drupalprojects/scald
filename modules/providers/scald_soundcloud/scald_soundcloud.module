@@ -70,7 +70,6 @@ function scald_soundcloud_scald_add_form_fill(&$atom, $form, $form_state) {
       $dest = 'public://soundcloud/' . $infos->id . '.jpg';
       if (file_prepare_directory(dirname($dest), FILE_CREATE_DIRECTORY)) {
         $file = file_save_data($thumb->data, $dest);
-        $no_thumb = FALSE;
       }
     }
 
