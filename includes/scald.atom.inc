@@ -66,9 +66,19 @@ function scald_atom_build_content($atom, $view_mode = 'full', $langcode = NULL) 
   entity_prepare_view('scald_atom', array($atom->sid => $atom), $langcode);
   $atom->content += field_attach_view('scald_atom', $atom, $view_mode, $langcode);
 
+  // If the transcoder provider prepared a 'player', use it. Otherwise, build
+  // a default representation of the atom.
   if (!empty($atom->rendered->player)) {
     $atom->content['atom'] = array(
       '#markup' => $atom->rendered->player,
+    );
+  }
+  else {
+    $atom->content['atom'] = array(
+      '#type' => 'link',
+      '#href' => 'atom/' . $atom->sid,
+      '#title' => '<img src="' . $atom->rendered->thumbnail_source_url . '" />',
+      '#options' => array('html' => TRUE),
     );
   }
 
