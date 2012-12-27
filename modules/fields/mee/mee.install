@@ -58,7 +58,7 @@ function mee_schema() {
       ),
       'copyright' => array('type' => 'text'),
     ),
-    'primary key' => array('entity_type', 'entity_id', 'atom_sid', 'field', 'delta'),
+    'primary key' => array('entity_type', 'entity_id', 'revision_id', 'atom_sid', 'field', 'delta'),
   );
 
   return $schema;
