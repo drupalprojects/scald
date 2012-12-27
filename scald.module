@@ -1645,6 +1645,15 @@ function scald_entity_info() {
 
   $contexts = scald_contexts();
   foreach ($contexts as $slug => $context) {
+    // Only normal contexts created via Scald UI are rendered with fields. Other
+    // contexts are rendered specially and it does not make sense to expose them
+    // as view mode to customize field rendering.
+    // If a 3rd module defines a new context and would like to expose it as
+    // a view mode, it can use hook_entity_info_alter().
+    if ($context['provider'] !== 'scald' || (isset($context['hidden']) && $context['hidden'])) {
+      continue;
+    }
+
     $return['scald_atom']['view modes'][$slug] = array(
       'label' => $context['title'],
       'custom settings' => FALSE,
