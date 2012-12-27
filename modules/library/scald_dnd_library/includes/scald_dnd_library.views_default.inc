@@ -11,10 +11,9 @@ function scald_dnd_library_views_default_views() {
   $views = array();
 
   // Library view
-
-  $view = new view;
+  $view = new view();
   $view->name = 'scald_library';
-  $view->description = t('Library view provided by Scald to access atoms.');
+  $view->description = 'Library view provided by Scald to access atoms.';
   $view->tag = '';
   $view->base_table = 'scald_atoms';
   $view->human_name = '';
@@ -26,6 +25,7 @@ function scald_dnd_library_views_default_views() {
   $handler = $view->new_display('default', 'Master', 'default');
   $handler->display->display_options['title'] = 'Atoms Library';
   $handler->display->display_options['use_ajax'] = TRUE;
+  $handler->display->display_options['use_more_always'] = FALSE;
   $handler->display->display_options['access']['type'] = 'perm';
   $handler->display->display_options['access']['perm'] = 'administer scald atoms';
   $handler->display->display_options['cache']['type'] = 'none';
@@ -38,66 +38,31 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['empty']['text']['id'] = 'text';
   $handler->display->display_options['empty']['text']['table'] = 'views';
   $handler->display->display_options['empty']['text']['field'] = 'area';
-  $handler->display->display_options['empty']['text']['empty'] = FALSE;
   $handler->display->display_options['empty']['text']['content'] = 'No atom found.';
   $handler->display->display_options['empty']['text']['format'] = 'plain_text';
-  $handler->display->display_options['empty']['text']['tokenize'] = 0;
   /* Relationship: Atom: Publisher */
   $handler->display->display_options['relationships']['publisher']['id'] = 'publisher';
   $handler->display->display_options['relationships']['publisher']['table'] = 'scald_atoms';
   $handler->display->display_options['relationships']['publisher']['field'] = 'publisher';
   $handler->display->display_options['relationships']['publisher']['label'] = 'Publisher';
-  $handler->display->display_options['relationships']['publisher']['required'] = 0;
-  /* Field: Atom: Scald ID */
-  $handler->display->display_options['fields']['sid']['id'] = 'sid';
-  $handler->display->display_options['fields']['sid']['table'] = 'scald_atoms';
-  $handler->display->display_options['fields']['sid']['field'] = 'sid';
-  /* Field: Atom: Type */
-  $handler->display->display_options['fields']['type']['id'] = 'type';
-  $handler->display->display_options['fields']['type']['table'] = 'scald_atoms';
-  $handler->display->display_options['fields']['type']['field'] = 'type';
-  /* Field: Atom: Provider */
-  $handler->display->display_options['fields']['provider']['id'] = 'provider';
-  $handler->display->display_options['fields']['provider']['table'] = 'scald_atoms';
-  $handler->display->display_options['fields']['provider']['field'] = 'provider';
-  /* Field: Atom: Base ID */
-  $handler->display->display_options['fields']['base_id']['id'] = 'base_id';
-  $handler->display->display_options['fields']['base_id']['table'] = 'scald_atoms';
-  $handler->display->display_options['fields']['base_id']['field'] = 'base_id';
-  /* Field: Atom: Title */
-  $handler->display->display_options['fields']['title']['id'] = 'title';
-  $handler->display->display_options['fields']['title']['table'] = 'scald_atoms';
-  $handler->display->display_options['fields']['title']['field'] = 'title';
-  /* Field: User: Name */
-  $handler->display->display_options['fields']['name']['id'] = 'name';
-  $handler->display->display_options['fields']['name']['table'] = 'users';
-  $handler->display->display_options['fields']['name']['field'] = 'name';
-  $handler->display->display_options['fields']['name']['relationship'] = 'publisher';
-  $handler->display->display_options['fields']['name']['label'] = 'Publisher';
-  $handler->display->display_options['fields']['name']['alter']['alter_text'] = 0;
-  $handler->display->display_options['fields']['name']['alter']['make_link'] = 0;
-  $handler->display->display_options['fields']['name']['alter']['word_boundary'] = 1;
-  $handler->display->display_options['fields']['name']['alter']['ellipsis'] = 1;
-  $handler->display->display_options['fields']['name']['alter']['strip_tags'] = 0;
-  $handler->display->display_options['fields']['name']['alter']['trim'] = 0;
-  $handler->display->display_options['fields']['name']['alter']['html'] = 0;
-  $handler->display->display_options['fields']['name']['hide_empty'] = 0;
-  $handler->display->display_options['fields']['name']['empty_zero'] = 0;
-  $handler->display->display_options['fields']['name']['link_to_user'] = 1;
-  $handler->display->display_options['fields']['name']['overwrite_anonymous'] = 0;
   /* Field: Atom: Representation */
   $handler->display->display_options['fields']['representation']['id'] = 'representation';
   $handler->display->display_options['fields']['representation']['table'] = 'scald_atoms';
   $handler->display->display_options['fields']['representation']['field'] = 'representation';
-  $handler->display->display_options['fields']['representation']['alter']['alter_text'] = 0;
-  $handler->display->display_options['fields']['representation']['alter']['make_link'] = 0;
-  $handler->display->display_options['fields']['representation']['alter']['word_boundary'] = 1;
-  $handler->display->display_options['fields']['representation']['alter']['ellipsis'] = 1;
-  $handler->display->display_options['fields']['representation']['alter']['strip_tags'] = 0;
-  $handler->display->display_options['fields']['representation']['alter']['trim'] = 0;
-  $handler->display->display_options['fields']['representation']['alter']['html'] = 0;
-  $handler->display->display_options['fields']['representation']['hide_empty'] = 0;
-  $handler->display->display_options['fields']['representation']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['representation']['label'] = '';
+  /* Sort criterion: Atom: Scald ID */
+  $handler->display->display_options['sorts']['sid']['id'] = 'sid';
+  $handler->display->display_options['sorts']['sid']['table'] = 'scald_atoms';
+  $handler->display->display_options['sorts']['sid']['field'] = 'sid';
+  $handler->display->display_options['sorts']['sid']['order'] = 'DESC';
+  $handler->display->display_options['sorts']['sid']['exposed'] = TRUE;
+  $handler->display->display_options['sorts']['sid']['expose']['label'] = 'Scald ID';
+  /* Sort criterion: Atom: Title */
+  $handler->display->display_options['sorts']['title']['id'] = 'title';
+  $handler->display->display_options['sorts']['title']['table'] = 'scald_atoms';
+  $handler->display->display_options['sorts']['title']['field'] = 'title';
+  $handler->display->display_options['sorts']['title']['exposed'] = TRUE;
+  $handler->display->display_options['sorts']['title']['expose']['label'] = 'Title';
   /* Filter criterion: Atom: Title */
   $handler->display->display_options['filters']['title']['id'] = 'title';
   $handler->display->display_options['filters']['title']['table'] = 'scald_atoms';
@@ -121,8 +86,6 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['filters']['uid']['expose']['label'] = 'Publisher';
   $handler->display->display_options['filters']['uid']['expose']['operator'] = 'uid_op';
   $handler->display->display_options['filters']['uid']['expose']['identifier'] = 'uid';
-  $handler->display->display_options['filters']['uid']['expose']['required'] = FALSE;
-  $handler->display->display_options['filters']['uid']['expose']['reduce'] = 0;
   /* Filter criterion: Atoms: Authors (scald_authors) */
   $handler->display->display_options['filters']['scald_authors_tid']['id'] = 'scald_authors_tid';
   $handler->display->display_options['filters']['scald_authors_tid']['table'] = 'field_data_scald_authors';
@@ -134,7 +97,6 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['filters']['scald_authors_tid']['expose']['label'] = 'Authors';
   $handler->display->display_options['filters']['scald_authors_tid']['expose']['operator'] = 'scald_authors_tid_op';
   $handler->display->display_options['filters']['scald_authors_tid']['expose']['identifier'] = 'scald_authors_tid';
-  $handler->display->display_options['filters']['scald_authors_tid']['expose']['remember_roles'] = array();
   $handler->display->display_options['filters']['scald_authors_tid']['vocabulary'] = 'scald_authors';
   /* Filter criterion: Atom: Type */
   $handler->display->display_options['filters']['type']['id'] = 'type';
@@ -146,8 +108,6 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['filters']['type']['expose']['label'] = 'Type';
   $handler->display->display_options['filters']['type']['expose']['operator'] = 'type_op';
   $handler->display->display_options['filters']['type']['expose']['identifier'] = 'type';
-  $handler->display->display_options['filters']['type']['expose']['required'] = FALSE;
-  $handler->display->display_options['filters']['type']['expose']['reduce'] = 0;
   /* Filter criterion: Atoms: Tags (scald_tags) */
   $handler->display->display_options['filters']['scald_tags_tid']['id'] = 'scald_tags_tid';
   $handler->display->display_options['filters']['scald_tags_tid']['table'] = 'field_data_scald_tags';
@@ -159,7 +119,6 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['filters']['scald_tags_tid']['expose']['label'] = 'Tags';
   $handler->display->display_options['filters']['scald_tags_tid']['expose']['operator'] = 'scald_tags_tid_op';
   $handler->display->display_options['filters']['scald_tags_tid']['expose']['identifier'] = 'scald_tags_tid';
-  $handler->display->display_options['filters']['scald_tags_tid']['expose']['remember_roles'] = array();
   $handler->display->display_options['filters']['scald_tags_tid']['vocabulary'] = 'scald_tags';
   /* Filter criterion: Atom: Actions */
   $handler->display->display_options['filters']['actions']['id'] = 'actions';
@@ -174,7 +133,8 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['filters']['actions']['expose']['operator'] = FALSE;
 
   /* Display: Scald Library */
-  $handler = $view->new_display('dnd_library', 'Scald Library', 'dnd_library_2');
+  $handler = $view->new_display('dnd_library', 'Scald Library', 'dnd_library_1');
+  $handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
   $handler->display->display_options['defaults']['access'] = FALSE;
   $handler->display->display_options['access']['type'] = 'perm';
   $handler->display->display_options['access']['perm'] = 'access scald dnd library';
@@ -183,61 +143,33 @@ function scald_dnd_library_views_default_views() {
   $handler->display->display_options['defaults']['style_options'] = FALSE;
   $handler->display->display_options['defaults']['row_plugin'] = FALSE;
   $handler->display->display_options['defaults']['row_options'] = FALSE;
-  $handler->display->display_options['defaults']['fields'] = FALSE;
-  /* Field: Atom: Representation */
-  $handler->display->display_options['fields']['representation']['id'] = 'representation';
-  $handler->display->display_options['fields']['representation']['table'] = 'scald_atoms';
-  $handler->display->display_options['fields']['representation']['field'] = 'representation';
-  $handler->display->display_options['fields']['representation']['label'] = '';
-  $handler->display->display_options['fields']['representation']['alter']['alter_text'] = 0;
-  $handler->display->display_options['fields']['representation']['alter']['make_link'] = 0;
-  $handler->display->display_options['fields']['representation']['alter']['word_boundary'] = 1;
-  $handler->display->display_options['fields']['representation']['alter']['ellipsis'] = 1;
-  $handler->display->display_options['fields']['representation']['alter']['strip_tags'] = 0;
-  $handler->display->display_options['fields']['representation']['alter']['trim'] = 0;
-  $handler->display->display_options['fields']['representation']['alter']['html'] = 0;
-  $handler->display->display_options['fields']['representation']['hide_empty'] = 0;
-  $handler->display->display_options['fields']['representation']['empty_zero'] = 0;
-  /* Field: Atom: Title */
-  $handler->display->display_options['fields']['title']['id'] = 'title';
-  $handler->display->display_options['fields']['title']['table'] = 'scald_atoms';
-  $handler->display->display_options['fields']['title']['field'] = 'title';
-  $handler->display->display_options['fields']['title']['label'] = 'Titre';
-  $handler->display->display_options['fields']['title']['alter']['alter_text'] = 0;
-  $handler->display->display_options['fields']['title']['alter']['make_link'] = 0;
-  $handler->display->display_options['fields']['title']['alter']['word_boundary'] = 1;
-  $handler->display->display_options['fields']['title']['alter']['ellipsis'] = 1;
-  $handler->display->display_options['fields']['title']['alter']['strip_tags'] = 0;
-  $handler->display->display_options['fields']['title']['alter']['trim'] = 0;
-  $handler->display->display_options['fields']['title']['alter']['html'] = 0;
-  $handler->display->display_options['fields']['title']['hide_empty'] = 0;
-  $handler->display->display_options['fields']['title']['empty_zero'] = 0;
-  /* Field: Atom: Scald ID */
-  $handler->display->display_options['fields']['sid']['id'] = 'sid';
-  $handler->display->display_options['fields']['sid']['table'] = 'scald_atoms';
-  $handler->display->display_options['fields']['sid']['field'] = 'sid';
-  $handler->display->display_options['fields']['sid']['alter']['alter_text'] = 0;
-  $handler->display->display_options['fields']['sid']['alter']['make_link'] = 0;
-  $handler->display->display_options['fields']['sid']['alter']['word_boundary'] = 1;
-  $handler->display->display_options['fields']['sid']['alter']['ellipsis'] = 1;
-  $handler->display->display_options['fields']['sid']['alter']['strip_tags'] = 0;
-  $handler->display->display_options['fields']['sid']['alter']['trim'] = 0;
-  $handler->display->display_options['fields']['sid']['alter']['html'] = 0;
-  $handler->display->display_options['fields']['sid']['hide_empty'] = 0;
-  $handler->display->display_options['fields']['sid']['empty_zero'] = 0;
   $handler->display->display_options['path'] = 'scald/library_dnd';
-
-  $translatables[$view->name] = array(
+  $translatables['scald_library'] = array(
     t('Master'),
-    t('Atoms'),
     t('Atoms Library'),
-    t('Authors'),
-    t('Scald Library'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('Items per page'),
+    t('- All -'),
+    t('Offset'),
+    t('« first'),
+    t('‹ previous'),
+    t('next ›'),
+    t('last »'),
     t('No atom found.'),
-    t('Tags'),
-    t('Title'),
-    t('Type'),
     t('Publisher'),
+    t('Scald ID'),
+    t('.'),
+    t(','),
+    t('Title'),
+    t('Authors'),
+    t('Type'),
+    t('Tags'),
+    t('Scald Library'),
   );
 
   $views[$view->name] = $view;

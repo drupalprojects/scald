@@ -324,55 +324,6 @@ function theme_sdl_preview_item($variables) {
 }
 
 /**
- * Implements hook_form_alter().
- */
-function scald_dnd_library_form_alter(&$form, $form_state, $form_id) {
-  if ($form_id == 'views_exposed_form') {
-    return;
-    // Check if the style plugin is scald_library.
-    $view = $form_state['view'];
-    if ($view->display_handler->get_option('style_plugin') == 'scald_library') {
-      // Put the filters in a fieldset... Hackish.
-      $filter = t('Filter');
-      drupal_add_js('misc/collapse.js');
-      $form['#prefix'] = "<fieldset class='collapsible collapsed'><legend>$filter</legend>";
-      $form['#suffix'] = "</fieldset>";
-      // Try to expose a sort based on the fields defined for this display.
-      // That's hackish too, but won't be needed when Views 3 hits a stable
-      // release, so let's say it's a temporary workaround.
-      $fields = $view->field;
-      $options = array();
-      foreach ($fields as $name => $field) {
-        if ($field->definition['click sortable']) {
-          $options[$name] = $field->options['label'];
-        }
-      }
-      if (count($options)) {
-        $filter = t('Filter');
-        $form['order'] = array(
-          '#type' => 'select',
-          '#title' => t('Sort'),
-          '#options' => $options,
-          '#default_value' => $_GET['order']
-        );
-        $form['sort'] = array(
-          '#type' => 'select',
-          '#title' => '',
-          '#options' => array('desc' => t('Descending'), 'asc' => t('Ascending')),
-          '#default_value' => $_GET['sort']
-        );
-        $form['submit']['#weight'] = 1;
-        $form['reset'] = array(
-          '#type' => 'markup',
-          '#value' => "<input type='reset' value='" . t('Reset') . "' />",
-          '#weight' => 2
-        );
-      }
-    }
-  }
-}
-
-/**
  * Implements hook_views_api().
  */
 function scald_dnd_library_views_api() {
@@ -381,8 +332,6 @@ function scald_dnd_library_views_api() {
     'path' => drupal_get_path('module', 'scald_dnd_library') . '/includes',
   );
 }
-// @todo Why the following file is sometimes not automatically included?
-module_load_include('inc', 'scald_dnd_library', 'includes/scald_dnd_library.views');
 
 /**
  * Implements hook_image_default_styles().

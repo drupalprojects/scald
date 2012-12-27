@@ -12,11 +12,16 @@ class scald_plugin_display_library extends views_plugin_display_page {
    * is already rendered.
    */
   function execute() {
+    $library = array();
+    $summary = array('criteria' => array());
+
     // Hide the links that Views would normally display, as they confuse
     // DnD.
-    $library = array();
+    $this->view->hide_admin_links = TRUE;
+
     // Execute the view to get all the filter that applies.
     $this->view->execute();
+
     // And now extract a summary from all the options that were filled.
     foreach ($this->view->filter as $id => $filter) {
       if ($filter->options['exposed']) {
@@ -90,36 +95,34 @@ class scald_plugin_display_library extends views_plugin_display_page {
         }
       }
     }
-    // Add info about how we sort the view.
-    if ($this->view->style_plugin->active) {
-      $sort = $this->view->style_plugin->active;
-      $label = $this->view->field[$sort]->options['label'];
-      $order = $this->view->style_plugin->order;
-      $orders = array('asc' => t('Ascending'), 'desc' => t('Descending'));
-      $summary['sort'] = t('<span class="label">Sort:</span> @criteria', array('@criteria' => $label . ' ' . $orders[$order]));
+    // Add info about how we sort the view in the summary.
+    if (!empty($this->view->exposed_data)) {
+      $exposed_data = $this->view->exposed_data;
+      $sort_by = isset($exposed_data['sort_by']) ? $exposed_data['sort_by'] : FALSE;
+      if ($sort_by && isset($this->view->sort[$sort_by])) {
+        $label = $this->view->sort[$sort_by]->options['expose']['label'];
+        if (isset($exposed_data['sort_order']) && in_array($exposed_data['sort_order'], array('ASC', 'DESC'))) {
+          $order = $exposed_data['sort_order'];
+        }
+        else {
+          $order = $this->view->sort[$sort_by]->options['expose']['order'];
+        }
+        $orders = array('ASC' => t('Ascending'), 'DESC' => t('Descending'));
+        $summary['sort'] = t('<span class="label">Sort:</span> @criteria', array('@criteria' => $label . ' ' . $orders[$order]));
+      }
     }
-    $this->view->hide_admin_links = TRUE;
-    $view = $this->view->render();
-    $messages = theme('status_messages');
-    $library['library'] = $messages . $view;
+
+    // Render our header based on the built summary.
     $header = '<div class="summary">';
     $header .= '<div class="toggle"></div><div class="title">' . t('search') . '</div>';
     if (!empty($summary['sort'])) {
       $header .= '<div class="sort">' . $summary['sort'] . '</div>';
     }
-    if (!isset($summary['criteria'])) {
-      // @todo remove this workaround. Normally is it always set.
-      $summary['criteria'] = array();
-    }
     $header .= theme('item_list', array('items' => $summary['criteria']));
     $header .= '</div>';
-    //@todo verify: D7 Views exposed filter does not use fieldset.
-    //$library['library'] = preg_replace('#</fieldset>#', '</fieldset>'. $header, $library['library'], 1);
-    $library['library'] .= $header;
-    foreach ($this->view->result as $result) {
-      $sid = $result->sid;
-      scald_dnd_library_add_item($library, $sid);
-    }
+
+    // Prepare the "Quick add" buttons, that will appear next to the library,
+    // based on the user permissions.
     $atom_types = scald_types();
     $buttons = array('type' => 'ul', 'title' => NULL, 'attributes' => array());
     ctools_include('ajax');
@@ -132,7 +135,17 @@ class scald_plugin_display_library extends views_plugin_display_page {
         );
       }
     }
-    $library['menu'] = '<div class="scald-menu"><div class="add-buttons">' . theme_item_list($buttons) . '</div></div>';
+
+    // Finally render the resulting library.
+    $view = $this->view->render();
+    $messages = theme('status_messages');
+    $library['library'] = $messages . $view . $header;
+    foreach ($this->view->result as $result) {
+      $sid = $result->sid;
+      scald_dnd_library_add_item($library, $sid);
+    }
+
+    $library['menu'] = '<div class="scald-menu"><div class="add-buttons">' . theme('item_list', $buttons) . '</div></div>';
     $library['library'] = '<div class="scald-library">' . $library['library'] . '</div>';
     $library['anchor'] = '<div class="scald-anchor"></div>';
     drupal_json_output($library);
