@@ -44,11 +44,39 @@ function scald_dnd_library_theme() {
  * Implements hook_dnd_libraries_info().
  */
 function scald_dnd_library_dnd_libraries_info() {
-  $return = array();
+  $libraries = array();
   if (module_exists('views')) {
-    $return['scald/library_dnd'] = t('Scald Library');
+    $cache = cache_get('views_based_libraries', 'cache_scald');
+    if ($cache && is_array($cache->data)) {
+      $libraries = $cache->data;
+    }
+    else {
+      $views = views_get_all_views();
+      foreach ($views as $view) {
+        // disabled views get nothing.
+        if (!empty($view->disabled)) {
+          continue;
+        }
+
+        $view->init_display();
+        foreach ($view->display as $id => $display) {
+          if (!empty($display->handler->definition['provides dnd library'])) {
+            $libraries[$display->handler->get_option('path')] = $display->handler->get_option('title') . ' (' . $view->name . '-' . $id . ')';
+          }
+        }
+      }
+      cache_set('views_based_libraries', $libraries, 'cache_scald');
+    }
   }
-  return $return;
+
+  return $libraries;
+}
+
+/**
+ * Implements hook_views_invalidate_cache().
+ */
+function scald_dnd_library_views_invalidate_cache() {
+  cache_clear_all('views_based_libraries', 'cache_scald');
 }
 
 /**

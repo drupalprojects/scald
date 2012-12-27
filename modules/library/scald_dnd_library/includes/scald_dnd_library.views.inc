@@ -37,6 +37,7 @@ function scald_dnd_library_views_plugins() {
         'admin' => t('Library'),
         'help topic' => 'scald-library',
         'uses hook menu' => TRUE,
+        'provides dnd library' => TRUE,
       )
     )
   );
