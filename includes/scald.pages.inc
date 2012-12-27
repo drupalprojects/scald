@@ -131,9 +131,8 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
   }
   else {
     if ($output === FALSE || !empty($form_state['complete'])) {
-      // @todo should we display a confirmation instead?
-      //return 'confirm message';
-      drupal_goto('atom/add');
+      $atom = $form_state['storage']->atom;
+      drupal_goto('atom/' . $atom->sid . '/view');
     }
     elseif (!empty($form_state['cancel'])) {
       drupal_goto('atom/add');
