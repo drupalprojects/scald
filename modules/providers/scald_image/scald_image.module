@@ -93,4 +93,7 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
       }
     }
   }
+  elseif ($mode == 'atom') {
+    $atom->rendered->player = '<!-- none -->';
+  }
 }
