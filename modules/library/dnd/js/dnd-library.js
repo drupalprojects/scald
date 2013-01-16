@@ -55,7 +55,7 @@ Drupal.dnd = {
 
   // Convert HTML to SAS. We consider there is no nested elements.
   html2sas: function(text) {
-    text = text.replace(/<!-- (scald=(\d+):([a-z_]+)) -->[\r\n\s\S]*<!-- END scald=\2 -->/g, '[$1]');
+    text = text.replace(/<!-- (scald=(\d+):([a-z_]+)) -->[\r\n\s\S]*?<!-- END scald=\2 -->/g, '[$1]');
     return text;
   },
 
