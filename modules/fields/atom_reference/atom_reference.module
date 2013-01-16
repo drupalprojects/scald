@@ -191,6 +191,12 @@ function atom_reference_field_widget_form(&$form, &$form_state, $field, $instanc
   $types = $instance['settings']['referencable_types'];
   $all = scald_types();
   $options = array();
+
+  // All types are allowed if no type is explicitely selected (default setting).
+  if (!array_filter($types)) {
+    $types = array_fill_keys(array_keys($all), '1');
+  }
+
   foreach ($types as $name => $value) {
     if ($value && isset($all[$name])) {
       $options[$name] = $all[$name]->title;

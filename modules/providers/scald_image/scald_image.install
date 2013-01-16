@@ -30,10 +30,21 @@ function scald_image_install() {
     ->execute();
 }
 
-
-
 /**
  * Implements hook_uninstall().
  */
 function scald_image_uninstall() {
 }
+
+/**
+ * Hide the Image field because the image is rendered once in the Atom core.
+ * This make Scald Image consistent with other atom types.
+ */
+function scald_image_update_7000() {
+  $instance = field_info_instance('scald_atom', 'scald_thumbnail', 'image');
+  foreach ($instance['display'] as $view_mode => $settings) {
+    $instance['display'][$view_mode]['type'] = 'hidden';
+  }
+  field_update_instance($instance);
+}
+
