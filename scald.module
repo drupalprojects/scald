@@ -1579,7 +1579,7 @@ function scald_scald_render($atom, $context, $options = NULL) {
       // If this is a custom context created through the UI, we use a special
       // render.
       $system = _scald_system_contexts();
-      if (empty($system[$context])) {
+      if ($context == 'full' || empty($system[$context])) {
         $content = scald_atom_view($atom, $context);
         return drupal_render($content);
       }
