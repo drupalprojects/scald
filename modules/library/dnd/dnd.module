@@ -143,7 +143,7 @@ function dnd_library() {
  */
 function dnd_library_alter(&$libraries, $module) {
   if ($module == 'mee' || $module == 'atom_reference') {
-    $libraries['dependencies']['library'][] = array('dnd', 'library');
+    $libraries['library']['dependencies'][] = array('dnd', 'library');
   }
 }
 
