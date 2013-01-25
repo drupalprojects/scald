@@ -91,6 +91,7 @@ function dnd_process_textarea($element, $form_state) {
     drupal_add_js(array(
       'dndDropAreas' => array($element['#id'] => $settings),
     ), 'setting');
+    $element['#attached']['library'][] = array('dnd', 'library');
   }
 
   return $element;
@@ -138,6 +139,15 @@ function dnd_library() {
 }
 
 /**
+ * Implements hook_library_alter().
+ */
+function dnd_library_alter(&$libraries, $module) {
+  if ($module == 'mee') {
+    $libraries['dependencies'][] = array('library' => array('dnd', 'library'));
+  }
+}
+
+/**
  * Adds all the JS libraries for the library to the page.
  */
 function dnd_add_library() {
@@ -146,7 +156,8 @@ function dnd_add_library() {
   if (!$included) {
     $included = TRUE;
 
-    drupal_add_library('dnd', 'library');
+    // This is included via #attached
+    // drupal_add_library('dnd', 'library');
 
     // Libraries might provide atom quick add links. We add CTools Modal JS so
     // that libraries can take use of it if they want.

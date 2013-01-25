@@ -29,6 +29,26 @@ function mee_theme($existing, $type, $theme, $path) {
 }
 
 /**
+ * Implements hook_library().
+ */
+function mee_library() {
+  $path = drupal_get_path('module', 'mee');
+  $libraries['library'] = array(
+    'title' => 'MEE Library',
+    'website' => 'http://drupal.org/project/scald',
+    'version' => '1.x',
+    'js' => array(
+      $path . '/mee.js' => array(),
+    ),
+    'css' => array(
+      $path . '/css/mee.css' => array(),
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
  * Implements hook_field_info_alter().
  */
 function mee_field_info_alter(&$info) {
@@ -257,8 +277,7 @@ function mee_field_widget_form_alter(&$element, &$form_state, $context) {
     '#prefix' => '<div class="mee-wrap-editor-library">',
     '#suffix' => '</div>',
     '#attached' => array(
-      'css' => array(drupal_get_path('module', 'mee') . '/css/mee.css'),
-      'js' => array(drupal_get_path('module', 'mee')  . '/mee.js'),
+      'library' => array('mee', 'library'),
     ),
     '#element_validate' => array('mee_field_text_validate'),
     '#weight' => 0.5,

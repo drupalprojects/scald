@@ -218,7 +218,8 @@ function atom_reference_field_widget_form(&$form, &$form_state, $field, $instanc
   $path = drupal_get_path('module', 'atom_reference');
   $return['sid']['#attached'] = array(
     'css' => array($path . '/atom_reference.css'),
-    'js'  => array($path . '/atom_reference.js')
+    'js'  => array($path . '/atom_reference.js'),
+    'library' => array(array('dnd', 'library')),
   );
 
   return $return;
