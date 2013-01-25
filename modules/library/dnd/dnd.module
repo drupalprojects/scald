@@ -148,6 +148,14 @@ function dnd_library_alter(&$libraries, $module) {
 }
 
 /**
+ * Implements hook_edit_editor_attachments_alter().
+ */
+function dnd_edit_editor_attachments_alter(&$attachments) {
+  // When Edit module uses CKEditor editor widget, we add our DnD library.
+  $attachments['ckeditor']['library'][] = array('dnd', 'library');
+}
+
+/**
  * Adds all the JS libraries for the library to the page.
  */
 function dnd_add_library() {
