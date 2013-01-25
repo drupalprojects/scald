@@ -62,18 +62,16 @@ function scald_flash_scald_fetch($atom, $type) {
  */
 function scald_flash_scald_prerender($atom, $context, $options, $mode) {
   if ($mode == 'atom') {
-    if ($context != 'sdl_library_item') {
-      $atom->rendered->player = theme('scald_flash_object',
-        array('vars' =>
-          array(
-            'flash_uri'      => file_create_url($atom->file_source),
-            'flash_width'   => ($atom->scald_width[LANGUAGE_NONE][0]['value'] ? $atom->scald_width[LANGUAGE_NONE][0]['value'] : 480),
-            'flash_height'  => ($atom->scald_height[LANGUAGE_NONE][0]['value'] ? $atom->scald_height[LANGUAGE_NONE][0]['value'] : 365),
-            'thumbnail'     => $atom->thumbnail_source
-          )
-        )
-      );
-    }
+    $atom->rendered->player = theme('scald_flash_object',
+      array('vars' =>
+        array(
+          'flash_uri'      => file_create_url($atom->file_source),
+          'flash_width'   => ($atom->scald_width[LANGUAGE_NONE][0]['value'] ? $atom->scald_width[LANGUAGE_NONE][0]['value'] : 480),
+          'flash_height'  => ($atom->scald_height[LANGUAGE_NONE][0]['value'] ? $atom->scald_height[LANGUAGE_NONE][0]['value'] : 365),
+          'thumbnail'     => $atom->thumbnail_source,
+        ),
+      )
+    );
   }
 }
 
