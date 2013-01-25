@@ -75,23 +75,29 @@ function scald_image_scald_fetch($atom, $type) {
  * Implements hook_scald_prerender().
  */
 function scald_image_scald_prerender($atom, $context, $options, $mode) {
+  // Find out which transcoder is in use. This seems unnecesarilly complex.
+  $contexts = scald_contexts();
+  $context_config = $contexts[$context]['type_format'][$atom->type];
+  if (!preg_match('/^style-(.*)$/', $context_config['transcoder'], $match)) {
+    return;
+  }
+
+  $preset = image_style_load($match[1]);
+
   if ($mode == 'transcoder') {
-    // Find out which transcoder is in use. This seems unnecesarilly complex.
-    $contexts = scald_contexts();
-    $context_config = $contexts[$context]['type_format'][$atom->type];
-    if (preg_match('/^style-(.*)$/', $context_config['transcoder'], $match)) {
-      $preset = image_style_load($match[1]);
-      if (!empty($atom->file_source)) {
-        $path = str_replace('public://', 'public://styles/' . $preset['name'] . '/public/', $atom->file_source);
-        $atom->file_transcoded = $path;
-        $atom->rendered->file_transcoded_url = file_create_url($path);
-      }
-      if (!empty($atom->thumbnail_source)) {
-        $path = str_replace('public://', 'public://styles/' . $preset['name'] . '/public/', $atom->thumbnail_source);
-        $atom->thumbnail_transcoded = $path;
-        $atom->rendered->thumbnail_transcoded_url = file_create_url($path);
-      }
+    if (!empty($atom->file_source)) {
+      $path = str_replace('public://', 'public://styles/' . $preset['name'] . '/public/', $atom->file_source);
+      $atom->file_transcoded = $path;
+      $atom->rendered->file_transcoded_url = file_create_url($path);
     }
+    if (!empty($atom->thumbnail_source)) {
+      $path = str_replace('public://', 'public://styles/' . $preset['name'] . '/public/', $atom->thumbnail_source);
+      $atom->thumbnail_transcoded = $path;
+      $atom->rendered->thumbnail_transcoded_url = file_create_url($path);
+    }
+  }
+  elseif ($mode == 'atom') {
+    $atom->rendered->player = theme('image_style', array('path' => $atom->file_source, 'style_name' => $preset['name']));
   }
 }
 
