@@ -6,6 +6,26 @@
  */
 
 /**
+ * Implements hook_library().
+ */
+function atom_reference_library() {
+  $path = drupal_get_path('module', 'atom_reference');
+  $libraries['library'] = array(
+    'title' => 'Atom reference library',
+    'website' => 'http://drupal.org/project/scald',
+    'version' => '1.x',
+    'js' => array(
+      $path . '/atom_reference.js' => array(),
+    ),
+    'css' => array(
+      $path . '/atom_reference.css' => array(),
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
  * Implements hook_field_info().
  */
 function atom_reference_field_info() {
@@ -216,11 +236,7 @@ function atom_reference_field_widget_form(&$form, &$form_state, $field, $instanc
 
   // Attach our JS and CSS to the element
   $path = drupal_get_path('module', 'atom_reference');
-  $return['sid']['#attached'] = array(
-    'css' => array($path . '/atom_reference.css'),
-    'js'  => array($path . '/atom_reference.js'),
-    'library' => array(array('dnd', 'library')),
-  );
+  $return['sid']['#attached'] = array('library' => array(array('atom_reference', 'library')));
 
   return $return;
 }

@@ -142,8 +142,8 @@ function dnd_library() {
  * Implements hook_library_alter().
  */
 function dnd_library_alter(&$libraries, $module) {
-  if ($module == 'mee') {
-    $libraries['dependencies'][] = array('library' => array('dnd', 'library'));
+  if ($module == 'mee' || $module == 'atom_reference') {
+    $libraries['dependencies']['library'][] = array('dnd', 'library');
   }
 }
 
