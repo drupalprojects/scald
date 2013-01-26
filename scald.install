@@ -49,7 +49,6 @@ function scald_schema() {
         'type'        => 'varchar',
         'length'      => SCALD_SLUG_MAX_LENGTH,
         'not null'    => TRUE,
-        'default'     => 'composite',
       ),
       'base_id'   => array(
         'description' => 'The identifier used by the Scald Atom Provider that registered Atom to determine additional properties (e.g. a Drupal NID or a YouTube ID).  FK',
@@ -111,7 +110,6 @@ function scald_schema() {
         'type'        => 'varchar',
         'length'      => SCALD_SLUG_MAX_LENGTH,
         'not null'    => TRUE,
-        'default'     => 'composite',
       ),
       'provider'         => array(
         'description' => 'The name of the module which provides this Type.  The Provider module should implement the Scald Provider API for Types.  FK {system}.name',
@@ -125,7 +123,6 @@ function scald_schema() {
         'type'        => 'varchar',
         'length'      => 255,
         'not null'    => TRUE,
-        'default'     => 'Scald Composite',
       ),
       'description' => array(
         'description' => 'A description of the Type for the benefit of Admins and Devs.',
@@ -151,7 +148,6 @@ function scald_schema() {
         'type'        => 'varchar',
         'length'      => SCALD_SLUG_MAX_LENGTH,
         'not null'    => TRUE,
-        'default'     => 'composite',
       ),
       'file_format'     => array(
         'description' => 'A file format slug.  Could be just about anything, but this is supposed to coincide with the format specifiers used by Scald Transcoders.',

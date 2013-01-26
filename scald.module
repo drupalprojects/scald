@@ -1502,11 +1502,10 @@ function scald_scald_actions() {
 /**
  * Implements hook_scald_prerender().
  *
- * Scald Core implements this hook for its role as a Scald Atom Provider of
- *  Atoms of Scald Unified Type 'composite', for its role as a Scald Context
- *  Provider of Scald Contexts 'debug', 'no-access', 'invalid-id', 'deleted',
- *  'title', and for its role as a Scald Transcoder Provider of Scald Transcoder
- *  'passthrough'.
+ * Scald Core implements this hook for its role as a Scald Context Provider of
+ * Scald Contexts 'debug', 'no-access', 'invalid-id', 'deleted', 'title' and
+ * UI-created contexts, and for its role as a Scald Transcoder Provider of Scald
+ * Transcoder 'passthrough'.
  *
  * @param $atom
  *  The Scald Atom object to prepare for rendering.
@@ -1528,22 +1527,6 @@ function scald_scald_prerender($atom, $mode, $context = NULL, $options = NULL) {
       break; // end 'type'
 
     case 'context':
-      switch ($context) {
-        case 'debug':
-          break;
-
-        case 'no-access':
-          break;
-
-        case 'invalid-id':
-          break;
-
-        case 'deleted':
-          break;
-
-        case 'title':
-          break;
-      }
       break; // end 'context'
 
     case 'transcoder':
