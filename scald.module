@@ -1136,7 +1136,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
   $atom->rendered = new stdClass;
   $atom->rendered->sid = $atom->sid;
   $atom->rendered->title = $atom->title;
-  $atom->rendered->file_source_url = empty($atom->file_source) ? NULL : url($atom->file_source);
+  $atom->rendered->file_source_url = empty($atom->file_source) ? NULL : file_create_url($atom->file_source);
   $atom->rendered->file_transcoded_url = NULL;
   $atom->rendered->thumbnail_source_url = file_create_url($atom->thumbnail_source);
   $atom->rendered->description = $atom->description;
@@ -1547,7 +1547,7 @@ function scald_scald_prerender($atom, $mode, $context = NULL, $options = NULL) {
       break; // end 'context'
 
     case 'transcoder':
-      $atom->rendered->file_transcoded_url = url($atom->file_source);
+      $atom->rendered->file_transcoded_url = file_create_url($atom->file_source);
       break; // end 'transcoder'
   }
 } // end scald_scald_prerender()
