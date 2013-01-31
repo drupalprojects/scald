@@ -1671,8 +1671,15 @@ function scald_entity_property_info() {
   $properties['sid'] = array(
     'label' => t("Scald ID"),
     'type' => 'integer',
-    'description' => t("The unique ID of the node."),
-    'schema field' => 'nid',
+    'description' => t("The unique ID of the atom."),
+    'schema field' => 'sid',
+  );
+  $properties['provider'] = array(
+    'label' => t('Scald Provider'),
+    'description' => t("The Provider of the atom."),
+    'setter callback' => 'entity_property_verbatim_set',
+    'required' => TRUE,
+    'schema field' => 'provider',
   );
   $properties['type'] = array(
     'label' => t("Atom type"),
@@ -1683,6 +1690,13 @@ function scald_entity_property_info() {
     'options list' => 'scald_type_get_names',
     'required' => TRUE,
     'schema field' => 'type',
+  );
+  $properties['base_id'] = array(
+    'label' => t("BaseID"),
+    'description' => t("The BaseID of the atom."),
+    'setter callback' => 'entity_property_verbatim_set',
+    'schema field' => 'base_id',
+    'required' => TRUE,
   );
   $properties['title'] = array(
     'label' => t("Title"),
@@ -1979,7 +1993,7 @@ function scald_menu() {
  */
 function scald_atom_uri($atom) {
   return array(
-    'path' => 'atoms/view/' . $atom->sid
+    'path' => 'atom/' . $atom->sid
   );
 }
 
