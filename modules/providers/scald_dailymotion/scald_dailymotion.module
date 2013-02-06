@@ -514,7 +514,7 @@ function scald_dailymotion_import() {
   // The edit page is nothing else other than the add page, at the Add step. We
   // prepare data for this step then send back to the add page.
   $types = scald_types();
-  $storage = (object) array(
+  $storage = array(
     'type' => $types['video'],
     'source' => 'scald_dailymotion',
   );
