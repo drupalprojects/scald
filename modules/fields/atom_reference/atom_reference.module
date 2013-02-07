@@ -6,6 +6,26 @@
  */
 
 /**
+ * Implements hook_library().
+ */
+function atom_reference_library() {
+  $path = drupal_get_path('module', 'atom_reference');
+  $libraries['library'] = array(
+    'title' => 'Atom reference library',
+    'website' => 'http://drupal.org/project/scald',
+    'version' => '1.x',
+    'js' => array(
+      $path . '/atom_reference.js' => array(),
+    ),
+    'css' => array(
+      $path . '/atom_reference.css' => array(),
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
  * Implements hook_field_info().
  */
 function atom_reference_field_info() {
@@ -86,7 +106,7 @@ function atom_reference_field_views_data($field) {
 function atom_reference_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
   // Ensure that the types of the referenced atoms match the one of those
   // that were defined in the field configuration.
-  $types = $instance['settings']['referencable_types'];
+  $types = atom_reference_field_referenceable_types($instance);
   foreach ($items as $delta => $item) {
     if (empty($item['sid'])) {
       continue;
@@ -163,14 +183,9 @@ function atom_reference_field_widget_info() {
 function atom_reference_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   dnd_add_library();
 
-  $types = $instance['settings']['referencable_types'];
   $all = scald_types();
   $options = array();
-
-  // All types are allowed if no type is explicitely selected (default setting).
-  if (!array_filter($types)) {
-    $types = array_fill_keys(array_keys($all), '1');
-  }
+  $types = atom_reference_field_referenceable_types($instance);
 
   foreach ($types as $name => $value) {
     if ($value && isset($all[$name])) {
@@ -196,12 +211,24 @@ function atom_reference_field_widget_form(&$form, &$form_state, $field, $instanc
 
   // Attach our JS and CSS to the element
   $path = drupal_get_path('module', 'atom_reference');
-  $return['sid']['#attached'] = array(
-    'css' => array($path . '/atom_reference.css'),
-    'js'  => array($path . '/atom_reference.js')
-  );
+  $return['sid']['#attached'] = array('library' => array(array('atom_reference', 'library')));
 
   return $return;
+}
+
+/**
+ * Atom types that are allowed to be referenced in that field instance.
+ */
+function atom_reference_field_referenceable_types($instance) {
+  $types = $instance['settings']['referencable_types'];
+  $all = scald_types();
+
+  // All types are allowed if no type is explicitely selected (default setting).
+  if (!array_filter($types)) {
+    $types = array_fill_keys(array_keys($all), '1');
+  }
+
+  return $types;
 }
 
 /**

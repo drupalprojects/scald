@@ -232,17 +232,7 @@ function theme_sdl_library_item($variables) {
     $authors = '';
   }
 
-  $return =  "
-  <div class='image'>
-    {$image}
-  </div>";
-  if (!empty($informations->player)) {
-    $return .= "
-  <div class='player'>
-    {$informations->player}
-  </div>";
-  }
-  $return .= "
+  $return = "<div class='image'>{$image}</div>
   <div class='meta type-" . drupal_strtolower($informations->type) . " clearfix'>
     <div class='title'>{$informations->title}</div>
     <div class='author'>{$authors}</div>
@@ -257,11 +247,7 @@ function theme_sdl_library_item($variables) {
  */
 function theme_sdl_editor_item($variables) {
   $data = !empty($variables['informations']->player) ? $variables['informations']->player : $variables['image'];
-  return "
-  <div class='image'>
-    {$data}
-  </div>
-  ";
+  return "<div class='image'>{$data}</div>";
 }
 
 /**

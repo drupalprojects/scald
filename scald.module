@@ -1136,7 +1136,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
   $atom->rendered = new stdClass;
   $atom->rendered->sid = $atom->sid;
   $atom->rendered->title = $atom->title;
-  $atom->rendered->file_source_url = empty($atom->file_source) ? NULL : url($atom->file_source);
+  $atom->rendered->file_source_url = empty($atom->file_source) ? NULL : file_create_url($atom->file_source);
   $atom->rendered->file_transcoded_url = NULL;
   $atom->rendered->thumbnail_source_url = file_create_url($atom->thumbnail_source);
   $atom->rendered->description = $atom->description;
@@ -1502,11 +1502,10 @@ function scald_scald_actions() {
 /**
  * Implements hook_scald_prerender().
  *
- * Scald Core implements this hook for its role as a Scald Atom Provider of
- *  Atoms of Scald Unified Type 'composite', for its role as a Scald Context
- *  Provider of Scald Contexts 'debug', 'no-access', 'invalid-id', 'deleted',
- *  'title', and for its role as a Scald Transcoder Provider of Scald Transcoder
- *  'passthrough'.
+ * Scald Core implements this hook for its role as a Scald Context Provider of
+ * Scald Contexts 'debug', 'no-access', 'invalid-id', 'deleted', 'title' and
+ * UI-created contexts, and for its role as a Scald Transcoder Provider of Scald
+ * Transcoder 'passthrough'.
  *
  * @param $atom
  *  The Scald Atom object to prepare for rendering.
@@ -1528,26 +1527,10 @@ function scald_scald_prerender($atom, $mode, $context = NULL, $options = NULL) {
       break; // end 'type'
 
     case 'context':
-      switch ($context) {
-        case 'debug':
-          break;
-
-        case 'no-access':
-          break;
-
-        case 'invalid-id':
-          break;
-
-        case 'deleted':
-          break;
-
-        case 'title':
-          break;
-      }
       break; // end 'context'
 
     case 'transcoder':
-      $atom->rendered->file_transcoded_url = url($atom->file_source);
+      $atom->rendered->file_transcoded_url = file_create_url($atom->file_source);
       break; // end 'transcoder'
   }
 } // end scald_scald_prerender()
@@ -1688,8 +1671,15 @@ function scald_entity_property_info() {
   $properties['sid'] = array(
     'label' => t("Scald ID"),
     'type' => 'integer',
-    'description' => t("The unique ID of the node."),
-    'schema field' => 'nid',
+    'description' => t("The unique ID of the atom."),
+    'schema field' => 'sid',
+  );
+  $properties['provider'] = array(
+    'label' => t('Scald Provider'),
+    'description' => t("The Provider of the atom."),
+    'setter callback' => 'entity_property_verbatim_set',
+    'required' => TRUE,
+    'schema field' => 'provider',
   );
   $properties['type'] = array(
     'label' => t("Atom type"),
@@ -1700,6 +1690,13 @@ function scald_entity_property_info() {
     'options list' => 'scald_type_get_names',
     'required' => TRUE,
     'schema field' => 'type',
+  );
+  $properties['base_id'] = array(
+    'label' => t("BaseID"),
+    'description' => t("The BaseID of the atom."),
+    'setter callback' => 'entity_property_verbatim_set',
+    'schema field' => 'base_id',
+    'required' => TRUE,
   );
   $properties['title'] = array(
     'label' => t("Title"),
@@ -1996,7 +1993,7 @@ function scald_menu() {
  */
 function scald_atom_uri($atom) {
   return array(
-    'path' => 'atoms/view/' . $atom->sid
+    'path' => 'atom/' . $atom->sid
   );
 }
 

@@ -64,17 +64,17 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
 
   $form_state = array(
     'ajax' => $js,
-    'storage' => ctools_object_cache_get('scald_atom', $cache_id),
+    'scald' => ctools_object_cache_get('scald_atom', $cache_id),
   );
 
-  if (empty($form_state['storage'])) {
-    $form_state['storage'] = (object) array(
+  if (empty($form_state['scald'])) {
+    $form_state['scald'] = array(
       'type' => $type,
       'source' => isset($source) ? $source : NULL,
     );
   }
 
-  $form_state['storage']->step = $step;
+  $form_state['scald']['step'] = $step;
 
   $form_info = array(
     'id' => 'scald-atom-add',
@@ -131,7 +131,7 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
   }
   else {
     if ($output === FALSE || !empty($form_state['complete'])) {
-      $atom = $form_state['storage']->atom;
+      $atom = $form_state['scald']['atom'];
       drupal_goto('atom/' . $atom->sid . '/view');
     }
     elseif (!empty($form_state['cancel'])) {
@@ -148,7 +148,7 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
  */
 function scald_atom_add_form_source($form, &$form_state) {
   $providers = scald_atom_providers();
-  $sources = $providers[$form_state['storage']->type->type];
+  $sources = $providers[$form_state['scald']['type']->type];
 
   // Localize the source names. Note that all the strings
   // have been marked for extraction in their corresponding
@@ -167,22 +167,22 @@ function scald_atom_add_form_source($form, &$form_state) {
 }
 
 function scald_atom_add_form_source_submit(&$form, &$form_state) {
-  $form_state['storage']->source = $form_state['values']['source'];
+  $form_state['scald']['source'] = $form_state['values']['source'];
 }
 
 /**
  * Add form.
  */
 function scald_atom_add_form_add($form, &$form_state) {
-  $storage = $form_state['storage'];
-  $function = $storage->source . '_scald_add_form';
+  $scald = $form_state['scald'];
+  $function = $scald['source'] . '_scald_add_form';
   if (function_exists($function)) {
     $function($form, $form_state);
   }
   else {
     // TODO: Figure out what should be done here.
     $form['error'] = array(
-      '#markup' => 'Importer without form ; does it makes sense ?'
+      '#markup' => 'Import without form; does it makes sense ?'
     );
   }
 
@@ -190,8 +190,8 @@ function scald_atom_add_form_add($form, &$form_state) {
 }
 
 function scald_atom_add_form_add_submit(&$form, &$form_state) {
-  $storage = $form_state['storage'];
-  $atom = new ScaldAtom($storage->type->type, $storage->source);
+  $scald = $form_state['scald'];
+  $atom = new ScaldAtom($scald['type']->type, $scald['source']);
 
   // Allow the source provider to alter it, filling in defaults value.
   $function = $atom->provider . '_scald_add_form_fill';
@@ -200,14 +200,14 @@ function scald_atom_add_form_add_submit(&$form, &$form_state) {
   }
 
   // And put it in the form_state
-  $storage->atom = $atom;
+  $form_state['scald']['atom'] = $atom;
 }
 
 /**
  * Options form.
  */
 function scald_atom_add_form_options($form, &$form_state) {
-  $atom = $form_state['storage']->atom;
+  $atom = $form_state['scald']['atom'];
 
   $form['title'] = array(
     '#type' => 'textfield',
@@ -240,7 +240,7 @@ function scald_atom_add_form_options($form, &$form_state) {
 }
 
 function scald_atom_add_form_options_submit(&$form, &$form_state) {
-  $atom = $form_state['storage']->atom;
+  $atom = $form_state['scald']['atom'];
 
   if (is_array($form_state['values']['scald_actions'])) {
     $bitstream = 0;
@@ -273,8 +273,8 @@ function scald_atom_add_form_options_submit(&$form, &$form_state) {
  * Handle the 'next' click on the add/edit pane form wizard.
  */
 function scald_atom_add_wizard_next(&$form_state) {
-  $cache_id = isset($form_state['storage']->atom->sid) ? 'edit:' . $form_state['storage']->atom->sid : 'add';
-  ctools_object_cache_set('scald_atom', $cache_id, $form_state['storage']);
+  $cache_id = isset($form_state['scald']['atom']->sid) ? 'edit:' . $form_state['scald']['atom']->sid : 'add';
+  ctools_object_cache_set('scald_atom', $cache_id, $form_state['scald']);
 }
 
 /**
@@ -305,12 +305,12 @@ function scald_atom_edit_page($js, $atom) {
   // The edit page is nothing else other than the add page, at the Options step.
   // We prepare data for this step then send back to the add page. The only
   // useful information at this step is the atom itself.
-  $storage = (object) array(
+  $scald = array(
     'atom' => $atom,
   );
   $types = scald_types();
   ctools_include('object-cache');
-  ctools_object_cache_set('scald_atom', 'edit:' . $atom->sid, $storage);
+  ctools_object_cache_set('scald_atom', 'edit:' . $atom->sid, $scald);
   return scald_atom_add_page($js, $types[$atom->type], 'options', $atom->sid);
 }
 

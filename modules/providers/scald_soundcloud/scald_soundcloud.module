@@ -112,24 +112,21 @@ function scald_soundcloud_scald_fetch($atom, $type) {
  */
 function scald_soundcloud_scald_prerender($atom, $context, $options, $mode) {
   if ($mode == 'atom') {
-    if ($context != 'sdl_library_item') {
-
-      // base height for a single track
-      $iframe_height = 166;
-      if (isset($atom->data['track_count']) && ($atom->data['track_count'] > 1)) {
-        // Empirique computation to show 10 tracks max (like on soundcloud website)
-        $iframe_height = 175 + 57 + min($atom->data['track_count'], 10) * 24;
-      }
-
-      $atom->rendered->player = theme('scald_soundcloud_player',
-        array('vars' =>
-          array(
-            'id' => $atom->base_id,
-            'iframe_height' => $iframe_height,
-          )
-        )
-      );
+    // base height for a single track
+    $iframe_height = 166;
+    if (isset($atom->data['track_count']) && ($atom->data['track_count'] > 1)) {
+      // Empirique computation to show 10 tracks max (like on soundcloud website)
+      $iframe_height = 175 + 57 + min($atom->data['track_count'], 10) * 24;
     }
+
+    $atom->rendered->player = theme('scald_soundcloud_player',
+      array('vars' =>
+        array(
+          'id' => $atom->base_id,
+          'iframe_height' => $iframe_height,
+        ),
+      )
+    );
   }
 }
 

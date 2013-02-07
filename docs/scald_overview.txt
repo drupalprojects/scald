@@ -124,6 +124,8 @@ feasible, but may not be 100% fool-proof.  You have been warned :).
 
 3.2.2 SCALD COMPOSITES
 
+  Note: Composites are no longer part of Scald in 7.x branches.
+
   Scald Composites are identical to Scald Atoms in every way except that instead
 of representing a single entity (e.g. an image), they represent a collection of
 other Scald Atoms.  The typical Scald Composite has one or more textarea fields
