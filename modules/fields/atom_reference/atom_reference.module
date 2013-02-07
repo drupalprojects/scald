@@ -102,31 +102,6 @@ function atom_reference_field_validate($entity_type, $entity, $field, $instance,
 }
 
 /**
- * Implements hook_field().
- */
-function atom_reference_field($op, &$node, $field, &$items, $teaser, $page) {
-  switch ($op) {
-    case 'sanitize':
-      // Get some safe values about the references atoms, checking that
-      // they still exist and are fetchable.
-      $sids = array();
-      foreach ($items as $delta => $item) {
-        if (is_array($item)) {
-          $items[$delta]['safe'] = array();
-          if (isset($item['sid'])) {
-            $atom = scald_fetch($item['sid']);
-            if (is_object($atom)) {
-              $items[$delta]['safe']['sid'] = $atom->sid;
-              $items[$delta]['safe']['title'] = check_plain($atom->title);
-            }
-          }
-        }
-      }
-      break;
-  }
-}
-
-/**
  * Implements hook_field_is_empty().
  */
 function atom_reference_field_is_empty($item, $field) {
