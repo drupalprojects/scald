@@ -77,6 +77,11 @@ function scald_image_scald_fetch($atom, $type) {
 function scald_image_scald_prerender($atom, $context, $options, $mode) {
   // Find out which transcoder is in use. This seems unnecesarilly complex.
   $contexts = scald_contexts();
+
+  if (empty($contexts[$context]['type_format'][$atom->type])) {
+    return;
+  }
+
   $context_config = $contexts[$context]['type_format'][$atom->type];
   if (!preg_match('/^style-(.*)$/', $context_config['transcoder'], $match)) {
     return;
