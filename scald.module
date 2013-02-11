@@ -1267,10 +1267,12 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
   }
 
   // Check the cache unless explicitly rebuilding the rendering of the Atom
-  $cache_id = $sid
-      . ':' . $context
-      . ':' . scald_user_actions($atom)
-      . (is_null($options) ? '' : ':' . $options);
+  $cache_parts = array_merge(array($sid, $context, scald_user_actions($atom)), drupal_render_cid_parts());
+  if (!empty($options)) {
+    $cache_parts[] = $options;
+  }
+  $cache_id = implode(':', $cache_parts);
+
   if (!$rebuild && !variable_get('scald_always_rebuild', FALSE)) {
     $cache = cache_get($cache_id, 'cache_scald');
     // If cache data is available, we attach 'rendered' property into atom as it
