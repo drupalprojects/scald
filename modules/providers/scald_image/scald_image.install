@@ -18,16 +18,11 @@ function scald_image_install() {
     field_update_instance($instance);
   }
 
-  // Associate the image atom type to the "library" image  style
-  // in the library context.
-  db_insert('scald_context_type_transcoder')
-    ->fields(array(
-      'context'     => 'sdl_library_item',
-      'type'        => 'image',
-      'file_format' => 'passthrough',
-      'transcoder'  => 'style-Library',
-    ))
-    ->execute();
+  // Associate the image atom type to the "library" image style in the library
+  // context.
+  $context_config = scald_context_config_load('sdl_library_item');
+  $context_config->transcoder['image']['*'] = 'style-Library';
+  scald_context_config_save($context_config);
 }
 
 /**
