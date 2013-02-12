@@ -98,9 +98,18 @@ function scald_add_type($type, $title, $description) {
     'bundle' => $type,
     'label' => 'Thumbnail',
     'required' => FALSE,
+    'display' => array(
+      'default' => array(
+        'type' => 'hidden',
+      ),
+    ),
   );
   if (!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
     field_create_instance($instance);
+    foreach ($instance['display'] as $view_mode => $settings) {
+      $instance['display'][$view_mode]['type'] = 'hidden';
+    }
+    field_update_instance($instance);
   }
 
   // Instantiate the Scald Authors field.
