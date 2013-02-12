@@ -148,7 +148,7 @@ function scald_schema() {
         'size' => 'big',
         'not null' => TRUE,
         'serialize' => TRUE,
-        'default' => array(),
+        'object default' => array(),
       ),
     ),
     'primary key' => array('context'),
