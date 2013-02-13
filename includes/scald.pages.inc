@@ -344,3 +344,18 @@ function scald_atom_delete_confirm_submit($form, &$form_state) {
   $form_state['redirect'] = 'admin/content/atoms';
 }
 
+/**
+ * Fetch atoms and return in JSON format.
+ *
+ * @param string $context
+ * @param string $sids
+ *   Comma separated list of atom ids.
+ */
+function scald_atom_fetch_atoms($context, $sids) {
+  $output = array();
+  $atoms = scald_atom_load_multiple(explode(',', $sids));
+  foreach ($atoms as $sid => $atom) {
+    $output[$sid][$context] = scald_render($atom, $context);
+  }
+  drupal_json_output($output);
+}

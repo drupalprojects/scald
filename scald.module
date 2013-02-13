@@ -1998,6 +1998,16 @@ function scald_menu() {
       'type' => MENU_LOCAL_TASK,
       'weight' => 100,
     );
+
+    // AJAX fetch atoms to provide handy functionality for library implementations.
+    $items['atom/fetch/%/%'] = array(
+      'title' => 'Fetch atoms',
+      'page callback' => 'scald_atom_fetch_atoms',
+      'page arguments' => array(2, 3),
+      'access arguments' => array('access content'),
+      'file' => 'includes/scald.pages.inc',
+      'theme callback' => 'ajax_base_page_theme',
+    );
   }
 
   return $items;
