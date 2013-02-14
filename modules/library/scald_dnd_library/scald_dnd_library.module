@@ -45,28 +45,26 @@ function scald_dnd_library_theme() {
  */
 function scald_dnd_library_dnd_libraries_info() {
   $libraries = array();
-  if (module_exists('views')) {
-    $cache = cache_get('views_based_libraries', 'cache_scald');
-    if ($cache && is_array($cache->data)) {
-      $libraries = $cache->data;
-    }
-    else {
-      $views = views_get_all_views();
-      foreach ($views as $view) {
-        // disabled views get nothing.
-        if (!empty($view->disabled)) {
-          continue;
-        }
+  $cache = cache_get('views_based_libraries', 'cache_scald');
+  if ($cache && is_array($cache->data)) {
+    $libraries = $cache->data;
+  }
+  else {
+    $views = views_get_all_views();
+    foreach ($views as $view) {
+      // disabled views get nothing.
+      if (!empty($view->disabled)) {
+        continue;
+      }
 
-        $view->init_display();
-        foreach ($view->display as $id => $display) {
-          if (!empty($display->handler->definition['provides dnd library'])) {
-            $libraries[$display->handler->get_option('path')] = $display->handler->get_option('title') . ' (' . $view->name . '-' . $id . ')';
-          }
+      $view->init_display();
+      foreach ($view->display as $id => $display) {
+        if (!empty($display->handler->definition['provides dnd library'])) {
+          $libraries[$display->handler->get_option('path')] = $display->handler->get_option('title') . ' (' . $view->name . '-' . $id . ')';
         }
       }
-      cache_set('views_based_libraries', $libraries, 'cache_scald');
     }
+    cache_set('views_based_libraries', $libraries, 'cache_scald');
   }
 
   return $libraries;
@@ -93,7 +91,6 @@ function scald_dnd_library_add_item(&$library, $sid) {
     'sas' =>  '[scald=' . $atom->sid . ':sdl_editor_representation]',
     'editor' => scald_render($atom, 'sdl_editor_representation'),
     'preview' => scald_render($atom, 'sdl_preview'),
-    'library' => scald_render($atom, 'sdl_library_item'),
   );
 
   // theme_sdl_editor_legend() requires a rendered atom. We call it only here to
@@ -110,9 +107,10 @@ function template_preprocess_sdl_library(&$variables) {
   if (is_object($variables['view'])) {
     $variables['library_items'] = array();
     $results = $variables['view']->result;
+    $context = $variables['view']->field['representation']->options['context'];
     foreach ($results as $result) {
       $sid = $result->sid;
-      $variables['library_items'][$sid] = scald_render($sid, 'sdl_library_item');
+      $variables['library_items'][$sid] = scald_render($sid, $context);
     }
   }
   elseif (empty($variables['library_items']) && isset($variables['options'])) {

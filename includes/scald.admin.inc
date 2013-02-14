@@ -321,6 +321,7 @@ function scald_admin_context_form_submit($form, &$form_state) {
   ) + $context;
 
   scald_context_save($context);
+  cache_clear_all('*', 'cache_scald', TRUE);
 
   $form_state['redirect'] = 'admin/structure/scald';
   return;
@@ -423,23 +424,17 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
       case '_trans':
         $context = drupal_substr($key, 0, -6);
         $transcoder = $value;
-        if ($value == '@none') {
-          db_delete('scald_context_type_transcoder')
-            ->condition('context', $context)
-            ->condition('type', $typename)
-            ->execute();
+        if ($value == '@none') {// @todo can it really happen?
+          $context_config = scald_context_config_load($context);
+          if (isset($context_config->transcoder[$typename]['*'])) {
+            $context_config->transcoder[$typename]['*'] = NULL;
+            scald_context_config_save($context_config);
+          }
         }
         else {
-          db_merge('scald_context_type_transcoder')
-            ->fields(array(
-              'file_format' => 'jpg',
-              'transcoder' => $transcoder,
-            ))
-            ->key(array(
-              'context' => $context,
-              'type' => $typename
-            ))
-            ->execute();
+          $context_config = scald_context_config_load($context);
+          $context_config->transcoder[$typename]['*'] = $transcoder;
+          scald_context_config_save($context_config);
         }
         break; // end '_trans'
     }

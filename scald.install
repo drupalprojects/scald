@@ -133,38 +133,38 @@ function scald_schema() {
     'primary key' => array('type'),
   );
 
-  $schema['scald_context_type_transcoder'] = array(
-    'description' => 'A mapping between Types, Contexts, file formats, and Transcoders',
-    'fields'      => array(
-      'context'    => array(
-        'description' => 'The Scald Context slug for a Scald Context.  Fk {scald_contexts}.context',
-        'type'        => 'varchar',
-        'length'      => SCALD_SLUG_MAX_LENGTH,
-        'not null'    => TRUE,
-        'default'     => 'title',
-      ),
-      'type'       => array(
-        'description' => 'The Scald Unified Type slug for a Scald Unified Type.  FK {scald_types}.type',
-        'type'        => 'varchar',
-        'length'      => SCALD_SLUG_MAX_LENGTH,
-        'not null'    => TRUE,
-      ),
-      'file_format'     => array(
-        'description' => 'A file format slug.  Could be just about anything, but this is supposed to coincide with the format specifiers used by Scald Transcoders.',
-        'type'        => 'varchar',
-        'length'      => SCALD_SLUG_MAX_LENGTH,
-        'not null'    => TRUE,
-        'default'     => 'passthrough',
+  $schema['scald_context_config'] = array(
+    'description' => 'Context configuration.',
+    'fields' => array(
+      'context' => array(
+        'description' => 'The Scald Context slug for a Scald Context. Fk {scald_contexts}.context',
+        'type' => 'varchar',
+        'length' => SCALD_SLUG_MAX_LENGTH,
+        'not null' => TRUE,
       ),
       'transcoder' => array(
-        'description' => 'The Scald Transcoder slug for a Scald Transcoder.  FK {scald_transcoders}.transcoder',
-        'type'        => 'varchar',
-        'length'      => SCALD_SLUG_MAX_LENGTH,
-        'not null'    => TRUE,
-        'default'     => 'passthrough',
+        'description' => 'A serialized array of transcoder per format.',
+        'type' => 'blob',
+        'size' => 'big',
+        'not null' => TRUE,
+        'serialize' => TRUE,
+        'object default' => array(),
       ),
     ),
-    'primary key' => array('type', 'context'),
+    'primary key' => array('context'),
+    'export' => array(
+      'key' => 'context',
+      'key name' => 'Context',
+      'primary key' => 'context',
+      'identifier' => 'context_config',
+      'export type string' => 'ctools_type',
+      'api' => array(
+        'owner' => 'scald',
+        'api' => 'context_config',
+        'minimum_version' => 1,
+        'current_version' => 1,
+      ),
+    ),
   );
 
   $schema['scald_licenses'] = array(
@@ -469,3 +469,32 @@ function scald_update_7004() {
 function scald_update_7005() {
   scald_actions(TRUE);
 }
+
+/**
+ * Migrate {scald_context_type_transcoder} into a new table
+ * {scald_context_config}.
+ */
+function scald_update_7006() {
+  drupal_load('module', 'scald');
+  db_create_table('scald_context_config', drupal_get_schema_unprocessed('scald', 'scald_context_config'));
+
+  $contexts = array();
+  $result = db_select('scald_context_type_transcoder', 's')
+    ->fields('s')
+    ->execute();
+  while ($row = $result->fetchAssoc()) {
+    // Let's make the update simple: there is no multiple format settings now.
+    $contexts[$row['context']]['transcoder'][$row['type']]['*'] = $row['transcoder'];
+  }
+  foreach ($contexts as $context => $config) {
+    db_insert('scald_context_config')
+      ->fields(array(
+        'context' => $context,
+        'transcoder' => serialize($config['transcoder']),
+      ))
+      ->execute();
+  }
+
+  db_drop_table('scald_context_type_transcoder');
+}
+

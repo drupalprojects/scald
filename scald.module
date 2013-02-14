@@ -98,9 +98,18 @@ function scald_add_type($type, $title, $description) {
     'bundle' => $type,
     'label' => 'Thumbnail',
     'required' => FALSE,
+    'display' => array(
+      'default' => array(
+        'type' => 'hidden',
+      ),
+    ),
   );
   if (!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
     field_create_instance($instance);
+    foreach ($instance['display'] as $view_mode => $settings) {
+      $instance['display'][$view_mode]['type'] = 'hidden';
+    }
+    field_update_instance($instance);
   }
 
   // Instantiate the Scald Authors field.
@@ -177,18 +186,22 @@ function scald_contexts($reset = FALSE) {
  * the standard info hook output.
  */
 function scald_scald_contexts_alter(&$contexts) {
-  $result = db_select('scald_context_type_transcoder', 's')
-    ->fields('s')
-    ->execute();
-
-  while ($row = $result->fetchAssoc()) {
+  ctools_include('export');
+  foreach (ctools_export_crud_load_all('scald_context_config') as $name => $config) {
     // Only add formats informations to context that got exposed.
-    if (!empty($contexts[$row['context']])) {
-      $contexts[$row['context']]['type_format'][$row['type']] = $row;
+    if (!empty($contexts[$name])) {
+      // This is the old and deprecated structure.
+      foreach ($config->transcoder as $type => $transcoder) {
+        $contexts[$name]['type_format'][$type] = array(
+          'file_format' => '*',
+          'transcoder' => $transcoder['*'],
+        );
+      }
+      // The new structure.
+      $contexts[$name]['transcoder'] = $config->transcoder;
     }
   }
 }
-
 
 /**
  * Get the available Scald Actions
@@ -1267,10 +1280,12 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
   }
 
   // Check the cache unless explicitly rebuilding the rendering of the Atom
-  $cache_id = $sid
-      . ':' . $context
-      . ':' . scald_user_actions($atom)
-      . (is_null($options) ? '' : ':' . $options);
+  $cache_parts = array_merge(array($sid, $context, scald_user_actions($atom)), drupal_render_cid_parts());
+  if (!empty($options)) {
+    $cache_parts[] = $options;
+  }
+  $cache_id = implode(':', $cache_parts);
+
   if (!$rebuild && !variable_get('scald_always_rebuild', FALSE)) {
     $cache = cache_get($cache_id, 'cache_scald');
     // If cache data is available, we attach 'rendered' property into atom as it
@@ -1624,7 +1639,7 @@ function scald_entity_info() {
       'bundles' => array(),
       'view modes' => array(),
       'view callback' => 'scald_render_multiple',
-    )
+    ),
   );
 
   $contexts = scald_contexts();
@@ -2041,6 +2056,32 @@ function scald_context_save($context) {
   $contexts = variable_get('scald_custom_contexts', array());
   $contexts[$context['name']] = $context;
   variable_set('scald_custom_contexts', $contexts);
+}
+
+/**
+ * Load a context config.
+ *
+ * @param string $name
+ * Context name.
+ */
+function scald_context_config_load($name) {
+  ctools_include('export');
+  if (!$context_config = ctools_export_crud_load('scald_context_config', $name)) {
+    $context_config = ctools_export_new_object('scald_context_config');
+    $context_config->context = $name;
+  }
+  return $context_config;
+}
+
+/**
+ * Save a context config.
+ *
+ * @param object $config
+ * Context config.
+ */
+function scald_context_config_save(&$config) {
+  ctools_include('export');
+  return ctools_export_crud_save('scald_context_config', $config);
 }
 
 /**
