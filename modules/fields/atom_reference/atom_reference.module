@@ -181,8 +181,6 @@ function atom_reference_field_widget_info() {
  * Implements hook_field_widget_form.
  */
 function atom_reference_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-  dnd_add_library();
-
   $all = scald_types();
   $options = array();
   $types = atom_reference_field_referenceable_types($instance);
