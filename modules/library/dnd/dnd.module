@@ -140,6 +140,10 @@ function dnd_library() {
  */
 function dnd_library_add_ctools_modal(&$libraries) {
   $ctools_path = drupal_get_path('module', 'ctools');
+  $libraries['ctools.modal'] = array(
+    'title' => 'CTools modal',
+    'version' => '1.x',
+  );
   $libraries['ctools.modal']['js'][$ctools_path . '/js/modal.js'] = array();
 
   $settings = array(
