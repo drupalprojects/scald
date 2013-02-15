@@ -122,10 +122,8 @@ function dnd_library() {
 
   // Libraries might provide atom quick add links. We add CTools Modal JS so
   // that libraries can take use of it if they want.
-  if (module_exists('ctools')) {
-    dnd_library_add_ctools_modal($libraries);
-    $libraries['library']['dependencies'][] = array('dnd', 'ctools.modal');
-  }
+  dnd_library_add_ctools_modal($libraries);
+  $libraries['library']['dependencies'][] = array('dnd', 'ctools.modal');
 
   return $libraries;
 }
