@@ -1,7 +1,6 @@
 name=Scald Quickstart
 description=Help quickstarting a project using Scald
 core=7.x
-version=7.x-1.0
 
 dependencies[] = scald
 dependencies[] = scald_image
