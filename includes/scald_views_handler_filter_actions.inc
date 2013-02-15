@@ -73,4 +73,3 @@ function admin_summary() {
   return implode(',', $names);
 }
 }
-

@@ -327,4 +327,3 @@ function dnd_get_library() {
   }
   return $library;
 }
-

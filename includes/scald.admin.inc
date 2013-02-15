@@ -500,4 +500,3 @@ function scald_settings_form_submit($form, &$form_state) {
   $field['settings']['allowed_values'][0]['vocabulary'] = $vocabulary->machine_name;
   field_update_field($field);
 }
-

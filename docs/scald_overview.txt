@@ -162,4 +162,3 @@ taken to ensure that the rendered Scald Atoms (probably rendered in XHTML) are
 not subsequently processed into oblivion by other input filters.  In other
 words, make sure that the Scald Atom Shorthand (SAS) Filter is *after* filters
 which strip tags.
-

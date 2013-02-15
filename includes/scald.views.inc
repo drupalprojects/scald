@@ -175,4 +175,3 @@ function scald_views_handlers() {
     ),
   );
 }
-

@@ -84,4 +84,3 @@ function scald_atom_build_content($atom, $view_mode = 'full', $langcode = NULL) 
 
   $atom->content += array('#view_mode' => $view_mode);
 }
-

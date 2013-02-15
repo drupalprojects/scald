@@ -350,4 +350,3 @@ scald_register_atom(), scald_update_atom(), scald_unregister_atom()
 scald_rendered_to_sas()
   -> scald_rendered_to_sas_LANGUAGE()
 ?>
-
