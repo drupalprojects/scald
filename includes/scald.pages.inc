@@ -343,7 +343,6 @@ function scald_atom_delete_confirm_submit($form, &$form_state) {
 
   $form_state['redirect'] = 'admin/content/atoms';
 }
-
 /**
  * Fetch atoms and return in JSON format.
  *

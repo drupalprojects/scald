@@ -12,4 +12,3 @@ token-like SAS (Scald Atom Shorthand) format and it is updated automatically.
 - The "legend" part: usually is the atom title and atom author. You can modify,
 or even delete, text in this part. A provider can omit this part by setting
 $atom->omit_legend = TRUE.
-

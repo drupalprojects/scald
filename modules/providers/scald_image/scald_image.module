@@ -104,4 +104,3 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
     $atom->rendered->player = theme('image_style', array('path' => $atom->file_source, 'style_name' => $preset['name']));
   }
 }
-

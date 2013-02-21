@@ -42,4 +42,3 @@ function scald_image_update_7000() {
   }
   field_update_instance($instance);
 }
-

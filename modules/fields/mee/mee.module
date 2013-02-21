@@ -516,4 +516,3 @@ function mee_wysiwyg_include_directory($type) {
       return $type;
   }
 }
-

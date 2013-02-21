@@ -151,4 +151,3 @@ class scald_plugin_display_library extends views_plugin_display_page {
     drupal_json_output($library);
   }
 }
-

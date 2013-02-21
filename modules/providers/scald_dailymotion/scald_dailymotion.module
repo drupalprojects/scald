@@ -524,4 +524,3 @@ function scald_dailymotion_import() {
   module_load_include('inc', 'scald', 'includes/scald.pages');
   return scald_atom_add_page(FALSE, $types['video'], 'add');
 }
-

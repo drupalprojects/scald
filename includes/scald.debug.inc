@@ -22,4 +22,3 @@ require_once('scald.constants.inc');
 function scald_debug_console($sid) {
   return scald_render($sid, 'debug', NULL, TRUE);
 }
-

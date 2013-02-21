@@ -202,7 +202,6 @@ function scald_scald_contexts_alter(&$contexts) {
     }
   }
 }
-
 /**
  * Get the available Scald Actions
  *

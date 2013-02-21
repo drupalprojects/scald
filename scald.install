@@ -497,4 +497,3 @@ function scald_update_7006() {
 
   db_drop_table('scald_context_type_transcoder');
 }
-

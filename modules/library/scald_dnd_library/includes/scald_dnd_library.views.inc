@@ -42,4 +42,3 @@ function scald_dnd_library_views_plugins() {
     )
   );
 }
-

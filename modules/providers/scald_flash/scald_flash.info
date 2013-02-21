@@ -4,4 +4,3 @@ package = Scald
 description = Provider: Provides Flash atoms
 dependencies[] = scald
 stylesheets[all][] = scald_flash.css
-

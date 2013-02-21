@@ -175,4 +175,3 @@ function scald_dnd_library_views_default_views() {
   $views[$view->name] = $view;
   return $views;
 }
-

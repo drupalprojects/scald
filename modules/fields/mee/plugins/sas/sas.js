@@ -20,4 +20,3 @@ Drupal.wysiwyg.plugins.sas = {
   }
 };
 })(jQuery);
-

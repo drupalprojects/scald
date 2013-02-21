@@ -1,4 +1,3 @@
-; $Id scald_audio.info,v 1.0 2012/08/01 Tubaldo Hervé, http://www.webup.fr $
 name = Scald Audio
 description = Allows the creation and edition of WAudio.
 core = 7.x
@@ -8,9 +7,3 @@ dependencies[] = scald
 
 files[] = scald_audio.module
 files[] = scald_audio.install
-
-; Information added by drupal.org packaging script on 2011-09-09
-version = "7.x-1.0"
-core = "7.x"
-project = "scald_audio"
-datestamp = "1343835297"
