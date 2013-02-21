@@ -92,14 +92,12 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
 
   if ($mode == 'transcoder') {
     if (!empty($atom->file_source)) {
-      $path = str_replace('public://', 'public://styles/' . $preset['name'] . '/public/', $atom->file_source);
-      $atom->file_transcoded = $path;
-      $atom->rendered->file_transcoded_url = file_create_url($path);
+      $atom->file_transcoded = image_style_path($preset['name'], $atom->file_source);
+      $atom->rendered->file_transcoded_url = image_style_url($preset['name'], $atom->file_source);
     }
     if (!empty($atom->thumbnail_source)) {
-      $path = str_replace('public://', 'public://styles/' . $preset['name'] . '/public/', $atom->thumbnail_source);
-      $atom->thumbnail_transcoded = $path;
-      $atom->rendered->thumbnail_transcoded_url = file_create_url($path);
+      $atom->thumbnail_transcoded = image_style_path($preset['name'], $atom->thumbnail_source);
+      $atom->rendered->thumbnail_transcoded_url = image_style_url($preset['name'], $atom->thumbnail_source);
     }
   }
   elseif ($mode == 'atom') {
