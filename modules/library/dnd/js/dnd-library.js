@@ -262,7 +262,7 @@ renderLibrary: function(data, editor) {
         else {
           $this.find('img');
         }
-        var id = $.url.setUrl($img.attr('src')).param('dnd_id');
+        var id = $img.data('atom-id');
         dt.dropEffect = 'copy';
         dt.setData('Text', Drupal.dnd.Atoms[id].sas);
         dt.setData('text/html', Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[id]));
@@ -366,13 +366,6 @@ renderLibrary: function(data, editor) {
 
 // Do garbage collection on detach
 detach: function() {
-},
-
-idSelector: function(element) {//@todo unused
-  if ($(element).is('img')) {
-    return $.url.setUrl(element.src).param('dnd_id');
-  }
-  return false;
 }
 }
 
