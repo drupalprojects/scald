@@ -85,6 +85,13 @@ function dnd_process_textarea($element, $form_state) {
  */
 function dnd_library() {
   $path = drupal_get_path('module', 'dnd');
+  $contexts = array();
+  foreach (scald_contexts() as $name => $definition) {
+    if (!empty($definition['hidden']) || empty($definition['parseable'])) {
+      continue;
+    }
+    $contexts[$name] = $definition['title'];
+  }
   $libraries['library'] = array(
     'title' => 'DnD Library',
     'website' => 'http://drupal.org/project/scald',
@@ -103,7 +110,13 @@ function dnd_library() {
       // Settings for the library url
       array(
         'type' => 'setting',
-        'data' => array('dnd' => array('url' => url(dnd_get_library()))),
+        'data' => array(
+          'dnd' => array(
+            'url' => url(dnd_get_library()),
+            'contexts' => $contexts,
+            'contextDefault' => 'sdl_editor_representation',
+          ),
+        ),
       ),
     ),
     'css' => array(

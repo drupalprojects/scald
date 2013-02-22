@@ -47,6 +47,45 @@ Drupal.dnd = {
     }
   },
 
+  /**
+   * Fetch atoms that are not present.
+   *
+   * @param context
+   * @param atom_ids
+   *   Integer or an array of atom_id.
+   * @param callback (optional)
+   *   Callback when all required atoms are available.
+   */
+  fetchAtom: function(context, atom_ids, callback) {
+    // Convert to array
+    atom_ids = [].concat(atom_ids);
+
+    for (var i= 0, len=atom_ids.length; i<len; i++) {
+      // Remove atom from the list if it is already available.
+      if (context in Drupal.dnd.Atoms[atom_ids[i]]) {
+        delete atom_ids[i];
+      }
+    }
+    // Remove undefined elements.
+    atom_ids.filter(Number);
+
+    if (atom_ids) {
+      $.getJSON(Drupal.settings.basePath + 'atom/fetch/' + context + '/' + atom_ids.join(), function(data) {
+        for (atom_id in data) {
+          Drupal.dnd.Atoms[atom_id] = Drupal.dnd.Atoms[atom_id] || {sid: atom_id, contexts: {}};
+          Drupal.dnd.Atoms[atom_id].contexts = $.extend(Drupal.dnd.Atoms[atom_id].contexts, data[atom_id]);
+        }
+        if (callback) {
+          callback();
+        }
+      });
+    }
+    else {
+      if (callback) {
+        callback();
+      }
+    }
+  },
 
   // Refresh the library.
   refreshLibraries: function() {
@@ -92,8 +131,10 @@ $.extend($.expr[":"], {
 /**
  * Default atom theme function
  */
-Drupal.theme.prototype.scaldEmbed = function(atom) {
-  var output = '<div class="dnd-atom-wrapper"><div class="dnd-drop-wrapper">' + atom.editor + '</div>';
+Drupal.theme.prototype.scaldEmbed = function(atom, context) {
+  context = context ? context : Drupal.settings.dnd.contextDefault;
+  var sas = atom.sid + ':' + context + (atom.meta.legend ? ':' + atom.meta.legend : '');
+  var output = '<div class="dnd-atom-wrapper" data-scald="' + encodeURIComponent(sas) + '"><div class="dnd-drop-wrapper">' + atom.contexts[context] + '</div>';
   if (atom.meta.legend) {
     output += '<div class="dnd-legend-wrapper">' + atom.meta.legend + '</div>';
   }
@@ -102,7 +143,6 @@ Drupal.theme.prototype.scaldEmbed = function(atom) {
   // Trick: if not the image might come out and go into the current hovered
   // paragraph.
   output = '<p>&nbsp;</p>' + output;
-
   return output;
 }
 
@@ -167,7 +207,11 @@ renderLibrary: function(data, editor) {
 
   for (atom_id in data.atoms) {
     // Store the atom data in our object
-    Drupal.dnd.Atoms[atom_id] = data.atoms[atom_id];
+    Drupal.dnd.Atoms[atom_id] = Drupal.dnd.Atoms[atom_id] || {sid: atom_id};
+    Drupal.dnd.Atoms[atom_id].contexts = Drupal.dnd.Atoms[atom_id].contexts || {};
+    $.extend(true, Drupal.dnd.Atoms[atom_id], data.atoms[atom_id]);
+    Drupal.dnd.Atoms[atom_id].contexts[Drupal.settings.dnd.contextDefault] = Drupal.dnd.Atoms[atom_id].editor;
+
     // And add a nice preview behavior if qTip is present
     if ($.prototype.qtip) {
       var settings = $.extend(Drupal.dnd.qTipSettings, {

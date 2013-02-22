@@ -358,3 +358,4 @@ function scald_atom_fetch_atoms($context, $sids) {
   }
   drupal_json_output($output);
 }
+

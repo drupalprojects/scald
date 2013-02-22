@@ -1450,7 +1450,7 @@ function _scald_system_contexts() {
       'title'           => t('Full page'),
       'description'     => t('Built-in Context used when pre-viewing an atom.'),
       'render_language' => 'XHTML',
-      'parseable'       => FALSE,
+      'parseable'       => TRUE,
       'formats'         => array(),
     ),
   );
@@ -2350,4 +2350,3 @@ class ScaldAtom {
     }
   }
 }
-
