@@ -83,6 +83,10 @@ function hook_scald_unregister_atom($atom, $mode);
 function hook_scald_provider();
 function hook_scald_action(&$atom, $action, $mode);
 
+// Player Provider Hooks
+function hook_scald_player()
+function hook_scald_prerender($atom, $context, $options, $mode)
+
 ?>
 
 

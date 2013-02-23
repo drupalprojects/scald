@@ -363,10 +363,16 @@ function scald_admin_contexts_form($form, $form_state, $type) {
 
   $contexts = scald_contexts();
   $transcoders = scald_transcoders();
+  $players = scald_players();
   $transcoder_options = array();
+  $player_options = array();
   foreach ($transcoders as $tname => $transcoder) {
     $transcoder_options[$tname] = $transcoder['title'];
-
+  }
+  foreach ($players as $player_name => $player) {
+    if (array_intersect($player['type'], array('*', $type->type))) {
+      $player_options[$player_name] = $player['name'];
+    }
   }
 
   foreach ($contexts as $name => $context) {
@@ -395,6 +401,13 @@ function scald_admin_contexts_form($form, $form_state, $type) {
       '#title'           => t('Transcoder'),
       '#options'         => $transcoder_options,
       '#default_value'   => $default,
+    );
+
+    $form[$name][$name . '_playe'] = array(
+      '#type'            => 'select',
+      '#title'           => t('Player'),
+      '#options'         => $player_options,
+      '#default_value'   => isset($context['player'][$type->type]) ? $context['player'][$type->type]['*'] : 'default',
     );
 
   }
@@ -437,6 +450,13 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
           scald_context_config_save($context_config);
         }
         break; // end '_trans'
+      // Players
+      case '_playe':
+        $context = drupal_substr($key, 0, -6);
+        $context_config = scald_context_config_load($context);
+        $context_config->player[$typename]['*'] = $value;
+        scald_context_config_save($context_config);
+        break; // end '_playe'
     }
   }
 

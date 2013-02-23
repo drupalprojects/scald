@@ -150,6 +150,14 @@ function scald_schema() {
         'serialize' => TRUE,
         'object default' => array(),
       ),
+      'player' => array(
+        'description' => 'A serialized array of player per type.',
+        'type' => 'blob',
+        'size' => 'big',
+        'not null' => TRUE,
+        'serialize' => TRUE,
+        'object default' => array(),
+      ),
     ),
     'primary key' => array('context'),
     'export' => array(
@@ -476,6 +484,39 @@ function scald_update_7005() {
  */
 function scald_update_7006() {
   drupal_load('module', 'scald');
+  $schema_scald_context_config = array(
+    'description' => 'Context configuration.',
+    'fields' => array(
+      'context' => array(
+        'description' => 'The Scald Context slug for a Scald Context. Fk {scald_contexts}.context',
+        'type' => 'varchar',
+        'length' => SCALD_SLUG_MAX_LENGTH,
+        'not null' => TRUE,
+      ),
+      'transcoder' => array(
+        'description' => 'A serialized array of transcoder per format.',
+        'type' => 'blob',
+        'size' => 'big',
+        'not null' => TRUE,
+        'serialize' => TRUE,
+        'object default' => array(),
+      ),
+    ),
+    'primary key' => array('context'),
+    'export' => array(
+      'key' => 'context',
+      'key name' => 'Context',
+      'primary key' => 'context',
+      'identifier' => 'context_config',
+      'export type string' => 'ctools_type',
+      'api' => array(
+        'owner' => 'scald',
+        'api' => 'context_config',
+        'minimum_version' => 1,
+        'current_version' => 1,
+      ),
+    ),
+  );
   db_create_table('scald_context_config', drupal_get_schema_unprocessed('scald', 'scald_context_config'));
 
   $contexts = array();
@@ -497,3 +538,19 @@ function scald_update_7006() {
 
   db_drop_table('scald_context_type_transcoder');
 }
+
+/**
+ * Add a new field 'player' to scald_context_config table.
+ */
+function scald_update_7007() {
+  db_add_field('scald_context_config', 'player', array(
+    'description' => 'A serialized array of player per type.',
+    'type' => 'blob',
+    'size' => 'big',
+    'not null' => TRUE,
+    'serialize' => TRUE,
+    'object default' => array(),
+    'initial' => serialize(array()),
+  ));
+}
+

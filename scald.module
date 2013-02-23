@@ -199,6 +199,7 @@ function scald_scald_contexts_alter(&$contexts) {
       }
       // The new structure.
       $contexts[$name]['transcoder'] = $config->transcoder;
+      $contexts[$name]['player'] = $config->player;
     }
   }
 }
@@ -268,6 +269,44 @@ function scald_scald_actions_alter(&$actions) {
  */
 function scald_transcoders($reset = FALSE) {
   return _scald_get_info('transcoders', $reset);
+}
+
+/**
+ * Get the available Scald Players.
+ *
+ * This function returns a structured array which specifies all the currently
+ * provided Scald Players. The players are in an array with one or more
+ * elements in the format:
+ * array(
+ *    'machine-name' => array(
+ *      'name' => 'HTML5 video player',
+ *      'description' => 'A HTML5-based video player with fallback to Flash',
+ *      'types' => array('video'),
+ *    ),
+ * );
+ *
+ * Basically, a player prepares the $atom->rendered->player in
+ * hook_scald_prerender() where $mode == 'player'. That value is then used to
+ * render the atom by the context provider module.
+ *
+ * @return
+ *   The Scald Players array
+ */
+function scald_players($reset = FALSE) {
+  return _scald_get_info('player', $reset);
+}
+
+/**
+ * Implements hook_scald_player().
+ */
+function scald_scald_player() {
+  return array(
+    'default' => array(
+      'name' => 'Default player',
+      'description' => 'The Scald default player for all atom types.',
+      'type' => array('*'),
+    ),
+  );
 }
 
 /**
@@ -1141,6 +1180,7 @@ function scald_prerender(&$atom, $context, $options = NULL) {
   $contexts = scald_contexts();
   $transcoders = scald_transcoders();
   $actions = scald_actions();
+  $players = scald_players();
   $context_config = $contexts[$context];
 
   // Build the portion of the Rendered member which Providers are expected to
@@ -1167,6 +1207,13 @@ function scald_prerender(&$atom, $context, $options = NULL) {
 
   // Context prerender
   module_invoke($context_config['provider'], 'scald_prerender', $atom, $context, $options, 'context');
+
+  // Player prerender
+  $player = isset($context_config['player'][$atom->type]) ? $context_config['player'][$atom->type]['*'] : 'default';
+  if (!isset($players[$player])) {
+    $player = 'default';
+  }
+  module_invoke($players[$player]['provider'], 'scald_prerender', $atom, $context, $options, 'player');
 
   // Populate default rendered members & validate other rendered members.
   $atom->rendered->title = check_plain($atom->rendered->title);
@@ -1523,19 +1570,19 @@ function scald_scald_actions() {
  *
  * @param $atom
  *  The Scald Atom object to prepare for rendering.
- * @param $mode
- *  A string indicating which mode the prerender function is being called in (
- *   'type', 'atom', 'context', or 'transcoder').
  * @param $context
  *  The Scald Context slug.  Must be optional since Scald Core implements
  *   multiple Providers which require hook_scald_prerender().
  * @param $options
  *  A string which represents any Context options.  Must be optional since Scald
  *   Core implements multiple Providers which require hook_scald_prerender().
+ * @param $mode
+ *  A string indicating which mode the prerender function is being called in (
+ *   'type', 'atom', 'context', 'player' or 'transcoder').
  * @return
  *  None; $atom->rendered should be adjusted as appropriate
  */
-function scald_scald_prerender($atom, $mode, $context = NULL, $options = NULL) {
+function scald_scald_prerender($atom, $context, $options, $mode) {
   switch ($mode) {
     case 'type':
       break; // end 'type'
@@ -1546,6 +1593,9 @@ function scald_scald_prerender($atom, $mode, $context = NULL, $options = NULL) {
     case 'transcoder':
       $atom->rendered->file_transcoded_url = file_create_url($atom->file_source);
       break; // end 'transcoder'
+
+    case 'player':
+      break;
   }
 } // end scald_scald_prerender()
 
