@@ -100,10 +100,6 @@ function dnd_library() {
       array('system', 'drupal.form'),
     ),
     'js' => array(
-      // Dependencies
-      $path . '/js/jquery.url.packed.js' => array(),
-      $path . '/js/jquery.fieldselection.js' => array(),
-
       // Drag and drop
       $path . '/js/dnd-library.js' => array(),
 
@@ -340,3 +336,4 @@ function dnd_get_library() {
   }
   return $library;
 }
+

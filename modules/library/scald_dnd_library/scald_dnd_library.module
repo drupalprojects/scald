@@ -335,3 +335,4 @@ function scald_dnd_library_image_default_styles() {
   );
   return $presets;
 }
+
