@@ -2144,6 +2144,18 @@ function scald_context_config_save(&$config) {
 }
 
 /**
+ * Reverts context config.
+ *
+ * This function overrides the fallback function defined in
+ * features/includes/features.ctools.inc to clear Scald cache after
+ * a features-revert.
+ */
+function scald_context_config_features_revert($module) {
+  ctools_component_features_revert('scald_context_config', $module);
+  cache_clear_all('*', 'cache_scald', TRUE);
+}
+
+/**
  * Access callback for the atom add page.
  */
 function scald_atom_add_access($type = NULL) {
