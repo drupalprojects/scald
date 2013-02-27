@@ -181,7 +181,7 @@ function atom_reference_field_widget_form(&$form, &$form_state, $field, $instanc
   );
 
   $return['sid'] = $element;
-  $return['sid']['#description'] .= $help;
+  $return['sid']['#description'] .= ' ' . $help;
 
   $return['sid']['#type'] = 'textfield';
   $return['sid']['#attributes'] = array('data-types' => implode(',', array_keys($options)));
