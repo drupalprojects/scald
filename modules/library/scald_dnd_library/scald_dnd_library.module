@@ -174,9 +174,7 @@ function scald_dnd_library_scald_render($atom, $context, $options = array()) {
     $attributes += array('class' => 'drop', 'draggable' => 'TRUE', 'data-atom-id' => $atom->sid);
   }
   elseif ($context == 'sdl_preview') {
-    $path .= (strpos($path, '?') !== FALSE)? '&' : '?';
-    $path .= 'dnd_id=' . $atom->sid;
-    $attributes += array('class' => 'drop');
+    $attributes += array('class' => 'drop', 'draggable' => 'TRUE', 'data-atom-id' => $atom->sid);
   }
   else {
     $attributes += array('class' => 'dnd-dropped');
