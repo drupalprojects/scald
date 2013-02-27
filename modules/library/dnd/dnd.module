@@ -272,7 +272,7 @@ function dnd_wysiwyg_plugin($editor, $version=0) {
           'title' => t('Force Container Plugin'),
           'description' => t('A custom plugin to forces a selection up to the outer container of a given element.'),
           'extensions' => array('forcecontainer' => t('Force Container')),
-          'path' => drupal_get_path('module', 'dnd') .'/js/tinymce/forcecontainer/editor_plugin_src.js',
+          'path' => drupal_get_path('module', 'dnd') . '/plugins/tinymce/editor_plugin_src.js',
           'load' => TRUE,
           'options' => array(
             'forcecontainer_class' => 'dnd-drop-wrapper',
