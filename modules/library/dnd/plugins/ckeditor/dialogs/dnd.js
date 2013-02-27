@@ -1,4 +1,4 @@
-(function() {
+(function($) {
 CKEDITOR.dialog.add('atomProperties', function(editor) {
   var lang = editor.lang.dnd, element, atom, cmbContext = [];
   for (context in Drupal.settings.dnd.contexts) {
@@ -10,6 +10,17 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
     minWidth: 420,
     minHeight: 360,
     onShow: function() {
+      if (!Drupal.dnd.atomCurrent) {
+        this.hide();
+        // If the library is hidden, show it
+        if ($('.dnd-library-wrapper').length && !$('.dnd-library-wrapper').hasClass('library-on')) {
+          $('.dnd-library-wrapper .scald-anchor').click();
+        }
+        else {
+          alert(lang.atom_none);
+        }
+        return;
+      }
       var data;
       data = decodeURIComponent(Drupal.dnd.atomCurrent.data('scald')).match(/(\d+):([^:]+)([\s\S]*)$/);
       atom = {
@@ -59,5 +70,4 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
     ]
   };
 });
-})();
-
+})(jQuery);
