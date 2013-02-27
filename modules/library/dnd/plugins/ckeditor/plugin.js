@@ -60,6 +60,13 @@ CKEDITOR.plugins.add('dnd', {
       editorFocus: CKEDITOR.env.ie || CKEDITOR.env.webkit
     });
 
+    // Register the toolbar button.
+    editor.ui.addButton && editor.ui.addButton('ScaldAtom', {
+      label: editor.lang.dnd.atom_properties,
+      command: 'atomProperties',
+      icon: this.path + 'icons/atom.png'
+    });
+
     editor.on('contentDom', function (evt) {
       editor.document.on('click', function (evt) {
         if (element = dnd.getWrapperElement(evt.data.getTarget())) {
@@ -114,6 +121,13 @@ CKEDITOR.plugins.add('dnd', {
         menu.atompaste = CKEDITOR.TRISTATE_OFF;
       }
       return menu;
+    });
+
+    editor.on('doubleclick', function(evt) {
+      var element = dnd.getWrapperElement(evt.data.element);
+      if (element) {
+        evt.data.dialog = 'atomProperties';
+      }
     });
 
     editor.on('paste', function (evt) {
