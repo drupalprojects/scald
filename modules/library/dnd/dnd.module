@@ -96,8 +96,8 @@ function dnd_library() {
     'title' => 'DnD Library',
     'website' => 'http://drupal.org/project/scald',
     'version' => '1.x',
-    'library' => array(
-      array('system', 'drupal.form'),
+    'dependencies' => array(
+      array('system', 'jquery.form'),
     ),
     'js' => array(
       // Drag and drop
