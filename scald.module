@@ -2010,6 +2010,16 @@ function scald_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
+  // AJAX fetch atoms to provide handy functionality for library implementations.
+  $items['atom/fetch/%/%'] = array(
+    'title' => 'Fetch atoms',
+    'page callback' => 'scald_atom_fetch_atoms',
+    'page arguments' => array(2, 3),
+    'access arguments' => array('access content'),
+    'file' => 'includes/scald.pages.inc',
+    'theme callback' => 'ajax_base_page_theme',
+  );
+
   $items['atom/%/debug'] = array(
     'title' => 'Debug',
     'page callback' => 'scald_debug_console',
@@ -2046,16 +2056,6 @@ function scald_menu() {
       'file path' => drupal_get_path('module', 'devel'),
       'type' => MENU_LOCAL_TASK,
       'weight' => 100,
-    );
-
-    // AJAX fetch atoms to provide handy functionality for library implementations.
-    $items['atom/fetch/%/%'] = array(
-      'title' => 'Fetch atoms',
-      'page callback' => 'scald_atom_fetch_atoms',
-      'page arguments' => array(2, 3),
-      'access arguments' => array('access content'),
-      'file' => 'includes/scald.pages.inc',
-      'theme callback' => 'ajax_base_page_theme',
     );
   }
 
