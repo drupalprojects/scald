@@ -62,14 +62,15 @@ Drupal.dnd = {
 
     for (var i= 0, len=atom_ids.length; i<len; i++) {
       // Remove atom from the list if it is already available.
-      if (context in Drupal.dnd.Atoms[atom_ids[i]]) {
+      if ((atom_ids[i] in Drupal.dnd.Atoms) && (context in Drupal.dnd.Atoms[atom_ids[i]].contexts)) {
         delete atom_ids[i];
       }
     }
-    // Remove undefined elements.
-    atom_ids.filter(Number);
 
-    if (atom_ids) {
+    // Remove undefined elements.
+    atom_ids = atom_ids.filter(Number);
+
+    if (atom_ids.length) {
       $.getJSON(Drupal.settings.basePath + 'atom/fetch/' + context + '/' + atom_ids.join(), function(data) {
         for (atom_id in data) {
           Drupal.dnd.Atoms[atom_id] = Drupal.dnd.Atoms[atom_id] || {sid: atom_id, contexts: {}};
