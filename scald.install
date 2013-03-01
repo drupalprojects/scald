@@ -14,9 +14,7 @@
  * @ingroup scald
  */
 
-require_once('includes/scald.constants.inc');
-
-
+require_once 'includes/scald.constants.inc';
 
 /**
  * Implements hook_schema().
@@ -26,7 +24,6 @@ function scald_schema() {
 
   $schema['cache_scald'] = drupal_get_schema_unprocessed('system', 'cache');
 
-  // Scald Atom Registry
   $schema['scald_atoms'] = array(
     'description' => 'The Scald Atom registry.',
     'fields'      => array(
@@ -90,10 +87,18 @@ function scald_schema() {
     ),
     'primary key' => array('sid'),
     'unique keys' => array(
-      'u_provider_type_base_id' => array(array('provider', 64), array('type', 64), array('base_id', 64)),
+      'u_provider_type_base_id' => array(
+        array('provider', 64),
+        array('type', 64),
+        array('base_id', 64),
+      ),
     ),
     'indexes'     => array(
-      'i_sid_provider_base_id'  => array('sid', array('provider', 64), array('base_id', 64)),
+      'i_sid_provider_base_id'  => array(
+        'sid',
+        array('provider', 64),
+        array('base_id', 64),
+      ),
       'i_sid_actions'           => array('sid', 'actions'),
       'i_type_sid'              => array('type', 'sid'),
       'i_publisher_sid'         => array('publisher', 'sid'),
@@ -101,7 +106,6 @@ function scald_schema() {
     ),
   );
 
-  // Scald Unified Type Registry
   $schema['scald_types'] = array(
     'description' => 'The Scald Unified Type registry.',
     'fields'      => array(
@@ -212,8 +216,6 @@ function scald_schema() {
   return $schema;
 }
 
-
-
 /**
  * Implements hook_install().
  *
@@ -222,11 +224,9 @@ function scald_schema() {
  *  modification of the {system} table is the only way to accomplish this).
  */
 function scald_install() {
-  // Get Scald hooks to run earlier than other modules
+  // Get Scald hooks to run earlier than other modules.
   db_query("UPDATE {system} SET weight = -50 WHERE name = 'scald'");
 }
-
-
 
 /**
  * Implements hook_uninstall().
@@ -245,8 +245,6 @@ function scald_uninstall() {
   variable_del('scald_custom_contexts');
 }
 
-
-
 /**
  * Implements hook_enable().
  *
@@ -261,8 +259,6 @@ function scald_enable() {
   _scald_create_tags_vocabulary();
 }
 
-
-
 /**
  * Implements hook_disable().
  *
@@ -274,10 +270,10 @@ function scald_disable() {
 }
 
 /**
- * Updates the schema from the 6.x version
+ * Updates the schema from the 6.x version.
  */
 function scald_update_7000() {
-  // Drop the table that were just storing the results of info hooks
+  // Drop the table that were just storing the results of info hooks.
   db_drop_table('scald_actions');
   db_drop_table('scald_atom_providers');
   db_drop_table('scald_contexts');
@@ -288,11 +284,11 @@ function scald_update_7000() {
 
   // Drop the relationships support from Scald Core.
   // Better solutions for this problems exists in Contrib, now
-  // that we're going for an entity-based solutions
+  // that we're going for an entity-based solutions.
   db_drop_table('scald_atom_relationships');
 
   // Convert the 'scald_atom_types' variable, whose format changed
-  // between 6.x and 7.x
+  // between 6.x and 7.x.
   $defaults = variable_get('scald_atom_defaults', NULL);
   if (!empty($defaults)) {
     $temp = array();
@@ -304,7 +300,7 @@ function scald_update_7000() {
     }
     $new_defaults = array();
     foreach ($temp as $name => $default) {
-      $new_defaults[$name] = (object)$default;
+      $new_defaults[$name] = (object) $default;
     }
     variable_set('scald_atom_defaults', $new_defaults);
   }
@@ -319,7 +315,7 @@ function scald_update_7000() {
  * Create a field to store atom thumbnails.
  */
 function _scald_create_thumbnail_field() {
-  // Create the scald_thumbnail field
+  // Create the scald_thumbnail field.
   if (!field_info_field('scald_thumbnail')) {
     $field = array(
       'field_name' => 'scald_thumbnail',
@@ -346,7 +342,7 @@ function _scald_create_author_vocabulary() {
       'module' => 'scald',
       'weight' => -5,
     );
-    $vocabulary = (object)$edit;
+    $vocabulary = (object) $edit;
     taxonomy_vocabulary_save($vocabulary);
     variable_set('scald_author_vocabulary', $vocabulary->vid);
 
@@ -370,7 +366,7 @@ function _scald_create_author_vocabulary() {
     field_create_instance($instance);
   }
 
-  // Create the scald_authors field
+  // Create the scald_authors field.
   if (!field_info_field('scald_authors')) {
     $field = array(
       'title' => t('Authors'),
@@ -383,7 +379,7 @@ function _scald_create_author_vocabulary() {
             'vocabulary' => $vocabulary->machine_name,
             'parent' => 0,
           ),
-        )
+        ),
       ),
     );
     field_create_field($field);
@@ -408,12 +404,12 @@ function _scald_create_tags_vocabulary() {
       'module' => 'scald',
       'weight' => -5,
     );
-    $vocabulary = (object)$edit;
+    $vocabulary = (object) $edit;
     taxonomy_vocabulary_save($vocabulary);
     variable_set('scald_tags_vocabulary', $vocabulary->vid);
   }
 
-  // Create the scald_tags field
+  // Create the scald_tags field.
   if (!field_info_field('scald_tags')) {
     $field = array(
       'title' => t('Scald tags'),
@@ -426,7 +422,7 @@ function _scald_create_tags_vocabulary() {
             'vocabulary' => $vocabulary->machine_name,
             'parent' => 0,
           ),
-        )
+        ),
       ),
     );
     field_create_field($field);
@@ -434,7 +430,8 @@ function _scald_create_tags_vocabulary() {
 }
 
 /**
- * Add the data column
+ * Add the {scald_atoms}.data column.
+ *
  * "A serialized array of atom and provider specific additionnal data"
  */
 function scald_update_7001() {
@@ -449,8 +446,7 @@ function scald_update_7001() {
 }
 
 /**
- * Delete the no longer necessary {scald_role_actions} table
- * Delete no longer necessary publisher(owner) variable
+ * Delete {scald_role_actions} table and scald_actions_publisher variable.
  */
 function scald_update_7002() {
   db_drop_table('scald_role_actions');
@@ -458,7 +454,7 @@ function scald_update_7002() {
 }
 
 /**
- * Create Scald_tags vocabulary
+ * Create Scald_tags vocabulary.
  */
 function scald_update_7003() {
   _scald_create_tags_vocabulary();
@@ -479,8 +475,7 @@ function scald_update_7005() {
 }
 
 /**
- * Migrate {scald_context_type_transcoder} into a new table
- * {scald_context_config}.
+ * Migrate {scald_context_type_transcoder} into {scald_context_config}.
  */
 function scald_update_7006() {
   drupal_load('module', 'scald');
@@ -553,4 +548,3 @@ function scald_update_7007() {
     'initial' => serialize(array()),
   ));
 }
-

@@ -5,19 +5,9 @@
  * Scald Youtube Installation
  */
 
-
-
 /**
  * Implements hook_install().
  */
 function scald_youtube_install() {
   scald_add_type('video', 'Video', 'Video');
-}
-
-
-
-/**
- * Implementats hook_uninstall().
- */
-function scald_youtube_uninstall() {
 }

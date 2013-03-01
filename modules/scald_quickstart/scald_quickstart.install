@@ -1,9 +1,9 @@
 <?php
 /**
  * @file
- *   Scald Quickstart Installation
+ * Scald Quickstart Installation
  *
- *   Add some basics elements for a first use of ScalD module
+ * Add some basics elements for a first use of ScalD module
  *
  * @ingroup scald
  */
@@ -12,9 +12,7 @@
  * Implements hook_install().
  */
 function scald_quickstart_install() {
-  /**
-   * Grant anoymous and authenticated user the rights to see published atoms
-   */
+  // Grant anoymous and authenticated user the rights to see published atoms.
   $rids = array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID);
   foreach ($rids as $rid) {
     user_role_change_permissions($rid,
@@ -28,13 +26,7 @@ function scald_quickstart_install() {
 }
 
 /**
- * Implements hook_uninstall().
- */
-function scald_quickstart_uninstall() {
-}
-
-/**
- * Grant anonymous and authenticated user the rights to see published atoms
+ * Grant anonymous and authenticated user the rights to see published atoms.
  */
 function scald_quickstart_update_7001() {
   $rids = array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID);
@@ -50,7 +42,7 @@ function scald_quickstart_update_7001() {
 }
 
 /**
- * Instanciate 'scald_tags' field
+ * Instanciate 'scald_tags' field.
  */
 function scald_quickstart_update_7002() {
   foreach (array('image', 'audio', 'video') as $bundle) {

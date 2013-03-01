@@ -1,10 +1,13 @@
 <?php
 /**
  * @file
- *   Provides a new view display for the scald library.
+ * Provides a new view display for the scald library.
  */
+
 class scald_plugin_display_library extends views_plugin_display_page {
   /**
+   * Overrides views_plugin_display_page::execute().
+   *
    * The library won't go through the normal theming / page rendering
    * process. Instead, we'll just fetch / render the atoms, and print
    * the JSON by itself.

@@ -58,7 +58,14 @@ function mee_schema() {
       ),
       'copyright' => array('type' => 'text'),
     ),
-    'primary key' => array('entity_type', 'entity_id', 'revision_id', 'atom_sid', 'field', 'delta'),
+    'primary key' => array(
+      'entity_type',
+      'entity_id',
+      'revision_id',
+      'atom_sid',
+      'field',
+      'delta',
+    ),
   );
 
   return $schema;
@@ -88,7 +95,7 @@ function mee_update_7001(&$sandbox) {
     db_add_field('mee_resource', 'revision_id', array(
       'type' => 'int',
       'unsigned' => TRUE,
-      'not null' => FALSE
+      'not null' => FALSE,
     ));
     db_change_field('mee_resource', 'content_nid', 'entity_id', array(
       'type' => 'int',
@@ -139,7 +146,14 @@ function mee_update_7001(&$sandbox) {
   $finished = empty($sandbox['max']) ? TRUE : ($sandbox['progress'] == $sandbox['max']);
 
   if ($finished) {
-    db_add_primary_key('mee_resource', array('entity_type', 'entity_id', 'revision_id', 'atom_sid', 'field', 'delta'));
+    db_add_primary_key('mee_resource', array(
+      'entity_type',
+      'entity_id',
+      'revision_id',
+      'atom_sid',
+      'field',
+      'delta',
+    ));
   }
 
   $sandbox['#finished'] = $finished;

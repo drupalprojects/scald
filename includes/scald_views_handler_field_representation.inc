@@ -1,9 +1,9 @@
 <?php
 /**
  * @file
- *   Provides a field containing the representation of an atom, in a choosen
- *   context.
+ * Provides a field containing the representation of an atom.
  */
+
 class scald_views_handler_field_representation extends views_handler_field {
   /**
    * Renders the atom according in the context specified in the option form.
@@ -40,7 +40,7 @@ class scald_views_handler_field_representation extends views_handler_field {
       '#title' => t('Context'),
       '#default_value' => $this->options['context'],
       '#description' => t('The context in which the atom should be rendered.'),
-      '#options' => $options
+      '#options' => $options,
     );
   }
 }

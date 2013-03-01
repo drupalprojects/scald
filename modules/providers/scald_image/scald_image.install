@@ -27,6 +27,7 @@ function scald_image_install() {
 
 /**
  * Hide the Image field because the image is rendered once in the Atom core.
+ *
  * This make Scald Image consistent with other atom types.
  */
 function scald_image_update_7000() {

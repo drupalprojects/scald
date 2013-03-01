@@ -1,10 +1,15 @@
 <?php
 /**
+ * @file
  * Defines a class for Scald Atoms.
  */
+
 class ScaldAtom {
+  /**
+   * Constructs a ScaldAtom object.
+   */
   public function __construct($type, $provider, array $values = array()) {
-    // Add default values
+    // Add default values.
     $values += array(
       'title' => '',
       'type' => $type,

@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- *   Provides default views for the Scald DnD Library module.
+ * Provides default views for the Scald DnD Library module.
  */
 
 /**
@@ -10,7 +10,7 @@
 function scald_dnd_library_views_default_views() {
   $views = array();
 
-  // Library view
+  // Library view.
   $view = new view();
   $view->name = 'scald_library';
   $view->description = 'Library view provided by Scald to access atoms.';

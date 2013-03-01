@@ -9,28 +9,28 @@
  * @ingroup scald
  */
 
-require_once('scald.constants.inc');
+require_once 'scald.constants.inc';
 
 /**
  * The Scald Admin Dashboard.
  *
- * @return
- *  The Dashboard rendered in XHTML.
+ * @return string
+ *   The Dashboard rendered in XHTML.
  */
 function scald_admin_dashboard() {
   $types = scald_types();
 
   $content = '<h3>' . t('Scald Providers') . '</h3>';
-  $content .= '<p>' . t('The following Scald Providers are registered with Scald Core.  To force a Provider to renew its registration (this is useful if a Provider conditionally provides something such as a Transcoder based on whether or not a module is availble and you have just enabled new modules) click the <em>re-register</em> link next to the Provider\'s name.') . '</p>';
+  $content .= '<p>' . t("The following Scald Providers are registered with Scald Core.  To force a Provider to renew its registration (this is useful if a Provider conditionally provides something such as a Transcoder based on whether or not a module is availble and you have just enabled new modules) click the <em>re-register</em> link next to the Provider's name.") . '</p>';
 
   $list = array('type' => 'ul', 'items' => array());
   $table = array(
-    'header' =>  array(
+    'header' => array(
       t('Name'),
       array(
         'data' => t('Actions'),
-        'colspan' => 4
-      )
+        'colspan' => 4,
+      ),
     ),
     'rows' => array(),
   );
@@ -54,7 +54,7 @@ function scald_admin_dashboard() {
 
   $list = array('type' => 'ul', 'items' => array());
   $table = array(
-    'header' =>  array(
+    'header' => array(
       t('Context name'),
       t('Atom type'),
       t('Property'),
@@ -77,16 +77,16 @@ function scald_admin_dashboard() {
   $content .= theme('table', $table);
 
   return $content;
-} // end scald_admin_dashboard()
+}
 
 
 /**
- * Form for admin settings for Scald Types
+ * Form for admin settings for Scald Types.
  */
 function scald_admin_type_form($form, $form_state, $type) {
   $form = array();
   $type_name = $type->type;
-  $type_raw = (array)$type;
+  $type_raw = (array) $type;
   $form['type_' . $type_name . '_title'] = array(
     '#type'           => 'textfield',
     '#title'          => t('Title'),
@@ -122,7 +122,7 @@ function scald_admin_type_form($form, $form_state, $type) {
     '#maxlength'      => 255,
     '#required'       => TRUE,
   );
-  // Create checkboxes for the defined actions
+  // Create checkboxes for the defined actions.
   $actions = scald_actions();
   $options = array();
   $options_default = array();
@@ -141,7 +141,7 @@ function scald_admin_type_form($form, $form_state, $type) {
 
   $form['atom_type'] = array(
     '#type' => 'value',
-    '#value' => $type_name
+    '#value' => $type_name,
   );
 
   $form['submit'] = array(
@@ -150,7 +150,7 @@ function scald_admin_type_form($form, $form_state, $type) {
   );
 
   return $form;
-} // end scald_admin_types_form()
+}
 
 /**
  * Submist function for admin settings for Scald Types.
@@ -166,7 +166,6 @@ function scald_admin_type_form_submit($form, &$form_state) {
     $scald_atom_defaults[$type] = new stdClass();
   }
 
-
   foreach ($form_state['values'] as $key => $value) {
     if (drupal_substr($key, 0, 5) == 'type_') {
       switch (drupal_substr($key, -6)) {
@@ -175,15 +174,15 @@ function scald_admin_type_form_submit($form, &$form_state) {
             ->fields(array('title' => $value))
             ->condition('type', $type)
             ->execute();
-          break; // end '_title'
+          break;
 
         case '_thumb':
           $scald_atom_defaults[$type]->thumbnail_source = $value;
-          break; // end '_thumb'
+          break;
 
         case '_descr':
           $scald_atom_defaults[$type]->description = $value;
-          break; // end '_descr'
+          break;
 
         case '_actin':
           $actions = scald_actions();
@@ -194,7 +193,7 @@ function scald_admin_type_form_submit($form, &$form_state) {
             }
           }
           $scald_atom_defaults[$type]->actions = $bitmask;
-          break; // end '_actin'
+          break;
       }
     }
   }
@@ -202,12 +201,12 @@ function scald_admin_type_form_submit($form, &$form_state) {
   drupal_set_message(t('Atom settings changed'));
   variable_set('scald_atom_defaults', $scald_atom_defaults);
   scald_types(TRUE);
-} // end scald_admin_types_form_submit()
+}
 
 /**
  * Form constructor for the context editing form.
  *
- * @param $context
+ * @param string $context
  *   (optional) context name, when editing an existing Scald context. However we
  *   do not manage to get the edit form yet, so it is always NULL.
  */
@@ -257,8 +256,7 @@ function scald_admin_context_form($form, &$form_state, $context = NULL) {
   $form['additional_settings'] = array(
     '#type' => 'vertical_tabs',
     // @todo provide a JavaScript to do Vertical Tabs summary stuffs.
-    '#attached' => array(
-    ),
+    '#attached' => array(),
   );
 
   $form['system'] = array(
@@ -339,7 +337,7 @@ function scald_admin_atoms() {
   $content .= '<p>' . t('Enable the Views module to get an handy paginated table with filters which will allow you to browse your atoms.') . '</p>';
 
   return $content;
-} // end scald_admin_atoms()
+}
 
 /**
  * The Scald Admin page for Scald Contexts.
@@ -353,7 +351,7 @@ function scald_admin_contexts($type) {
   $output[] = drupal_get_form('scald_admin_contexts_form', $type);
 
   return $output;
-} // end scald_admin_contexts()
+}
 
 /**
  * Form for admin settings for Scald Contexts.
@@ -376,7 +374,7 @@ function scald_admin_contexts_form($form, $form_state, $type) {
   }
 
   foreach ($contexts as $name => $context) {
-    // Only list visible contexts
+    // Only list visible contexts.
     if (!empty($context['hidden'])) {
       continue;
     }
@@ -418,9 +416,7 @@ function scald_admin_contexts_form($form, $form_state, $type) {
   );
 
   return $form;
-} // end scald_admin_contexts_form()
-
-
+}
 
 /**
  * Submit handler for Scald Contexts admin settings form.
@@ -437,7 +433,8 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
       case '_trans':
         $context = drupal_substr($key, 0, -6);
         $transcoder = $value;
-        if ($value == '@none') {// @todo can it really happen?
+        if ($value == '@none') {
+          // @todo can it really happen?
           $context_config = scald_context_config_load($context);
           if (isset($context_config->transcoder[$typename]['*'])) {
             $context_config->transcoder[$typename]['*'] = NULL;
@@ -449,14 +446,15 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
           $context_config->transcoder[$typename]['*'] = $transcoder;
           scald_context_config_save($context_config);
         }
-        break; // end '_trans'
+        break;
+
       // Players
       case '_playe':
         $context = drupal_substr($key, 0, -6);
         $context_config = scald_context_config_load($context);
         $context_config->player[$typename]['*'] = $value;
         scald_context_config_save($context_config);
-        break; // end '_playe'
+        break;
     }
   }
 
@@ -465,7 +463,7 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
   // need to regenerate it.
   cache_clear_all('*', 'cache_scald', TRUE);
 
-} // end scald_admin_contexts_form_submit()
+}
 
 /**
  * Generates Scald admin settings form.
@@ -478,16 +476,16 @@ function scald_settings_form() {
       <p>Below you'll find some general Scald settings. Beware that some of
       them are very useful for debugging, but may completely kill performance.
       Use with caution.</p>
-    ")
+    "),
   );
   $form['scald_always_rebuild'] = array(
     '#type' => 'checkbox',
     '#default_value' => variable_get('scald_always_rebuild', FALSE),
     '#title' => t('Always rebuild rendered content'),
-    '#description' => t('By default, Scald tries to agressively cache the atom\'s rendered content, by context and by actions available to the user viewing it. Checking this box, Scald will re-render the atom each time. This is a massive performance hit.'),
+    '#description' => t("By default, Scald tries to agressively cache the atom's rendered content, by context and by actions available to the user viewing it. Checking this box, Scald will re-render the atom each time. This is a massive performance hit."),
   );
 
-  // Scald tags vocabulary
+  // Scald tags vocabulary configuration.
   $options = array();
   $vocabularies = taxonomy_get_vocabularies();
   foreach ($vocabularies as $vid => $vocabulary) {
@@ -501,22 +499,25 @@ function scald_settings_form() {
     '#default_value' => variable_get('scald_tags_vocabulary', 0),
   );
 
-  // Add our custom submit handler
+  // Add our custom submit handler.
   $form['#submit'][] = 'scald_settings_form_submit';
 
   return system_settings_form($form);
 }
 
 
+/**
+ * Handles the admin settings form submission.
+ */
 function scald_settings_form_submit($form, &$form_state) {
-  // Find the selected vocabulary
+  // Find the selected vocabulary.
   $vocabularies = taxonomy_get_vocabularies();
   $vocabulary = $vocabularies[$form_state['values']['scald_tags_vocabulary']];
 
-  // Fetch info on the scald_tags taxonomy reference field
+  // Fetch info on the scald_tags taxonomy reference field.
   $field = field_info_field('scald_tags');
 
-  // Change the vocabulary used for this field
+  // Change the vocabulary used for this field.
   $field['settings']['allowed_values'][0]['vocabulary'] = $vocabulary->machine_name;
   field_update_field($field);
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- *   Contains form handlers for the DailyMotion search form.
+ * Contains form handlers for the DailyMotion search form.
  */
 
 /**
@@ -10,61 +10,64 @@
 function scald_dailymotion_search_form($form, &$form_state) {
   $terms = '';
 
-  // Check if storage contains a value. A value is set only after the form is submitted and 'rebuild' is set to TRUE.
+  // Check if storage contains a value. A value is set only after the form is
+  // submitted and 'rebuild' is set to TRUE.
   if (!empty($form_state['storage']['terms'])) {
     $terms = $form_state['storage']['terms'];
     // Display a message with the submitted value.
     drupal_set_message(t("Your search terms: @terms", array('@terms' => $terms)));
   }
 
-  // Define form elements
+  // Define form elements.
   $form = array();
   $form['search'] = array(
     '#type' => 'fieldset',
     '#tree' => TRUE,
-    '#attributes' => array('class' => array('container-inline'))
+    '#attributes' => array('class' => array('container-inline')),
   );
   $form['search']['search_term'] = array(
     '#type' => 'textfield',
     '#title' => t('Terms'),
-    '#default_value' => $terms
+    '#default_value' => $terms,
   );
   $form['search']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Search'),
-    '#submit' => array('scald_dailymotion_search_form_search_submit')
+    '#submit' => array('scald_dailymotion_search_form_search_submit'),
   );
 
-  // If we have specified terms, execute the search and display the results
+  // If we have specified terms, execute the search and display the results.
   if (!empty($terms)) {
     $form['results'] = array(
       '#type' => 'fieldset',
       '#title' => t('Search results'),
       '#tree' => TRUE,
-      '#theme' => 'scald_dailymotion_search_results_table'
+      '#theme' => 'scald_dailymotion_search_results_table',
     );
 
     $items = scald_dailymotion_feed('search', $terms);
     if (count($items)) {
-      // Iterate on all results
+      // Iterate on all results.
       foreach ($items as $video) {
-        // Prepare variables for theme_image()
+        // Prepare variables for theme_image().
         $image_variables = array(
           'path' => str_replace('large', 'small', $video->thumbnail['src']),
           'alt' => $video->title,
           'title' => $video->title,
         );
 
-        // Prepare row data
+        // Prepare row data.
         $form['results']['videos'][$video->id] = array(
           'import' => array(
             '#type'         => 'radio',
             '#return_value' => $video->id,
-            '#parents'      => array('identifier'),    // This will ensure we get the selected result in a variable called 'identifier'
+            // This ensure the selected result is in a variable named
+            // 'identifier'.
+            '#parents'      => array('identifier'),
           ),
           'title' => array(
             '#type'   => 'item',
-            '#markup' => $video->title
+            '#markup' => $video->title,
           ),
           'thumbnail' => array(
             '#type'   => 'item',
@@ -73,23 +76,23 @@ function scald_dailymotion_search_form($form, &$form_state) {
           'id' => array(
             '#type'   => 'item',
             '#markup' => $video->id,
-          )
+          ),
         );
       }
       $form['results']['import'] = array(
         '#type' => 'submit',
         '#value' => t('Import'),
-        '#submit' => array('scald_dailymotion_search_form_submit')
+        '#submit' => array('scald_dailymotion_search_form_submit'),
       );
     }
     else {
-      // No need to show a table
+      // No need to show a table.
       unset($form['results']['#theme']);
 
-      // No results message
+      // No results message.
       $form['results']['empty'] = array(
         '#type' => 'item',
-        '#markup' => t('No results')
+        '#markup' => t('No results'),
       );
     }
   }
@@ -114,32 +117,24 @@ function scald_dailymotion_search_form_submit($form, &$form_state) {
   $identifier = $form_state['values']['identifier'];
   if (!$identifier) {
     drupal_set_message(t('No video selected for import'));
-    $form_state['rebuild'] = TRUE; // Present again the list of results
+    // Present again the list of result.
+    $form_state['rebuild'] = TRUE;
     return;
   }
 
-  // End the multistep search workflow
+  // End the multistep search workflow.
   unset($form_state['storage']);
   $form_state['rebuild'] = FALSE;
 
-  // Redirect user to the import form (special page)
+  // Redirect user to the import form (special page).
   $form_state['redirect'] = array(
     'atoms/dailymotion/import',
     array(
       'query' => array(
-        'dm-id' => $identifier
-      )
-    )
+        'dm-id' => $identifier,
+      ),
+    ),
   );
-
-/*
-  // Import video immediately (no UI)
-  $sid = scald_dailymotion_register($identifier);
-  if($sid) {
-    $video = scald_fetch($sid);
-    drupal_set_message(t('Created video %title', array('%title' => $video->title)));
-  }
- */
 }
 
 /**
@@ -159,7 +154,11 @@ function theme_scald_dailymotion_search_results_table($variables) {
       ),
     );
   }
-  $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'scald-dailymotion-videos')));
+  $output = theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'attributes' => array('id' => 'scald-dailymotion-videos'),
+  ));
   $output .= drupal_render_children($form);
   return $output;
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- *   Provides the administration related parts of the DnD module.
+ * Provides the administration related parts of the DnD module.
  */
 
 /**
@@ -14,7 +14,7 @@ function dnd_admin_form() {
     '#title' => t('Library'),
     '#default_value' => dnd_get_library(),
     '#description' => t('The library that will available on node edit forms if they contains fields referencing rich media content, such as Multimedia Editorial Element or Ressource reference fields.'),
-    '#options' => $libraries
+    '#options' => $libraries,
   );
   return system_settings_form($form);
 }

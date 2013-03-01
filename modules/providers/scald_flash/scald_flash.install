@@ -5,15 +5,13 @@
  * Scald Flash Installation
  */
 
-
-
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  */
 function scald_flash_install() {
   scald_add_type('flash', 'Flash', 'Resource flash');
 
-  // on set les settings par defauts pour préciser la thumbnail à utiliser par défaut
+  // Defines the default thumbnail to use for flash atoms.
   $actions = scald_actions();
   $default = new stdClass();
   $default->actions = $actions['view']['bitmask'] + $actions['fetch']['bitmask'];
@@ -25,10 +23,8 @@ function scald_flash_install() {
   $defaults = variable_set('scald_atom_defaults', $defaults);
 }
 
-
-
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function scald_flash_uninstall() {
   field_delete_field('scald_width');
@@ -43,7 +39,7 @@ function scald_flash_uninstall() {
  * Implements hook_enable().
  *
  * Ensures that various configuration options are set so that Scald Core can
- *  make certain assumptions about the contents of variables.
+ * make certain assumptions about the contents of variables.
  */
 function scald_flash_enable() {
   _scald_flash_create_width_field();
@@ -54,7 +50,7 @@ function scald_flash_enable() {
  * Create a field to store atom width.
  */
 function _scald_flash_create_width_field() {
-  // Create the scald_width field
+  // Create the scald_width field.
   if (!field_info_field('scald_width')) {
     $field = array(
       'field_name' => 'scald_width',
@@ -81,12 +77,12 @@ function _scald_flash_create_width_field() {
  * Create a field to store atom height.
  */
 function _scald_flash_create_height_field() {
-  // Create the scald_height field
+  // Create the scald_height field.
   if (!field_info_field('scald_height')) {
     $field = array(
       'field_name' => 'scald_height',
       'type' => 'text',
-        'label' => t('Height'),
+      'label' => t('Height'),
     );
     field_create_field($field);
 

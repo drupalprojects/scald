@@ -22,7 +22,7 @@ function scald_dnd_library_views_plugins() {
         'help topic' => 'style-library',
         'theme' => 'sdl_library',
         'theme file' => 'scald_dnd_library.module',
-      )
+      ),
     ),
     'display' => array(
       'dnd_library' => array(
@@ -38,7 +38,7 @@ function scald_dnd_library_views_plugins() {
         'help topic' => 'scald-library',
         'uses hook menu' => TRUE,
         'provides dnd library' => TRUE,
-      )
-    )
+      ),
+    ),
   );
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- *   Provides admin form for DailyMotion's Scald Provider.
+ * Provides admin form for DailyMotion's Scald Provider.
  */
 
 /**
@@ -13,10 +13,10 @@ function scald_dailymotion_imports_form() {
   $types = array('user' => t('User'), 'tag' => t('Tag'));
   if (count($imports)) {
     $form['imports'] = array(
-       '#type' => 'fieldset',
-       '#title' => t('Current imports'),
-       '#tree' => TRUE,
-       '#theme' => 'scald_dailymotion_imports_table',
+      '#type' => 'fieldset',
+      '#title' => t('Current imports'),
+      '#tree' => TRUE,
+      '#theme' => 'scald_dailymotion_imports_table',
     );
     foreach ($imports as $key => $import) {
       $form['imports'][$key] = array(
@@ -29,23 +29,22 @@ function scald_dailymotion_imports_form() {
         'value' => array(
           '#type' => 'textfield',
           '#title' => t('Identifier'),
-          '#default_value' => $import['value']
+          '#default_value' => $import['value'],
         ),
       );
     }
 
     $form['imports']['submit'] = array(
       '#type' => 'submit',
-      '#value' => t('Save configuration')
+      '#value' => t('Save configuration'),
     );
   }
-
 
   $form['add'] = array(
     '#type' => 'fieldset',
     '#title' => t('Add import'),
     '#collapsible' => TRUE,
-    '#collapsed' => count($imports)
+    '#collapsed' => count($imports),
   );
   $form['add']['type'] = array(
     '#type' => 'select',
@@ -55,12 +54,12 @@ function scald_dailymotion_imports_form() {
   $form['add']['value'] = array(
     '#type' => 'textfield',
     '#title' => t('Identifier'),
-    '#description' => t('This field value meaning depends on the Type field defined above. For a <em>User</em> import, put the username whose videos you\'d loke to import here, for a tag import, use the tag name.')
+    '#description' => t("This field value meaning depends on the Type field defined above. For a <em>User</em> import, put the username whose videos you'd like to import here, for a tag import, use the tag name."),
   );
   $form['add']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Add this import'),
-    '#submit' => array('scald_dailymotion_imports_form_add')
+    '#submit' => array('scald_dailymotion_imports_form_add'),
   );
   return $form;
 }
@@ -106,7 +105,11 @@ function theme_scald_dailymotion_imports_table($variables) {
       ),
     );
   }
-  $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'scald-dailymotion-imports')));
+  $output = theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'attributes' => array('id' => 'scald-dailymotion-imports'),
+  ));
   $output .= drupal_render_children($form);
   return $output;
 }

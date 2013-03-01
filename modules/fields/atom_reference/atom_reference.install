@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- *   Install, update and uninstall functions for the Atom reference module.
+ * Install, update and uninstall functions for the Atom reference module.
  */
 
 /**
@@ -13,11 +13,11 @@ function atom_reference_field_schema($field) {
       'sid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
-        'not null' => FALSE
-      )
+        'not null' => FALSE,
+      ),
     ),
     'indexes' => array(
-      'sid' => array('sid')
-    )
+      'sid' => array('sid'),
+    ),
   );
 }

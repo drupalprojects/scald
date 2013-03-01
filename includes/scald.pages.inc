@@ -1,10 +1,15 @@
 <?php
 /**
  * @file
- *   This file contains the various pages related to the creation and
- *   edition of the atoms entities.
+ * This file contains the various callbacks related to Scald defined pages.
+ *
+ * A lot of callbacks related to the creation and  edition of the atoms
+ * entities are defined here.
  */
 
+/**
+ * Creates the page listing possible Scald Atom Types.
+ */
 function scald_atom_add() {
   $types = scald_types();
   if (empty($types)) {
@@ -13,10 +18,10 @@ function scald_atom_add() {
 
   $content = array();
 
-  // Check if the user is allowed to create atoms of any type
+  // Check if the user is allowed to create atoms of any type.
   $any = user_access('administer scald atoms') || user_access('create atom of any type');
   foreach ($types as $name => $type) {
-    // Skip atom type the user isn't allowed to create
+    // Skip atom type the user isn't allowed to create.
     if (!$any && !user_access('create atom of ' . $type->type . ' type')) {
       continue;
     }
@@ -24,7 +29,7 @@ function scald_atom_add() {
       'title' => $type->title,
       'href'  => 'atom/add/' . $name,
       'localized_options' => array(),
-      'description' => ''
+      'description' => '',
     );
   }
   return theme('node_add_list', array('content' => $content));
@@ -83,7 +88,7 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
     'show back' => FALSE,
     'show cancel' => TRUE,
     'show return' => FALSE,
-    'next callback' =>  'scald_atom_add_wizard_next',
+    'next callback' => 'scald_atom_add_wizard_next',
     'finish callback' => 'scald_atom_add_wizard_finish',
     'cancel callback' => 'scald_atom_add_wizard_cancel',
     'order' => array(
@@ -113,8 +118,6 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
     // If javascript is active, we have to use a render array.
     $commands = array();
     if ($output === FALSE || !empty($form_state['complete'])) {
-      // Do some good thing
-      //$commands[] = ajax_command_html('#ctools-sample', $animal);
       // Dismiss the modal.
       $commands[] = array('command' => 'dnd_refresh');
       $commands[] = ctools_modal_command_dismiss();
@@ -166,6 +169,9 @@ function scald_atom_add_form_source($form, &$form_state) {
   return $form;
 }
 
+/**
+ * Handles the source step form submission.
+ */
 function scald_atom_add_form_source_submit(&$form, &$form_state) {
   $form_state['scald']['source'] = $form_state['values']['source'];
 }
@@ -182,13 +188,16 @@ function scald_atom_add_form_add($form, &$form_state) {
   else {
     // TODO: Figure out what should be done here.
     $form['error'] = array(
-      '#markup' => 'Import without form; does it makes sense ?'
+      '#markup' => 'Import without form; does it makes sense ?',
     );
   }
 
   return $form;
 }
 
+/**
+ * Handles the add step form submission.
+ */
 function scald_atom_add_form_add_submit(&$form, &$form_state) {
   $scald = $form_state['scald'];
   $atom = new ScaldAtom($scald['type']->type, $scald['source']);
@@ -239,6 +248,9 @@ function scald_atom_add_form_options($form, &$form_state) {
   return $form;
 }
 
+/**
+ * Handles the final atom creation step form submission.
+ */
 function scald_atom_add_form_options_submit(&$form, &$form_state) {
   $atom = $form_state['scald']['atom'];
 
@@ -255,13 +267,13 @@ function scald_atom_add_form_options_submit(&$form, &$form_state) {
 
   $op = empty($atom->sid) ? t('created') : t('updated');
 
-  // Let entity add its properties to the atom
+  // Let entity add its properties to the atom.
   entity_form_submit_build_entity('scald_atom', $atom, $form, $form_state);
 
-  // And save it
+  // Then save it...
   scald_atom_save($atom);
 
-  // Add a message confirming the creation
+  // Add a message confirming the creation.
   drupal_set_message(t('Atom %title, of type %type has been %op', array(
     '%title' => $atom->title,
     '%type' => $atom->type,
@@ -347,6 +359,7 @@ function scald_atom_delete_confirm_submit($form, &$form_state) {
  * Fetch atoms and return in JSON format.
  *
  * @param string $context
+ *   The context the atoms should be rendered in.
  * @param string $sids
  *   Comma separated list of atom ids.
  */
@@ -358,4 +371,3 @@ function scald_atom_fetch_atoms($context, $sids) {
   }
   drupal_json_output($output);
 }
-

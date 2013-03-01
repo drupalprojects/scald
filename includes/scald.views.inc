@@ -3,6 +3,10 @@
  * @file
  * Provides support for the Views module.
  */
+
+/**
+ * Implements hook_views_data().
+ */
 function scald_views_data() {
   $data = array();
 
@@ -14,7 +18,6 @@ function scald_views_data() {
     'help' => t("Views related to Scald Atoms."),
   );
 
-  // sid
   $data['scald_atoms']['sid'] = array(
     'title' => t('Scald ID'),
     'help' => t("The atom's unique identifier"),
@@ -22,7 +25,7 @@ function scald_views_data() {
       'handler' => 'views_handler_field_numeric',
       'click sortable' => TRUE,
     ),
-     'sort' => array(
+    'sort' => array(
       'handler' => 'views_handler_sort',
     ),
     'filter' => array(
@@ -33,7 +36,6 @@ function scald_views_data() {
     ),
   );
 
-   // representation
   $data['scald_atoms']['representation'] = array(
     'title' => t('Representation'),
     'real field' => 'sid',
@@ -41,10 +43,9 @@ function scald_views_data() {
     'field' => array(
       'handler' => 'scald_views_handler_field_representation',
       'click sortable' => FALSE,
-    )
+    ),
   );
 
-  // provider
   $data['scald_atoms']['provider'] = array(
     'title' => t('Provider'),
     'help' => t('The module responsible of this atom'),
@@ -63,7 +64,6 @@ function scald_views_data() {
     ),
   );
 
-  // Type
   $data['scald_atoms']['type'] = array(
     'title' => t('Type'),
     'help' => t('The type of the atom, such as "image", "audio" ...'),
@@ -82,7 +82,6 @@ function scald_views_data() {
     ),
   );
 
-  // Base ID
   $data['scald_atoms']['base_id'] = array(
     'title' => t('Base ID'),
     'help' => t('The base id, used by the providing module. For example, for atoms based on node, this could be the nid.'),
@@ -101,7 +100,6 @@ function scald_views_data() {
     ),
   );
 
-  // Publisher
   $data['scald_atoms']['publisher'] = array(
     'title' => t('Publisher'),
     'help' => t('Relate an atom to the user who published it.'),
@@ -113,7 +111,6 @@ function scald_views_data() {
     ),
   );
 
-  // Title
   $data['scald_atoms']['title'] = array(
     'title' => t('Title'),
     'help' => t("The atom's title"),
@@ -132,7 +129,6 @@ function scald_views_data() {
     ),
   );
 
-  // Actions
   $data['scald_atoms']['actions'] = array(
     'title' => t('Actions'),
     'help' => t("Possible interactions with this atom"),

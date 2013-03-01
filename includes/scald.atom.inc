@@ -11,14 +11,14 @@
  * function displays the player and all atom fields. Fields are reorderable and
  * customisable in the Field UI as usual.
  *
- * @param $atom
+ * @param ScaldAtom $atom
  *   Atom to be rendered
- * @param $context
+ * @param string $context
  *   (optional) Name of the context (view mode). Defaults to 'full'.
- * @param $langcode
+ * @param string $langcode
  *   (optional) A langcode to use for rendering.
  *
- * @return
+ * @return array
  *   An array as expected by drupal_render().
  */
 function scald_atom_view($atom, $context = 'full', $langcode = NULL) {
@@ -38,11 +38,11 @@ function scald_atom_view($atom, $context = 'full', $langcode = NULL) {
 /**
  * Builds atom content.
  *
- * @param $atom
+ * @param ScaldAtom $atom
  *   Atom to build content.
- * @param $view_mode
+ * @param string $view_mode
  *   View mode.
- * @param $langcode
+ * @param string $langcode
  *   (optional) A langcode to use for rendering.
  */
 function scald_atom_build_content($atom, $view_mode = 'full', $langcode = NULL) {

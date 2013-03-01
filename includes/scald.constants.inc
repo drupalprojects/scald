@@ -10,21 +10,29 @@
  */
 
 
-define('SCALD_SLUG_MAX_LENGTH',           128);
-define('SCALD_SLUG_MATCH_PATTERN',        '/^[\w-]+$/');
+define('SCALD_SLUG_MAX_LENGTH', 128);
+define('SCALD_SLUG_MATCH_PATTERN', '/^[\w-]+$/');
 
-// There are dozens of issues with integer values and variables in PHP.  All
-//  integer values are unsigned and so the highest bit which is truly safe to
-//  use in the way that Scald does is the 31st bit.
-// This is the max power which can live in the db
-define('SCALD_ACTIONS_MAX_POWER',         30);
+/**
+ * Defines the maximum power assignable to an action.
+ *
+ * There are dozens of issues with integer values and variables in PHP.  All
+ * integer values are unsigned and so the highest bit which is truly safe to
+ * use in the way that Scald does is the 31st bit.
+ *
+ * This is the max power which can live in the db.
+ *
+ * This constants limits the number of actions that can be defined at the
+ * same time in any given site.
+ */
+define('SCALD_ACTIONS_MAX_POWER', 30);
 
-define('SCALD_SAS_MATCH_PATTERN',         '/\[\s*scald=(\d+)(?(?=:):([\w-]+))(?(?=\s+)\s+([^\]]*))\s*\]/');
-define('SCALD_RENDERED_MATCH_PATTERN',    '/<!--\s*scald=(\d+)(?(?=:):([\w-]+))(?(?=\s+)\s+([^\]]*))\s*-->.*<!--\s*END scald=\1\s*-->/sU');
+define('SCALD_SAS_MATCH_PATTERN', '/\[\s*scald=(\d+)(?(?=:):([\w-]+))(?(?=\s+)\s+([^\]]*))\s*\]/');
+define('SCALD_RENDERED_MATCH_PATTERN', '/<!--\s*scald=(\d+)(?(?=:):([\w-]+))(?(?=\s+)\s+([^\]]*))\s*-->.*<!--\s*END scald=\1\s*-->/sU');
 
 // How many users to load and save at a time in order to rebuild Actions
-//  bitstrings
+// bitstrings.
 define('SCALD_ADMIN_ACTIONS_BATCH_LIMIT', 1);
 
 // How many users to register as Authors at a time during hook_enable().
-define('SCALD_ENABLE_BATCH_LIMIT',        100);
+define('SCALD_ENABLE_BATCH_LIMIT', 100);

@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- *   Default views for the Scald module.
+ * Default views for the Scald module.
  */
 
 /**
@@ -10,9 +10,8 @@
 function scald_views_default_views() {
   $views = array();
 
-  // Atoms listing view
-
-  $view = new view;
+  // Atoms listing view.
+  $view = new view();
   $view->name = 'scald_atoms';
   $view->description = t('Atoms listing view provided by Scald to access atoms.');
   $view->tag = '';

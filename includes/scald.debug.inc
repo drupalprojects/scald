@@ -9,15 +9,16 @@
  * @ingroup scald
  */
 
-require_once('scald.constants.inc');
+require_once 'scald.constants.inc';
 
 /**
- * Callback for Scald Debugging Console
+ * Callback for Scald Debugging Console.
  *
- * @param $sid
- *  The Scald ID of the Atom to load into the debugging console
- * @return
- *  XHTML for the Console page
+ * @param int $sid
+ *   The Scald ID of the Atom to load into the debugging console
+ *
+ * @return string
+ *   XHTML for the Console page
  */
 function scald_debug_console($sid) {
   return scald_render($sid, 'debug', NULL, TRUE);

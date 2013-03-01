@@ -1,24 +1,28 @@
 <?php
 /**
  * @file
- *   Provides a Views filter handler allowing to restrict the results to
- *   atoms the user can interact with.
+ * Provides a filter allowing to restrict the results by atoms actions.
  */
+
 class scald_views_handler_filter_actions extends views_handler_filter {
   /**
-   * Overrides operator_form: hardcode our bitwise AND, and tells Views
-   * that this filter doesn't expose an operator.
+   * Overrides operator_form.
+   *
+   * Hardcode our bitwise AND, and tells Views that this filter doesn't
+   * expose an operator.
    */
   function operator_form(&$form, &$form_state) {
     $this->no_operator = TRUE;
     $form['operator'] = array(
       '#type' => 'value',
-      '#value' => '&'
+      '#value' => '&',
     );
   }
 
   /**
-   * Overrides value_form: provides checkboxes for the defined actions.
+   * Overrides value_form.
+   *
+   * Provides checkboxes for the defined actions.
    */
   function value_form(&$form, &$form_state) {
     $old_default = !is_array($this->options['value']);
@@ -35,12 +39,14 @@ class scald_views_handler_filter_actions extends views_handler_filter {
       '#title' => t('Actions'),
       '#type' => 'checkboxes',
       '#options' => $options,
-      '#default_value' => $defaults
+      '#default_value' => $defaults,
     );
   }
 
   /**
-   * Overrides query: change the operator before querying.
+   * Overrides query.
+   *
+   * Change the operator before querying.
    */
   function query() {
     if (is_array($this->options['value'])) {
@@ -60,16 +66,18 @@ class scald_views_handler_filter_actions extends views_handler_filter {
   }
 
   /**
-   * Overrides admin_summary: display user friendly label.
+   * Overrides admin_summary.
+   *
+   * Display user friendly label.
    */
-function admin_summary() {
-  $actions = scald_actions();
-  $names = array();
-  foreach ($actions as $name => $action) {
-    if (!empty($this->options['value'][$name])) {
-      $names[] = $action['title'];
+  function admin_summary() {
+    $actions = scald_actions();
+    $names = array();
+    foreach ($actions as $name => $action) {
+      if (!empty($this->options['value'][$name])) {
+        $names[] = $action['title'];
+      }
     }
+    return implode(',', $names);
   }
-  return implode(',', $names);
-}
 }
