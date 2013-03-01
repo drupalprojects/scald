@@ -1,11 +1,8 @@
 <?php
-
 /**
  * @file
  * Scald Images Installation
  */
-
-
 
 /**
  * Implements hook_install().
@@ -15,6 +12,9 @@ function scald_image_install() {
   $instance = field_read_instance('scald_atom', 'scald_thumbnail', 'image');
   if ($instance) {
     $instance['label'] = 'Image';
+    foreach ($instance['display'] as $view_mode => $settings) {
+      $instance['display'][$view_mode]['type'] = 'hidden';
+    }
     field_update_instance($instance);
   }
 
@@ -23,12 +23,6 @@ function scald_image_install() {
   $context_config = scald_context_config_load('sdl_library_item');
   $context_config->transcoder['image']['*'] = 'style-Library';
   scald_context_config_save($context_config);
-}
-
-/**
- * Implements hook_uninstall().
- */
-function scald_image_uninstall() {
 }
 
 /**
