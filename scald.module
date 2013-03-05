@@ -1917,6 +1917,7 @@ function scald_menu() {
     'page arguments' => array(3, 2),
     'access callback' => 'scald_atom_add_access',
     'access arguments' => array(2),
+    'theme callback' => 'ajax_base_page_theme',
     'file' => 'includes/scald.pages.inc',
     'type' => MENU_CALLBACK,
   );
@@ -1954,6 +1955,7 @@ function scald_menu() {
     'page arguments' => array(3, 1),
     'access callback' => 'scald_action_permitted',
     'access arguments' => array(1, 'edit'),
+    'theme callback' => 'ajax_base_page_theme',
     'file' => 'includes/scald.pages.inc',
   );
 
