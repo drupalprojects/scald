@@ -104,3 +104,17 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
     $atom->rendered->player = theme('image_style', array('path' => $atom->file_source, 'style_name' => $preset['name']));
   }
 }
+
+/**
+ * Implements hook_scald_update_atom().
+ */
+function scald_image_scald_update_atom($atom, $mode) {
+  if ($mode == 'atom') {
+    if ($atom->scald_thumbnail) {
+      // The thumbnail field is also the base entity. We keep them in
+      // synchronisation when user update that field.
+      $atom->base_id = $atom->scald_thumbnail[LANGUAGE_NONE][0]['fid'];
+    }
+  }
+}
+
