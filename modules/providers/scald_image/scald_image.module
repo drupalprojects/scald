@@ -61,6 +61,19 @@ function scald_image_scald_transcoders() {
 }
 
 /**
+ * Implements hook_scald_player().
+ */
+function scald_image_scald_player() {
+  return array(
+    'image_figure' => array(
+      'name' => 'HTML5 Image player',
+      'description' => 'The HTML5 player using figure/figcaption for all image atoms.',
+      'type' => array('image'),
+    ),
+  );
+}
+
+/**
  * Implements hook_scald_fetch().
  */
 function scald_image_scald_fetch($atom, $type) {
@@ -99,6 +112,14 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
       $atom->thumbnail_transcoded = image_style_path($preset['name'], $atom->thumbnail_source);
       $atom->rendered->thumbnail_transcoded_url = image_style_url($preset['name'], $atom->thumbnail_source);
     }
+  }
+  elseif ($mode == 'player') {
+    $atom->rendered->player = '
+      <figure class="scald-atom scald-atom-image">
+        <img src="' . $atom->rendered->file_transcoded_url . '" alt="" />
+        <figcaption>' . check_plain($atom->title) . '</figcaption>
+      </figure>
+    ';
   }
   elseif ($mode == 'atom') {
     $atom->rendered->player = theme('image_style', array('path' => $atom->file_source, 'style_name' => $preset['name']));
