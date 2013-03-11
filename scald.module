@@ -1780,6 +1780,18 @@ function scald_field_extra_fields() {
   return $extra;
 }
 
+/**
+ * Implements hook_form_FORM_ID_alter() of field_ui_display_overview_form().
+ */
+function scald_form_field_ui_display_overview_form_alter(&$form, $form_state) {
+  if ($form['#entity_type'] !== 'scald_atom') {
+    return;
+  }
+
+  $form['fields']['atom']['format']['config'] = array(
+    '#markup' => '<p>' . t('The display of the core atom could be configured at the <a href="@url">contexts page</a>.', array('@url' => url('admin/structure/scald/' . $form['#bundle'] . '/contexts'))) . '</p>',
+  );
+}
 
 /**
  * Implements hook_permission().
