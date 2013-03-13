@@ -141,6 +141,15 @@ function scald_views_data() {
     ),
   );
 
+  $data['scald_atoms']['data'] = array(
+    'title' => t('Data'),
+    'help' => t("Free-form data associated to this atom. The content will be atom and provider specific."),
+    'field' => array(
+      'handler' => 'scald_views_handler_field_data',
+      'click sortable' => FALSE,
+    ),
+  );
+
   return $data;
 }
 
