@@ -176,12 +176,35 @@ function hook_scald_action($atom, $action, $mode) {
 
 /**
  * Respond to atom prerender.
+ *
+ * @param $atom
+ *   The atom being created.
+ *
+ * @param $mode
+ *   Role of the callee function. Can have the following values:
+ *   - "type" (not really, as we don't have type provider now)
+ *   - "atom"
+ *   - "transcoder"
+ *   - "context"
+ *   - "player"
+ *
  */
 function hook_scald_prerender($atom, $context, $options, $mode) {
 }
 
 /**
  * Respond to atom render.
+ *
+ * It is not a really hook. Only one module is invoke.
+ *
+ * @param $atom
+ *   The atom being rendered.
+ *
+ * @param $context
+ *   The context used to render.
+ *
+ * @param $options
+ *   The options which is a string in JSON format.
  */
 function hook_scald_render($atom, $context, $options) {
 }
