@@ -69,8 +69,34 @@ function scald_image_scald_player() {
       'name' => 'HTML5 Image player',
       'description' => 'The HTML5 player using figure/figcaption for all image atoms.',
       'type' => array('image'),
+      'settings' => array(
+        'classes' => '',
+        'caption' => '[atom:title], by [atom:author]',
+      ),
     ),
   );
+}
+
+/**
+ * Implements hook_scald_player_settings_form().
+ */
+function scald_image_scald_player_settings_form($form, &$form_state) {
+  $element = array();
+
+  $element['classes'] = array(
+    '#type' => 'textfield',
+    '#title' => t('CSS classes'),
+    '#size' => 40,
+    '#default_value' => $form['#scald']['player_settings']['classes'],
+  );
+  $element['caption'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Text pattern used for caption'),
+    '#size' => 40,
+    '#default_value' => $form['#scald']['player_settings']['caption'],
+  );
+
+  return $element;
 }
 
 /**
@@ -89,15 +115,15 @@ function scald_image_scald_fetch($atom, $type) {
  * Implements hook_scald_prerender().
  */
 function scald_image_scald_prerender($atom, $context, $options, $mode) {
-  // Find out which transcoder is in use. This seems unnecesarilly complex.
+  // Find out which transcoder is in use.
   $contexts = scald_contexts();
+  $config = scald_context_config_load($context);
 
-  if (empty($contexts[$context]['type_format'][$atom->type])) {
+  if (!$transcoder = $config->transcoder[$atom->type]['*']) {
     return;
   }
 
-  $context_config = $contexts[$context]['type_format'][$atom->type];
-  if (!preg_match('/^style-(.*)$/', $context_config['transcoder'], $match)) {
+  if (!preg_match('/^style-(.*)$/', $transcoder, $match)) {
     return;
   }
 
@@ -114,10 +140,13 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
     }
   }
   elseif ($mode == 'player') {
+    $settings = $config->player[$atom->type]['settings'];
+    $classes = array_merge(array('scald-atom', 'scald-atom-image'), explode(' ', check_plain($settings['classes'])));
+    $caption = token_replace($settings['caption'], array('atom' => $atom));
     $atom->rendered->player = '
-      <figure class="scald-atom scald-atom-image">
+      <figure class="' . implode(' ', $classes) . '">
         <img src="' . $atom->rendered->file_transcoded_url . '" alt="" />
-        <figcaption>' . check_plain($atom->title) . '</figcaption>
+        <figcaption>' . $caption . '</figcaption>
       </figure>
     ';
   }
