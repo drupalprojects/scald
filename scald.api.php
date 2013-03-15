@@ -87,6 +87,20 @@ function hook_scald_player() {
 }
 
 /**
+ * Settings form for player.
+ *
+ * It is not a really hook. Only one module is invoke.
+ *
+ * @param $form
+ *
+ * @param $form_state
+ *
+ * $form_state['scald'] contains atom type, context and player value.
+ */
+function hook_scald_player_settings_form($form, &$form_state) {
+}
+
+/**
  * Respond to atom insertion.
  *
  * It is not a really hook. Only one module is invoke. This function is a direct

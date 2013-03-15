@@ -406,8 +406,18 @@ function scald_admin_contexts_form($form, $form_state, $type) {
       '#title'           => t('Player'),
       '#options'         => $player_options,
       '#default_value'   => isset($context['player'][$type->type]) ? $context['player'][$type->type]['*'] : 'default',
+      '#ajax'            => array(
+        'callback' => 'scald_admin_contexts_player_ajax',
+        'wrapper' => $name . '-player-settings',
+      ),
     );
 
+    $current_player = isset($form_state['values'][$name . '_playe']) ? $form_state['values'][$name . '_playe'] : $form[$name][$name . '_playe']['#default_value'];
+    $form[$name][$name . '_player_settings'] = array(
+      '#markup' => empty($players[$current_player]['settings']) ? '' : t('Configure the player <a href="@url">settings</a>.', array('@url' => url('admin/structure/scald/' . $type->type . '/player/' . $name . '/' . $current_player))),
+      '#prefix' => '<div id="' . $name . '-player-settings">',
+      '#suffix' => '</div>',
+    );
   }
 
   $form['submit'] = array(
@@ -416,6 +426,12 @@ function scald_admin_contexts_form($form, $form_state, $type) {
   );
 
   return $form;
+}
+
+function scald_admin_contexts_player_ajax($form, $form_state) {
+  $context_name = substr($form_state['triggering_element']['#name'], -6);
+  $type_name = $form_state['build_info']['args'][0]->type;
+  return $form[$type_name][$type_name . '_player_settings'];
 }
 
 /**
@@ -521,3 +537,79 @@ function scald_settings_form_submit($form, &$form_state) {
   $field['settings']['allowed_values'][0]['vocabulary'] = $vocabulary->machine_name;
   field_update_field($field);
 }
+
+/**
+ * Player settings form.
+ */
+function scald_player_settings_form($form, $form_state, $type, $context, $player) {
+  $contexts = scald_contexts();
+  $players = scald_players();
+
+  // Sanity check
+  if (!isset($contexts[$context]) || !isset($players[$player])) {
+    return;
+  }
+
+  // If the current player is not the same as the configure player, display a
+  // notice message.
+  if (($current_player = $contexts[$context]['player'][$type->type]['*']) != $player) {
+    drupal_set_message(t('You are configuring the player %player, which is not the current player %current_player.', array('%player' => $player, '%current_player' => $current_player)), 'warning');
+  }
+
+  $settings_form = array();
+  $function = $players[$player]['provider'] . '_scald_player_settings_form';
+  if (function_exists($function)) {
+    // Default settings
+    $player_settings = isset($contexts[$context]['player'][$type->type]['settings']) ? $contexts[$context]['player'][$type->type]['settings'] : array();
+    if (isset($players[$player]['settings'])) {
+      $player_settings += $players[$player]['settings'];
+    }
+
+    $form['#scald'] =array(
+      'type' => $type,
+      'context' => $context,
+      'player' => $player,
+      'player_settings' => $player_settings,
+    );
+
+    $settings_form = $function($form, $form_state);
+  }
+
+  if ($settings_form) {
+    $form['settings'] = array(
+      '#type' => 'container',
+      'settings' => $settings_form,
+      'actions' => array(
+        '#type' => 'action',
+        'save_settings' => array(
+          '#type' => 'submit',
+          '#value' => t('Update'),
+          '#op' => 'update',
+        ),
+      ),
+    );
+  }
+
+  return $form;
+}
+
+
+/**
+ * Player settings form submission.
+ */
+function scald_player_settings_form_submit($form, &$form_state) {
+  $op = $form_state['triggering_element']['#op'];
+  if ($op == 'update') {
+    $scald = $form['#scald'];
+    $config = scald_context_config_load($scald['context']);
+
+    foreach ($scald['player_settings'] as $key => $value) {
+      $config->player[$scald['type']->type]['settings'][$key] = $form_state['values'][$key];
+    }
+    scald_context_config_save($config);
+    cache_clear_all('*', 'cache_scald', TRUE);
+
+    drupal_set_message(t('Your player settings has been updated.'));
+  }
+}
+

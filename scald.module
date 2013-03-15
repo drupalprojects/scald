@@ -1182,26 +1182,6 @@ function scald_prerender(&$atom, $context, $options = NULL) {
   $atom->rendered->description = $atom->description;
   $atom->rendered->nocache = FALSE;
 
-  // Invoke the Type & Atom prerenders hooks.
-  module_invoke($types[$atom->type]->provider, 'scald_prerender', $atom, $context, $options, 'type');
-  module_invoke($atom->provider, 'scald_prerender', $atom, $context, $options, 'atom');
-
-  // Invoke the Transcoder Provider prerender hook -- only if there is a
-  // Transcoder specified for this Context.
-  if (!empty($context_config['type_format']) && !empty($context_config['type_format'][$atom->type])) {
-    module_invoke($transcoders[$context_config['type_format'][$atom->type]['transcoder']]['provider'], 'scald_prerender', $atom, $context, $options, 'transcoder');
-  }
-
-  // Invoke the Context prerender hook.
-  module_invoke($context_config['provider'], 'scald_prerender', $atom, $context, $options, 'context');
-
-  // Invoke the Player prerender hook.
-  $player = isset($context_config['player'][$atom->type]) ? $context_config['player'][$atom->type]['*'] : 'default';
-  if (!isset($players[$player])) {
-    $player = 'default';
-  }
-  module_invoke($players[$player]['provider'], 'scald_prerender', $atom, $context, $options, 'player');
-
   // Populate default rendered members & validate other rendered members.
   $atom->rendered->title = check_plain($atom->rendered->title);
   $atom->rendered->description = filter_xss($atom->rendered->description);
@@ -1244,6 +1224,25 @@ function scald_prerender(&$atom, $context, $options = NULL) {
     'link' => l($name, 'user/' . $atom->publisher),
   );
 
+  // Invoke the Type & Atom prerenders hooks.
+  module_invoke($types[$atom->type]->provider, 'scald_prerender', $atom, $context, $options, 'type');
+  module_invoke($atom->provider, 'scald_prerender', $atom, $context, $options, 'atom');
+
+  // Invoke the Transcoder Provider prerender hook -- only if there is a
+  // Transcoder specified for this Context.
+  if (!empty($context_config['type_format']) && !empty($context_config['type_format'][$atom->type])) {
+    module_invoke($transcoders[$context_config['type_format'][$atom->type]['transcoder']]['provider'], 'scald_prerender', $atom, $context, $options, 'transcoder');
+  }
+
+  // Invoke the Context prerender hook.
+  module_invoke($context_config['provider'], 'scald_prerender', $atom, $context, $options, 'context');
+
+  // Invoke the Player prerender hook.
+  $player = isset($context_config['player'][$atom->type]) ? $context_config['player'][$atom->type]['*'] : 'default';
+  if (!isset($players[$player])) {
+    $player = 'default';
+  }
+  module_invoke($players[$player]['provider'], 'scald_prerender', $atom, $context, $options, 'player');
 }
 
 /**
@@ -1897,6 +1896,14 @@ function scald_menu() {
     'access arguments'  => array('administer scald'),
     'file'              => 'includes/scald.admin.inc',
     'type'              => MENU_LOCAL_TASK,
+  );
+  $items['admin/structure/scald/%scald_type/player/%/%'] = array(
+    'title'             => 'Player settings',
+    'page callback'     => 'drupal_get_form',
+    'page arguments'    => array('scald_player_settings_form', 3, 5, 6),
+    'access arguments'  => array('administer scald'),
+    'file'              => 'includes/scald.admin.inc',
+    'type'              => MENU_NORMAL_ITEM,
   );
   $items['admin/config/content/scald'] = array(
     'title'             => 'Scald',
