@@ -4,11 +4,15 @@
  *
  * Include this file into your editor CSS so that Atom wrappers have a better
  * visualisation.
- * To configure the RTE CSS using WYSIWYG module, go to
- * admin/config/content/wysiwyg/profile/YOUR_FILTER/edit, in the CSS section
- * choose "Define CSS" then enter CSS filepaths in the below textfield.
+ *
+ * It is automatically included when the DnD plugin is used.
  */
 
 .dnd-atom-wrapper {
-  outline: 3px #ccc solid;
+  padding: 5px;
 }
+.dnd-atom-wrapper:hover {
+  outline: 2px #ccc solid;
+  background-color: #ddd;
+}
+
