@@ -1673,7 +1673,7 @@ function scald_entity_info() {
         'path' => 'admin/structure/scald/%scald_type',
         'bundle argument' => 3,
         'real path' => 'admin/structure/scald/' . $type,
-        'access arguments' => array('administer content types'),
+        'access arguments' => array('administer scald'),
       ),
     );
   }
