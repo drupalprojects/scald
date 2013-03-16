@@ -11,6 +11,9 @@ dnd.getWrapperElement = function(element) {
     element = element.getParent();
   }
   if (element) {
+    element.setAttributes({
+      contentEditable: 'false'
+    });
     this.atomCurrent = element;
   }
   return element;
