@@ -261,27 +261,23 @@ function dnd_suppress_library($set = TRUE) {
 }
 
 /**
- * Implementation of hook_wywiwyg_plugin().
+ * Implements hook_wywiwyg_plugin().
  */
-function dnd_wysiwyg_plugin($editor, $version=0) {
+function dnd_wysiwyg_plugin($editor, $version) {
   $plugins = array();
   switch ($editor) {
-    case 'tinymce':
-      if ($version > 3) {
-        $plugins['forcecontainer'] = array(
-          'title' => t('Force Container Plugin'),
-          'description' => t('A custom plugin to forces a selection up to the outer container of a given element.'),
-          'extensions' => array('forcecontainer' => t('Force Container')),
-          'path' => drupal_get_path('module', 'dnd') . '/plugins/tinymce/editor_plugin_src.js',
-          'load' => TRUE,
-          'options' => array(
-            'forcecontainer_class' => 'dnd-drop-wrapper',
-            'forcecontainer_trigger_dnd' => TRUE,
-          ),
-        );
-      }
+    case 'ckeditor':
+      $plugins['dnd'] = array(
+        'path' => drupal_get_path('module', 'dnd') . '/plugins/ckeditor',
+        'filename' => 'plugin.js',
+        'buttons' => array(
+          'dnd' => t('Scald DnD integration'),
+        ),
+        'load' => TRUE,
+      );
       break;
   }
+
   return $plugins;
 }
 
