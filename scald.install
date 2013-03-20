@@ -512,7 +512,7 @@ function scald_update_7006() {
       ),
     ),
   );
-  db_create_table('scald_context_config', drupal_get_schema_unprocessed('scald', 'scald_context_config'));
+  db_create_table('scald_context_config', $schema_scald_context_config);
 
   $contexts = array();
   $result = db_select('scald_context_type_transcoder', 's')
