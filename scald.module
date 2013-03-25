@@ -2110,6 +2110,17 @@ function scald_context_config_load($name) {
     $context_config = ctools_export_new_object('scald_context_config');
     $context_config->context = $name;
   }
+
+  // Add default settings
+  foreach (scald_types() as $type) {
+    if (!isset($context_config->transcoder[$type->type]['*'])) {
+      $context_config->transcoder[$type->type]['*'] = 'passthrough';
+    }
+    if (!isset($context_config->player[$type->type]['*'])) {
+      $context_config->player[$type->type]['*'] = 'default';
+    }
+  }
+
   return $context_config;
 }
 
