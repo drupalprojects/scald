@@ -24,6 +24,21 @@ function scald_schema() {
 
   $schema['cache_scald'] = drupal_get_schema_unprocessed('system', 'cache');
 
+  // This is a temporary fix for PostgreSQL, as it cannot have sub parted unique
+  // keys. The meta issue to fix it in core is http://drupal.org/node/1571842
+  $connection_info = Database::getConnectionInfo();
+  $driver = $connection_info['default']['driver'];
+  if ($driver == 'pgsql') {
+    $unique_keys = array('provider', 'type', 'base_id');
+  }
+  else {
+    $unique_keys = array(
+      array('provider', 64),
+      array('type', 64),
+      array('base_id', 64),
+    );
+  }
+
   $schema['scald_atoms'] = array(
     'description' => 'The Scald Atom registry.',
     'fields'      => array(
@@ -87,11 +102,7 @@ function scald_schema() {
     ),
     'primary key' => array('sid'),
     'unique keys' => array(
-      'u_provider_type_base_id' => array(
-        array('provider', 64),
-        array('type', 64),
-        array('base_id', 64),
-      ),
+      'u_provider_type_base_id' => $unique_keys,
     ),
     'indexes'     => array(
       'i_sid_provider_base_id'  => array(
