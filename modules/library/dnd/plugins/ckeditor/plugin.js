@@ -35,7 +35,9 @@ CKEDITOR.plugins.add('dnd', {
 
     CKEDITOR.dialog.add('atomProperties', this.path + 'dialogs/dnd.js' );
 
-    var command = editor.addCommand('atomProperties', new CKEDITOR.dialogCommand('atomProperties'));
+    var command = editor.addCommand('atomProperties', new CKEDITOR.dialogCommand('atomProperties', {
+      allowedContent: 'div(*);iframe'
+    }));
 
     editor.addCommand('atomDelete', {
       exec: function (editor) {
