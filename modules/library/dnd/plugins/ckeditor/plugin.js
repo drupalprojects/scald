@@ -28,9 +28,11 @@ CKEDITOR.plugins.add('dnd', {
 
   init: function (editor) {
     var path = this.path;
-    editor.on('instanceReady', function (evt) {
+    editor.on('mode', function (evt) {
       var editor = evt.editor;
-      editor.document.appendStyleSheet(path + '../../css/editor.css');
+      if (editor.mode == 'wysiwyg') {
+        editor.document.appendStyleSheet(path + '../../css/editor.css');
+      }
     });
 
     CKEDITOR.dialog.add('atomProperties', this.path + 'dialogs/dnd.js' );
