@@ -1,7 +1,0 @@
-name = Scald Twitter
-core = 7.x
-package = Scald
-description = Provider: Provides Text atoms linked to Tweets
-dependencies[] = scald
-stylesheets[all][] = scald_twitter.css
-scripts[] = scald_twitter.js
