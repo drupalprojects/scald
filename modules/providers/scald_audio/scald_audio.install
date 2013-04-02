@@ -11,3 +11,11 @@
 function scald_audio_install() {
   scald_add_type('audio', 'Audio', 'Audio');
 }
+
+/**
+ * Implements hook_uninstall().
+ */
+function scald_audio_uninstall() {
+  scald_remove_type('audio');
+}
+

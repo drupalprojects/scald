@@ -26,6 +26,13 @@ function scald_image_install() {
 }
 
 /**
+ * Implements hook_uninstall().
+ */
+function scald_image_uninstall() {
+  scald_remove_type('image');
+}
+
+/**
  * Hide the Image field because the image is rendered once in the Atom core.
  *
  * This make Scald Image consistent with other atom types.

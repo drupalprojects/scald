@@ -146,6 +146,30 @@ function scald_add_type($type, $title, $description) {
 }
 
 /**
+ * Remove a Scald unified type.
+ *
+ * This function removes a type. It can be used inside atom providers
+ * hook_uninstall(), to easily ensure that the type of the atom the module
+ * provides is removed if no other use it.
+ *
+ * @param string $type
+ *   Machine name of atom type.
+ *
+ * @return bool
+ *   TRUE if the type was removed, FALSE otherwise.
+ */
+function scald_remove_type($type) {
+  if (!array_key_exists($type, scald_atom_providers())) {
+    db_delete('scald_types')
+      ->condition('type', $type)
+      ->execute();
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
  * Get available Scald Contexts.
  *
  * This function determines and returns a structured array specifying all the

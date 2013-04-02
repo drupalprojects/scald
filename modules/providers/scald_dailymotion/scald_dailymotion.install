@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Scald Dailymotion Installation
+ * Scald Dailymotion Installation.
  */
 
 /**
@@ -11,3 +11,11 @@
 function scald_dailymotion_install() {
   scald_add_type('video', 'Video', 'Video');
 }
+
+/**
+ * Implements hook_uninstall().
+ */
+function scald_dailymotion_uninstall() {
+  scald_remove_type('video');
+}
+
