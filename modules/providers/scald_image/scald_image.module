@@ -57,6 +57,17 @@ function scald_image_scald_transcoders() {
       )
     );
   }
+  if (module_exists('picture')) {
+    foreach (picture_mapping_load_all() as $name => $style) {
+      $transcoders['group-' . $name] = array(
+        'title' => t('@group (Picture group)', array('@group' => $name)),
+        'description' => t('Use the Picture group @group to prepare the image', array('@group' => $name)),
+        'formats' => array(
+          'image' => 'passthrough',
+        )
+      );
+    }
+  }
   return $transcoders;
 }
 
@@ -121,22 +132,32 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
   // one of the transcoder provided by Scald Image.
   $style_name = NULL;
   if ($transcoder = $config->transcoder[$atom->type]['*']) {
+    // Image style support.
     if (preg_match('/^style-(.*)$/', $transcoder, $match)) {
       $style_name = $match[1];
+    }
+    // Picture support.
+    elseif (preg_match('/^group-(.*)$/', $transcoder, $match) && module_exists('picture')) {
+      $mappings = picture_mapping_load($match[1]);
     }
   }
 
   if ($mode == 'transcoder') {
+    // Scald Image can only do 1:1 transcoding. For Picture integration, it is
+    // done in the Atom mode to avoid duplicate code from Picture module.
     if (empty($style_name)) {
       return;
     }
 
     $preset = image_style_load($style_name);
+
     if (!empty($atom->file_source)) {
       $atom->file_transcoded = image_style_path($preset['name'], $atom->file_source);
       $atom->rendered->file_transcoded_url = image_style_url($preset['name'], $atom->file_source);
     }
     if (!empty($atom->thumbnail_source)) {
+      // Deprecated. Thumbnail will no longer be transcoded, it would be managed
+      // though Field API.
       $atom->thumbnail_transcoded = image_style_path($preset['name'], $atom->thumbnail_source);
       $atom->rendered->thumbnail_transcoded_url = image_style_url($preset['name'], $atom->thumbnail_source);
     }
@@ -145,13 +166,9 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
     $settings = $config->player[$atom->type]['settings'];
     $classes = array_merge(array('scald-atom', 'scald-atom-image'), explode(' ', check_plain($settings['classes'])));
     $caption = token_replace($settings['caption'], array('atom' => $atom));
-    $image = '<img src="' . $atom->rendered->file_transcoded_url . '" alt="" />';
-    if (!empty($options['link'])) {
-      $image = l($image, $options['link'], array('html' => TRUE));
-    }
     $atom->rendered->player = '
       <figure class="' . implode(' ', $classes) . '">
-        ' . $image . '
+        ' . $atom->rendered->player . '
         <figcaption>' . $caption . '</figcaption>
       </figure>
     ';
@@ -159,6 +176,23 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
   elseif ($mode == 'atom') {
     if (!empty($style_name)) {
       $atom->rendered->player = theme('image_style', array('path' => $atom->file_source, 'style_name' => $style_name));
+    }
+    elseif (isset($mappings)) {
+      foreach ($mappings->mapping as $breakpoint_name => $multipliers) {
+        if (!empty($multipliers)) {
+          foreach ($multipliers as $multiplier => $image_style) {
+            if (!empty($image_style)) {
+              $fallback_image_style = $image_style;
+              break 2;
+            }
+          }
+        }
+      }
+      // The fallback_image_style is the first image style we find, and so if it
+      // is empty then we do not have any image style.
+      if (!empty($fallback_image_style)) {
+        $atom->rendered->player = theme('picture', array('uri' => $atom->file_source, 'style_name' => $fallback_image_style, 'breakpoints' => $mappings->mapping));
+      }
     }
     else {
       $path = empty($atom->rendered->file_transcoded_url) ? $atom->file_source : $atom->rendered->file_transcoded_url;
