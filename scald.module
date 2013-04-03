@@ -2258,7 +2258,7 @@ function scald_compute_role_actions($role) {
   // For each action, check the role permissions, and add the action bitmask
   // to our counter if the permission is granted.
   foreach ($scald_actions as $key => $action) {
-    if (!empty($role_permissions[$key . 'own atom'])) {
+    if (!empty($role_permissions[$key . ' own atom'])) {
       $role_actions['own'] |= $action['bitmask'];
     }
     if (!empty($role_permissions[$key . ' any atom'])) {
