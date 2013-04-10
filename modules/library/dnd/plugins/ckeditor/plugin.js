@@ -32,6 +32,8 @@ CKEDITOR.plugins.add('dnd', {
       var editor = evt.editor;
       if (editor.mode == 'wysiwyg') {
         editor.document.appendStyleSheet(path + '../../css/editor.css');
+        // Prevents atom from being edited inside the editor.
+        $(editor.document.$).find('div.dnd-atom-wrapper').attr('contentEditable', false);
       }
     });
 
@@ -75,6 +77,11 @@ CKEDITOR.plugins.add('dnd', {
     });
 
     editor.on('contentDom', function (evt) {
+      editor.document.on('drop', function (evt) {
+        // Prevents atom from being edited inside the editor.
+        $(editor.document.$).find('div.dnd-atom-wrapper').attr('contentEditable', false);
+      });
+
       editor.document.on('click', function (evt) {
         if (element = dnd.getWrapperElement(evt.data.getTarget())) {
         }
@@ -145,4 +152,3 @@ CKEDITOR.plugins.add('dnd', {
   }
 });
 })(jQuery, Drupal.dnd);
-
