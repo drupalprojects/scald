@@ -1,6 +1,6 @@
 name = Scald Image
 description = Allows the creation and edition of Images using the core Image module. Allows the use of image styles as transcoders.
-package = Scald
+package = Scald Providers
 core = 7.x
 dependencies[] = scald
 dependencies[] = image

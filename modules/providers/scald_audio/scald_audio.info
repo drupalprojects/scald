@@ -1,7 +1,7 @@
 name = Scald Audio
-description = Allows the creation and edition of WAudio.
+description = Allows the creation and edition of Audio.
 core = 7.x
-package = Scald
+package = Scald Providers
 
 dependencies[] = scald
 
