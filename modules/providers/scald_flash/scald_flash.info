@@ -1,5 +1,5 @@
 name = Scald Flash
-description = Provide Flash atoms from local SWF files.
+description = Provides Flash atoms from SWF files.
 package = Scald Providers
 core = 7.x
 dependencies[] = scald

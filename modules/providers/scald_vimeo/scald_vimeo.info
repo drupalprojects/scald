@@ -1,5 +1,5 @@
 name = Scald Vimeo
-description = Provide Video atoms linked to Vimeo videos.
+description = Provides Video atoms from Vimeo.
 package = Scald Providers
 core = 7.x
 dependencies[] = scald
