@@ -22,17 +22,18 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
         return;
       }
       var data, legend;
-      data = decodeURIComponent(Drupal.dnd.atomCurrent.data('scald')).match(/(\d+):([^:]+)([\s\S]*)$/);
-      // Get the legend directly from the markup instead of from data-*. Also
-      // turn back the protected comment.
+      // Get the data directly from the comment markup.
+      data = Drupal.dnd.atomCurrent.getChild(0).getHtml().replace(/<!--\{cke_protected\}\{C\}([\s\S]+?)-->.*/, function(match, data) {
+        return decodeURIComponent(data);
+      });
       legend = Drupal.dnd.atomCurrent.getChild(1);
       legend = legend ? legend.getHtml().replace( /<!--\{cke_protected\}\{C\}([\s\S]+?)-->/g, function(match, data) {
         return decodeURIComponent(data);
       }).trim() : false;
 
       atom = {
-        sid: data[1],
-        context: data[2],
+        sid: data.match(/scald=(\d+)/)[1],
+        context: data.match(/\:(\S+)/)[1],
         legend: legend
       };
       this.setupContent(atom);
