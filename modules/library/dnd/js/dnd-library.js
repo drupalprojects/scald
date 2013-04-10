@@ -134,8 +134,7 @@ $.extend($.expr[":"], {
  */
 Drupal.theme.prototype.scaldEmbed = function(atom, context) {
   context = context ? context : Drupal.settings.dnd.contextDefault;
-  var sas = atom.sid + ':' + context + (atom.meta.legend ? ':' + atom.meta.legend : '');
-  var output = '<div class="dnd-atom-wrapper" data-scald="' + encodeURIComponent(sas) + '"><div class="dnd-drop-wrapper">' + atom.contexts[context] + '</div>';
+  var output = '<div class="dnd-atom-wrapper" data-scald="' + atom.sid + ':' + context + '"><div class="dnd-drop-wrapper">' + atom.contexts[context] + '</div>';
   if (atom.meta.legend) {
     output += '<div class="dnd-legend-wrapper">' + atom.meta.legend + '</div>';
   }

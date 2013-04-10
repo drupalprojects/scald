@@ -33,6 +33,8 @@ function scald_flash_uninstall() {
   $defaults = variable_get('scald_atom_defaults', array());
   unset($defaults['flash']);
   $defaults = variable_set('scald_atom_defaults', $defaults);
+
+  scald_remove_type('flash');
 }
 
 /**

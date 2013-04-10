@@ -376,6 +376,18 @@ function mee_scald_atom_delete($atom) {
 }
 
 /**
+ * Implements hook_node_revision_delete().
+ */
+function mee_node_revision_delete($revision) {
+  // Delete all resource associations for this revision
+  db_delete('mee_resource')
+    ->condition('entity_type', 'node')
+    ->condition('entity_id', $revision->nid)
+    ->condition('revision_id', $revision->vid)
+    ->execute();
+}
+
+/**
  * Returns HTML for the MEE resource list.
  *
  * @param $variables

@@ -1,6 +1,6 @@
 name = Scald Vimeo
+description = Provide Video atoms linked to Vimeo videos.
+package = Scald Providers
 core = 7.x
-php = 5.x
-package = Scald
-description = Provider: Provides Video atoms linked to Vimeo videos
 dependencies[] = scald
+
