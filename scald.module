@@ -753,9 +753,15 @@ function scald_fetch($sid, $rebuild = FALSE) {
     return $scald_atoms[$sid];
   }
 
-  // Let the Atom Type Provider handle any defaults.
   $types = scald_types();
 
+  // If the type or atom provider is no longer available, ignore the atom. It
+  // cannot be loaded nor deleted.
+  if (!isset($types[$atom->type]) || !module_exists($atom->provider)) {
+    return FALSE;
+  }
+
+  // Let the Atom Type Provider handle any defaults.
   module_invoke($types[$atom->type]->provider, 'scald_fetch', $atom, 'type');
 
   $atom->base_entity = NULL;
@@ -1353,7 +1359,10 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
 
   // Either a cache miss or an explicit rebuild.  Pull in the rest of the Atom.
   if (!scald_is_fetched($atom)) {
-    $atom = scald_fetch($sid);
+    // If the atom cannot be fetched, render it with the "no-access" context.
+    if (!$atom = scald_fetch($sid)) {
+      return scald_scald_render($atom, 'no-access');
+    }
   }
 
   scald_prerender($atom, $context, $options);
