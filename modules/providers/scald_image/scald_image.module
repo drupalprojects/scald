@@ -151,7 +151,6 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
         <figcaption>' . $caption . '</figcaption>
       </figure>
     ';
-    $atom->omit_legend = TRUE;
   }
   elseif ($mode == 'atom') {
     if (!empty($style_name)) {
