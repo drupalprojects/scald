@@ -1,9 +1,6 @@
 name = Scald Audio
-description = Allows the creation and edition of Audio.
-core = 7.x
+description = Provide Audio atoms from local files.
 package = Scald Providers
-
+core = 7.x
 dependencies[] = scald
 
-files[] = scald_audio.module
-files[] = scald_audio.install
