@@ -13,7 +13,7 @@ function dnd_admin_form() {
     '#type' => 'select',
     '#title' => t('Library'),
     '#default_value' => dnd_get_library(),
-    '#description' => t('The library that will available on node edit forms if they contains fields referencing rich media content, such as Multimedia Editorial Element or Ressource reference fields.'),
+    '#description' => t('The library that will available on node edit forms if they contains fields referencing rich media content, such as Multimedia Editorial Element or Resource reference fields.'),
     '#options' => $libraries,
   );
   return system_settings_form($form);

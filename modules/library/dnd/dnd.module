@@ -12,7 +12,7 @@ function dnd_menu() {
     'title' => 'Drag and Drop Library',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('dnd_admin_form'),
-    'description' => 'Configure the ressource library used when creating content.',
+    'description' => 'Configure the resource library used when creating content.',
     'access arguments' => array('administer dnd'),
     'file' => 'dnd.admin.inc',
   );
