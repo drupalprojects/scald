@@ -115,21 +115,23 @@ function scald_image_scald_fetch($atom, $type) {
  * Implements hook_scald_prerender().
  */
 function scald_image_scald_prerender($atom, $context, $options, $mode) {
-  // Find out which transcoder is in use.
-  $contexts = scald_contexts();
   $config = scald_context_config_load($context);
 
-  if (!$transcoder = $config->transcoder[$atom->type]['*']) {
-    return;
+  // Find out which transcoder is in use, and checks if it's
+  // one of the transcoder provided by Scald Image.
+  $style_name = NULL;
+  if ($transcoder = $config->transcoder[$atom->type]['*']) {
+    if (preg_match('/^style-(.*)$/', $transcoder, $match)) {
+      $style_name = $match[1];
+    }
   }
-
-  if (!preg_match('/^style-(.*)$/', $transcoder, $match)) {
-    return;
-  }
-
-  $preset = image_style_load($match[1]);
 
   if ($mode == 'transcoder') {
+    if (empty($style_name)) {
+      return;
+    }
+
+    $preset = image_style_load($style_name);
     if (!empty($atom->file_source)) {
       $atom->file_transcoded = image_style_path($preset['name'], $atom->file_source);
       $atom->rendered->file_transcoded_url = image_style_url($preset['name'], $atom->file_source);
@@ -149,9 +151,16 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
         <figcaption>' . $caption . '</figcaption>
       </figure>
     ';
+    $atom->omit_legend = TRUE;
   }
   elseif ($mode == 'atom') {
-    $atom->rendered->player = theme('image_style', array('path' => $atom->file_source, 'style_name' => $preset['name']));
+    if (!empty($style_name)) {
+      $atom->rendered->player = theme('image_style', array('path' => $atom->file_source, 'style_name' => $style_name));
+    }
+    else {
+      $path = empty($atom->rendered->file_transcoded_url) ? $atom->file_source : $atom->rendered->file_transcoded_url;
+      $atom->rendered->player = theme('image', array('path' => $path));
+    }
   }
 }
 
