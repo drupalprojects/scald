@@ -1605,7 +1605,9 @@ function scald_scald_prerender($atom, $context, $options, $mode) {
       break;
 
     case 'transcoder':
-      $atom->rendered->file_transcoded_url = file_create_url($atom->file_source);
+      if (!empty($atom->file_source)) {
+        $atom->rendered->file_transcoded_url = file_create_url($atom->file_source);
+      }
       break;
 
     case 'player':
