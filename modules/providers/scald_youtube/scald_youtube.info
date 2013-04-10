@@ -1,5 +1,5 @@
 name = Scald YouTube
-description = Provide Video atoms linked to YouTube videos.
+description = Provides Video atoms from YouTube.
 package = Scald Providers
 core = 7.x
 dependencies[] = scald

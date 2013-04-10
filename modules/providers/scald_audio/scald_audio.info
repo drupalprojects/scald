@@ -1,5 +1,5 @@
 name = Scald Audio
-description = Provide Audio atoms from local files.
+description = Provides Audio atoms from audio files.
 package = Scald Providers
 core = 7.x
 dependencies[] = scald
