@@ -57,20 +57,29 @@ function scald_admin_dashboard() {
     'header' => array(
       t('Context name'),
       t('Atom type'),
+      t('Module'),
       t('Property'),
       t('Actions'),
     ),
     'rows' => array(),
   );
 
+  $custom_contexts = variable_get('scald_custom_contexts', array());
   foreach (scald_contexts() as $name => $context) {
+    $actions = array();
+
+    // This is a context created through the UI, it could be edit or delete.
+    if (array_key_exists($name, $custom_contexts)) {
+      $actions[] = l(t('Edit'), 'admin/structure/scald/context/edit/' . $name);
+      $actions[] = l(t('Delete'), 'admin/structure/scald/context/delete/' . $name);
+    }
+
     $table['rows'][] = array(
       check_plain($context['title']) . '<div class="description">' . filter_xss_admin($context['description']) . '</div>',
       empty($context['formats']) ? '<em>' . t('not specified') . '</em>' : check_plain(implode(', ', array_keys($context['formats']))),
-      // @todo add more when the UI created context comes
+      $context['provider'],
       empty($context['hidden']) ? '' : t('hidden'),
-      // @todo add more when the UI created context comes
-      '',
+      implode(' ', $actions),
     );
   }
 
@@ -206,22 +215,32 @@ function scald_admin_type_form_submit($form, &$form_state) {
 /**
  * Form constructor for the context editing form.
  *
- * @param string $context
- *   (optional) Context name, when editing an existing Scald context. However we
- *   do not manage to get the edit form yet, so it is always NULL.
+ * @param string $context_name
+ *   (optional) Context name, when editing an existing Scald context.
  */
-function scald_admin_context_form($form, &$form_state, $context = NULL) {
-  // Default setting for the new context.
-  $context = array(
-    'name' => '',
-    'title' => '',
-    'description' => '',
-    'render_language' => 'XHTML',
-    'parseable' => TRUE,
-    'hidden' => FALSE,
-    'transcoder' => 'passthrough',
-    'formats' => array(),
-  );
+function scald_admin_context_form($form, &$form_state, $context_name = NULL) {
+  if ($context_name) {
+    // Edit an existing Scald context.
+    $custom_contexts = variable_get('scald_custom_contexts', array());
+    if (!array_key_exists($context_name, $custom_contexts)) {
+      drupal_set_message(t('Custom context not found: %context', array('%context' => $context_name)), 'error');
+      drupal_goto('admin/structure/scald');
+    }
+    else {
+      $context = $custom_contexts[$context_name];
+    }
+  }
+  else {
+    // Default setting for the new context.
+    $context = array(
+      'name' => '',
+      'title' => '',
+      'description' => '',
+      'render_language' => 'XHTML',
+      'parseable' => TRUE,
+      'formats' => array(),
+    );
+  }
 
   // Make the context array available to implementations of hook_form_alter.
   $form['#context'] = $context;
@@ -243,6 +262,7 @@ function scald_admin_context_form($form, &$form_state, $context = NULL) {
       'source' => array('title'),
       'exists' => 'scald_context_load',
     ),
+    '#disabled' => $context['name'] ? TRUE : FALSE,
     '#description' => t('A unique machine-readable name for this context. It must only contain lowercase letters, numbers, and underscores.'),
   );
 
@@ -278,15 +298,11 @@ function scald_admin_context_form($form, &$form_state, $context = NULL) {
     '#weight' => 40,
   );
 
-  // @todo allow to delete context
-  if (FALSE) {
-    if (!empty($type->type)) {
-      $form['actions']['delete'] = array(
-        '#type' => 'submit',
-        '#value' => t('Delete context'),
-        '#weight' => 45,
-      );
-    }
+  if ($context['name']) {
+    $form['actions']['delete'] = array(
+      '#markup' => l(t('Delete context'), 'admin/structure/scald/context/delete/' . $context['name']),
+      '#weight' => 45,
+    );
   }
 
   return $form;
@@ -325,6 +341,45 @@ function scald_admin_context_form_submit($form, &$form_state) {
   return;
 }
 
+/**
+ * Context delete confirm form.
+ *
+*  @param array $form
+*  @param array $form_state
+ * @param string $context_name
+ */
+function scald_admin_context_confirm_delete_form($form, &$form_state, $context_name) {
+  // Delete a Scald custom context.
+  $custom_contexts = variable_get('scald_custom_contexts', array());
+  if (!array_key_exists($context_name, $custom_contexts)) {
+    drupal_set_message(t('Custom context not found: %context', array('%context' => $context_name)), 'error');
+    drupal_goto('admin/structure/scald');
+  }
+
+  $form['#context'] = $custom_contexts[$context_name];
+
+  return confirm_form(
+    $form,
+    t('Are you sure you want to delete the Scald context %context?', array('%context' => $form['#context']['name'])),
+    'admin/structure/scald',
+    t('Any settings for this context will also be deleted. This action cannot be undone.')
+  );
+}
+
+/**
+ * Process scald_admin_context_confirm_delete_form form submission.
+ */
+function scald_admin_context_confirm_delete_form_submit($form, &$form_state) {
+  $context = $form['#context'];
+  $custom_contexts = variable_get('scald_custom_contexts', array());
+  unset($custom_contexts[$context['name']]);
+  variable_set('scald_custom_contexts', $custom_contexts);
+
+  $config = scald_context_config_load($context['name']);
+  scald_context_config_delete($config);
+
+  $form_state['redirect'] = 'admin/structure/scald';
+}
 
 /**
  * The Scald Admin page for Scald Atoms.

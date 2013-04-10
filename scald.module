@@ -1903,6 +1903,20 @@ function scald_menu() {
     'access arguments'  => array('administer scald'),
     'file'              => 'includes/scald.admin.inc',
   );
+  $items['admin/structure/scald/context/edit/%'] = array(
+    'title'             => 'Edit Scald context',
+    'page callback'     => 'drupal_get_form',
+    'page arguments'    => array('scald_admin_context_form', 5),
+    'access arguments'  => array('administer scald'),
+    'file'              => 'includes/scald.admin.inc',
+  );
+  $items['admin/structure/scald/context/delete/%'] = array(
+    'title'             => 'Delete Scald context',
+    'page callback'     => 'drupal_get_form',
+    'page arguments'    => array('scald_admin_context_confirm_delete_form', 5),
+    'access arguments'  => array('administer scald'),
+    'file'              => 'includes/scald.admin.inc',
+  );
   $items['admin/structure/scald/%scald_type'] = array(
     'title'             => 'Type',
     'title callback'    => 'scald_type_name',
@@ -2166,6 +2180,18 @@ function scald_context_config_load($name) {
 function scald_context_config_save(&$config) {
   ctools_include('export');
   return ctools_export_crud_save('scald_context_config', $config);
+}
+
+/**
+ * Delete a context config.
+ *
+ * @param object $config
+ *   Context config.
+ */
+function scald_context_config_delete($config) {
+  ctools_include('export');
+  ctools_export_crud_delete('scald_context_config', $config);
+  cache_clear_all('*', 'cache_scald', TRUE);
 }
 
 /**
