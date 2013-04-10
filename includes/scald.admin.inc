@@ -20,8 +20,8 @@ require_once 'scald.constants.inc';
 function scald_admin_dashboard() {
   $types = scald_types();
 
-  $content = '<h3>' . t('Scald Providers') . '</h3>';
-  $content .= '<p>' . t("The following Scald Providers are registered with Scald Core.  To force a Provider to renew its registration (this is useful if a Provider conditionally provides something such as a Transcoder based on whether or not a module is availble and you have just enabled new modules) click the <em>re-register</em> link next to the Provider's name.") . '</p>';
+  $content = '<h3>' . t('Scald Unified Atom Types') . '</h3>';
+  $content .= '<p>' . t('List of Scald Unified Atom Types. Each type is an entity bundle and has different fields, displays and contexts. Multiple providers (e.g. local image provider, Flickr provider) can provide atoms of the same type and share the same transcoders, players.') . '</p>';
 
   $list = array('type' => 'ul', 'items' => array());
   $table = array(
@@ -153,10 +153,10 @@ function scald_admin_type_form($form, $form_state, $type) {
 }
 
 /**
- * Submist function for admin settings for Scald Types.
+ * Submit function for admin settings for Scald Types.
  *
  * Updated values are written directly back to the database and then the Scald
- *  Configuration Object is rebuilt from the db.
+ * Configuration Object is rebuilt from the db.
  */
 function scald_admin_type_form_submit($form, &$form_state) {
   $scald_atom_defaults = variable_get('scald_atom_defaults', array());
@@ -207,7 +207,7 @@ function scald_admin_type_form_submit($form, &$form_state) {
  * Form constructor for the context editing form.
  *
  * @param string $context
- *   (optional) context name, when editing an existing Scald context. However we
+ *   (optional) Context name, when editing an existing Scald context. However we
  *   do not manage to get the edit form yet, so it is always NULL.
  */
 function scald_admin_context_form($form, &$form_state, $context = NULL) {
@@ -223,7 +223,7 @@ function scald_admin_context_form($form, &$form_state, $context = NULL) {
     'formats' => array(),
   );
 
-  // Make the context arrary available to implementations of hook_form_alter.
+  // Make the context array available to implementations of hook_form_alter.
   $form['#context'] = $context;
 
   $form['title'] = array(
@@ -344,8 +344,8 @@ function scald_admin_atoms() {
  */
 function scald_admin_contexts($type) {
   $content = '<h3>' . t('Scald Rendering Contexts') . '</h3>';
-  $content .= '<p>' . t('Scald Rendering Contexts are something like themes for Scald Atoms.  Any Atom can be rendered in any Context and the Context determines what that rendering looks like and what language it is in.') . '</p>';
-  $content .= '<p>' . t('If a Context is "parseable", that means that its output is wrapped in HTML comments (currently this feature only works reliably for Contexts which have a render language of XHTML) which make it possible for Scald Core to uniquely identify the Atom based on the rendering.  For instance, if a WYSIWYG editor is being used in some text areas and Scald Atoms should be included in the WYSIWYG preview of the text, a Context can be chosen and specified as parseable.  That ensures that when the textarea is submitted, Scald Core will be able to determine which Atoms are present in the textarea, convert the rendered versions to Scald Atom Shorthand and ensure proper parsing by the Scald Atom Shorthand Input Filter.') . '</p>';
+  $content .= '<p>' . t('Scald Rendering Contexts are something like view modes for Scald atoms. Any atom can be rendered in any supported context and the context determines what that rendering looks like, which player it uses, and what language (XHTML etc.) it is in.') . '</p>';
+  $content .= '<p>' . t('If a context is <em>parseable</em>, that means that its output is wrapped in HTML comments (currently this feature only works reliably for contexts which have a render language of XHTML) which make it possible for Scald to uniquely identify the atom based on the rendering. For instance, if a WYSIWYG editor is being used in some text areas and Scald atoms should be included in the WYSIWYG preview of the text, a context can be chosen and specified as parseable. That ensures that when the textarea is submitted, Scald will be able to determine which atoms are present in the textarea, convert the rendered versions to Scald Atom Shorthand (SAS).') . '</p>';
 
   $output[] = array('#markup' => $content);
   $output[] = drupal_get_form('scald_admin_contexts_form', $type);
@@ -438,7 +438,7 @@ function scald_admin_contexts_player_ajax($form, $form_state) {
  * Submit handler for Scald Contexts admin settings form.
  *
  * Updated values are written directly back to the database and then the Scald
- *  Configuration Object is rebuilt from the db.
+ * Configuration Object is rebuilt from the db.
  */
 function scald_admin_contexts_form_submit($form, &$form_state) {
   drupal_set_message(t('Context transcoders settings saved'));
@@ -478,7 +478,6 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
   // all the output that we keep in the cache is invalid, which means that we'll
   // need to regenerate it.
   cache_clear_all('*', 'cache_scald', TRUE);
-
 }
 
 /**
