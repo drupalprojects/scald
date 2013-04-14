@@ -119,3 +119,18 @@ of modules:
 - Atom provider: lots of modules. They are in general independent and can be
   enabled when necessary.
 
+Because Scald is modular, you need at least one module in each category to work:
+
+- dnd: the bridge between a library and a field, it is responsible for the drag
+  and drop.
+
+- scald_dnd_library: the default library in Scald.
+
+- a field that supports dnd: either Atom Reference field, or a text field with
+  "Drag and Drop" option enabled.
+
+- An atom provider module.
+
+More detail on how to install/configure Scald is available at
+http://drupal.org/node/1775718.
+
