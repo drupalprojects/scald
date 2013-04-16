@@ -392,7 +392,13 @@ function scald_atom_defaults($type) {
     $default = new stdClass();
     $default->actions = $actions['view']['bitmask'] + $actions['fetch']['bitmask'];
     $default->description = '';
-    $default->thumbnail_source = drupal_get_path('module', 'scald') . '/assets/thumbnail_default.png';
+
+    $thumbnail = in_array($type, array('image', 'audio', 'video')) ? $type . '.png' : 'thumbnail_default.png';
+    $default->thumbnail_source = 'public://atoms/' . $thumbnail;
+
+    if (!file_exists($default->thumbnail_source)) {
+      file_unmanaged_copy(drupal_get_path('module', 'scald') . '/assets/' . $thumbnail, $default->thumbnail_source);
+    }
   }
   return $default;
 }
