@@ -132,13 +132,18 @@ $.extend($.expr[":"], {
 /**
  * Default atom theme function
  */
-Drupal.theme.prototype.scaldEmbed = function(atom, context) {
+Drupal.theme.prototype.scaldEmbed = function(atom, context, options) {
   context = context ? context : Drupal.settings.dnd.contextDefault;
   var output = '<div class="dnd-atom-wrapper"><div class="dnd-drop-wrapper">' + atom.contexts[context] + '</div>';
   if (atom.meta.legend) {
     output += '<div class="dnd-legend-wrapper">' + atom.meta.legend + '</div>';
   }
   output += '</div>';
+
+  // If there are options, update the SAS representation.
+  if (options) {
+    output = output.replace(/<!-- scald=\d+(.+?) -->/, '<!-- scald=' + atom.sid + ':' + context + ' ' + JSON.stringify(options) + ' -->');
+  }
 
   // Trick: if not the image might come out and go into the current hovered
   // paragraph.

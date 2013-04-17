@@ -145,9 +145,13 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
     $settings = $config->player[$atom->type]['settings'];
     $classes = array_merge(array('scald-atom', 'scald-atom-image'), explode(' ', check_plain($settings['classes'])));
     $caption = token_replace($settings['caption'], array('atom' => $atom));
+    $image = '<img src="' . $atom->rendered->file_transcoded_url . '" alt="" />';
+    if (!empty($options['link'])) {
+      $image = l($image, $options['link'], array('html' => TRUE));
+    }
     $atom->rendered->player = '
       <figure class="' . implode(' ', $classes) . '">
-        <img src="' . $atom->rendered->file_transcoded_url . '" alt="" />
+        ' . $image . '
         <figcaption>' . $caption . '</figcaption>
       </figure>
     ';
@@ -159,6 +163,10 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
     else {
       $path = empty($atom->rendered->file_transcoded_url) ? $atom->file_source : $atom->rendered->file_transcoded_url;
       $atom->rendered->player = theme('image', array('path' => $path));
+    }
+
+    if (!empty($options['link'])) {
+      $atom->rendered->player = l($atom->rendered->player, $options['link'], array('html' => TRUE));
     }
   }
 }
