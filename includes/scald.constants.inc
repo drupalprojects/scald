@@ -27,7 +27,26 @@ define('SCALD_SLUG_MATCH_PATTERN', '/^[\w-]+$/');
  */
 define('SCALD_ACTIONS_MAX_POWER', 30);
 
+/**
+ * Defines the regexp pattern for SAS format.
+ *
+ * The full SAS format is literally:
+ *
+ *   [scald=ATOM_ID:context options]
+ *
+ * where 'context' is the context name and 'options' is JSON representation of
+ * options used to render the atom.
+ *
+ * Examples of SAS formats:
+ *
+ * [scald=23]
+ *   atom with ID=23 in the 'title' (default) context
+ * [scald=23:full]
+ *   atom with ID=23 in the 'full' context
+ * [scald=23:full {"link":"http://www.google.com"}]
+ */
 define('SCALD_SAS_MATCH_PATTERN', '/\[\s*scald=(\d+)(?(?=:):([\w-]+))(?(?=\s+)\s+([^\]]*))\s*\]/');
+
 define('SCALD_RENDERED_MATCH_PATTERN', '/<!--\s*scald=(\d+)(?(?=:):([\w-]+))(?(?=\s+)\s+([^\]]*))\s*-->.*<!--\s*END scald=\1\s*-->/sU');
 
 // How many users to load and save at a time in order to rebuild Actions
