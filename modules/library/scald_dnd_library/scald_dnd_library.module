@@ -159,16 +159,20 @@ function scald_dnd_library_scald_contexts() {
 /**
  * Implements hook_scald_render().
  */
-function scald_dnd_library_scald_render($atom, $context, $options = array()) {
-  if (!empty($atom->rendered->file_transcoded_url)) {
-    $path = $atom->rendered->file_transcoded_url;
-  }
-  elseif (!empty($atom->rendered->thumbnail_transcoded_url)) {
+function scald_dnd_library_scald_render($atom, $context, $options) {
+  if (!empty($atom->rendered->thumbnail_transcoded_url)) {
     $path = $atom->rendered->thumbnail_transcoded_url;
   }
-  else {
+  elseif (!empty($atom->rendered->thumbnail_source_url)) {
     $path = $atom->rendered->thumbnail_source_url;
   }
+  elseif (!empty($atom->rendered->file_transcoded_url)) {
+    $path = $atom->rendered->file_transcoded_url;
+  }
+  else {
+    $path = $atom->rendered->file_source_url;
+  }
+
   $attributes = array();
   if ($context == 'sdl_library_item') {
     $attributes += array('class' => 'drop', 'draggable' => 'TRUE', 'data-atom-id' => $atom->sid);
