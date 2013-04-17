@@ -224,6 +224,27 @@ function hook_scald_render($atom, $context, $options) {
 }
 
 /**
+ * Handles the render options when it is not a JSON string.
+ *
+ * In the old version of Scald, $options could be a simple string. But modern
+ * implementation requires it is a JSON string to interact with $options as an
+ * array. This hook give modules a change to convert that simple string into an
+ * array.
+ *
+ * @param array $options
+ *   The $options array to be updated. The original options string is stored at
+ *   $options['option'].
+ *
+ * @param ScaldAtom $atom
+ *   The atom used in render.
+ *
+ * @param string $context
+ *   The context used in render.
+ */
+function hook_scald_render_options_alter(&$options, &$atom, &$context) {
+}
+
+/**
  * Convert from a rendered format to SAS.
  */
 function hook_scald_rendered_to_sas_LANGUAGE($text) {

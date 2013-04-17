@@ -1198,8 +1198,12 @@ function _scald_user_combine_actions($account) {
 
 /**
  * Prepare a Scald Atom for rendering.
+ *
+ * @param ScaldAtom $atom
+ * @param string $context
+ * @param array $options
  */
-function scald_prerender(&$atom, $context, $options = NULL) {
+function scald_prerender(&$atom, $context, $options) {
   $types = scald_types();
   $contexts = scald_contexts();
   $transcoders = scald_transcoders();
@@ -1298,8 +1302,9 @@ function scald_prerender(&$atom, $context, $options = NULL) {
  *   A valid Scald Context slug (a text string)
  * @param string $options
  *   An optional text string specifying additional Scald Context-specific
- *    options that get passed to the Scald Context for rendering (e.g. a
- *    mechanism for specifying the size of an image).
+ *   options that get passed to the Scald Context for rendering (e.g. a
+ *   mechanism for specifying the size of an image). Usually it is the JSON
+ *   format of an array of options.
  * @param bool $rebuild
  *   Set to true to force a rebuild of the rendering.
  *
@@ -1371,6 +1376,20 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
     }
   }
 
+  // Convert $options into an array.
+  if (!$options) {
+    $options = array();
+  }
+  // If $options is not a JSON string or a single value, give other modules a
+  // chance to handle it.
+  elseif (!is_array($decoded = drupal_json_decode($options))) {
+    $options = array('option' => $options);
+    drupal_alter('scald_render_options', $options, $atom, $context);
+  }
+  else {
+    $options = $decoded;
+  }
+
   scald_prerender($atom, $context, $options);
 
   // Context Provider does the final rendering.
@@ -1388,7 +1407,7 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
   // For so-called "parsable" Contexts, ensure a standard format for the
   // enclosing comments.
   if ($contexts[$context]['parseable']) {
-    $rendered = '<!-- scald=' . $atom->sid . ':' . $context . (!empty($options) ? ' ' . $options : '') . ' -->' . $rendered . '<!-- END scald=' . $atom->sid . ' -->';
+    $rendered = '<!-- scald=' . $atom->sid . ':' . $context . ($options ? ' ' . drupal_json_encode($options) : '') . ' -->' . $rendered . '<!-- END scald=' . $atom->sid . ' -->';
   }
 
   // Only cache the Atom if Contexts, etc. have not indicated that the rendering
