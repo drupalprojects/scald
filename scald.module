@@ -1372,7 +1372,7 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
   if (!scald_is_fetched($atom)) {
     // If the atom cannot be fetched, render it with the "no-access" context.
     if (!$atom = scald_fetch($sid)) {
-      return scald_scald_render($atom, 'no-access');
+      return scald_scald_render($atom, 'no-access', array());
     }
   }
 

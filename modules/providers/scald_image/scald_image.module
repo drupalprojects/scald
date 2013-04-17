@@ -183,4 +183,3 @@ function scald_image_scald_update_atom($atom, $mode) {
     }
   }
 }
-
