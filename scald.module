@@ -1643,7 +1643,7 @@ function scald_scald_prerender($atom, $context, $options, $mode) {
 /**
  * Implements hook_scald_render().
  */
-function scald_scald_render($atom, $context, $options = NULL) {
+function scald_scald_render($atom, $context, $options) {
   switch ($context) {
     case 'debug':
       return '<pre class="debug">' . print_r($atom, TRUE) . '</pre>';
