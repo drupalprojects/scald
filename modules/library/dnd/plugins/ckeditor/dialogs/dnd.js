@@ -27,7 +27,7 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
         .replace(/<!--\{cke_protected\}\{C\}([\s\S]+?)-->.*/, function(match, data) {
           return decodeURIComponent(data);
         })
-        .replace(/^<!--\s+scald=(.+?)\s+-->$/, '$1');
+        .replace(/^<!--\s+scald=(.+?)\s+-->.*$/, '$1');
       legend = Drupal.dnd.atomCurrent.getChild(1);
       legend = legend ? legend.getHtml().replace( /<!--\{cke_protected\}\{C\}([\s\S]+?)-->/g, function(match, data) {
         return decodeURIComponent(data);
