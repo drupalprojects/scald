@@ -46,6 +46,7 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
       this.setupContent(atom);
     },
     onOk: function() {
+      Drupal.dnd.Atoms[atom.sid] = Drupal.dnd.Atoms[atom.sid] || {contexts:{}, meta: {}};
       Drupal.dnd.Atoms[atom.sid].meta.legend = this.getValueOf('info', 'txtLegend');
       var context = this.getValueOf('info', 'cmbContext');
       atom.options.link = this.getValueOf('info', 'txtLink');
