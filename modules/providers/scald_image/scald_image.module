@@ -176,10 +176,28 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
  */
 function scald_image_scald_update_atom($atom, $mode) {
   if ($mode == 'atom') {
-    if ($atom->scald_thumbnail) {
-      // The thumbnail field is also the base entity. We keep them in
-      // synchronisation when user update that field.
-      $atom->base_id = $atom->scald_thumbnail[LANGUAGE_NONE][0]['fid'];
-    }
+    _scald_image_sync_thumbnail($atom);
   }
 }
+
+/**
+ * Implements hook_scald_register_atom().
+ */
+function scald_image_scald_register_atom($atom, $mode) {
+  if ($mode == 'atom') {
+    _scald_image_sync_thumbnail($atom);
+  }
+}
+
+/**
+ * Synchronisation of thumbnail with base_id.
+ *
+ * The thumbnail field is also the base entity. We keep them in synchronisation
+ * when user update that field.
+ */
+function _scald_image_sync_thumbnail($atom) {
+  if ($atom->scald_thumbnail) {
+    $atom->base_id = $atom->scald_thumbnail[LANGUAGE_NONE][0]['fid'];
+  }
+}
+
