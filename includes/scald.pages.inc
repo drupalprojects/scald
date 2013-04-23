@@ -367,7 +367,16 @@ function scald_atom_fetch_atoms($context, $sids) {
   $output = array();
   $atoms = scald_atom_load_multiple(explode(',', $sids));
   foreach ($atoms as $sid => $atom) {
-    $output[$sid][$context] = scald_render($atom, $context);
+    $output[$sid] = array(
+      'sid' => $sid,
+      'contexts' => array($context => scald_render($atom, $context)),
+      'meta' => array(
+        'title' => $atom->title,
+        'type' => $atom->type,
+        'legend' => '',
+      ),
+    );
   }
   drupal_json_output($output);
 }
+

@@ -73,9 +73,12 @@ Drupal.dnd = {
     if (atom_ids.length) {
       $.getJSON(Drupal.settings.basePath + 'atom/fetch/' + context + '/' + atom_ids.join(), function(data) {
         for (atom_id in data) {
-          Drupal.dnd.Atoms[atom_id] = Drupal.dnd.Atoms[atom_id] || {sid: atom_id, contexts: {}};
-          Drupal.dnd.Atoms[atom_id].meta = Drupal.dnd.Atoms[atom_id].meta || {legend: ''};
-          Drupal.dnd.Atoms[atom_id].contexts = $.extend(Drupal.dnd.Atoms[atom_id].contexts, data[atom_id]);
+          if (Drupal.dnd.Atoms[atom_id]) {
+            Drupal.dnd.Atoms[atom_id].contexts[context] = data[atom_id].contexts[context];
+          }
+          else {
+            Drupal.dnd.Atoms[atom_id] = data[atom_id];
+          }
         }
         if (callback) {
           callback();
