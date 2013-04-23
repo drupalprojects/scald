@@ -43,7 +43,10 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
         options: options,
         legend: legend
       };
-      this.setupContent(atom);
+      var me = this;
+      Drupal.dnd.fetchAtom(context, sid, function() {
+        me.setupContent(atom);
+      });
     },
     onOk: function() {
       Drupal.dnd.Atoms[atom.sid] = Drupal.dnd.Atoms[atom.sid] || {sid: atom.sid, contexts:{}, meta: {}};
@@ -88,7 +91,14 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
             type: 'text',
             label: 'Link',
             setup: function(atom) {
-              this.setValue(atom.options.link);
+              if (Drupal.dnd.Atoms[atom.sid].meta.type === 'image') {
+                this.setValue(atom.options.link);
+                this.enable();
+              }
+              else {
+                this.setValue(editor.lang.dnd.link_image_only);
+                this.disable();
+              }
             }
           }
         ]
