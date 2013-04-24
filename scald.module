@@ -1152,6 +1152,19 @@ function scald_action_permitted($atom, $action = 'fetch', $account = NULL) {
 }
 
 /**
+ * Converts actions bitmask to array of action machine names.
+ */
+function scald_action_bitmask_to_array($bitmask) {
+  $names = array();
+  foreach (scald_actions() as $name => $action) {
+    if ($action['bitmask'] & $bitmask) {
+      $names[] = $name;
+    }
+  }
+  return $names;
+}
+
+/**
  * Implements hook_user_load().
  */
 function scald_user_load($users) {
@@ -2065,10 +2078,10 @@ function scald_menu() {
 
   // AJAX callback allowing to fetch atoms, which provides is usefull
   // for library implementations and RTE integrations.
-  $items['atom/fetch/%/%'] = array(
+  $items['atom/fetch/%'] = array(
     'title' => 'Fetch atoms',
     'page callback' => 'scald_atom_fetch_atoms',
-    'page arguments' => array(2, 3),
+    'page arguments' => array(2),
     'access callback' => TRUE,
     'file' => 'includes/scald.pages.inc',
     'theme callback' => 'ajax_base_page_theme',

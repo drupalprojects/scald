@@ -358,23 +358,28 @@ function scald_atom_delete_confirm_submit($form, &$form_state) {
 /**
  * Fetch atoms and return in JSON format.
  *
- * @param string $context
- *   The context the atoms should be rendered in.
  * @param string $sids
  *   Comma separated list of atom ids.
+ *
+ * Other parameters, such as context, could also be passed via the querystring.
  */
-function scald_atom_fetch_atoms($context, $sids) {
+function scald_atom_fetch_atoms($sids) {
   $output = array();
   $atoms = scald_atom_load_multiple(explode(',', $sids));
+
+  // Context can be passed via the querystring.
+  $context = isset($_GET['context']) && array_key_exists($_GET['context'], scald_contexts()) ? $_GET['context'] : '';
+
   foreach ($atoms as $sid => $atom) {
     $output[$sid] = array(
       'sid' => $sid,
-      'contexts' => array($context => scald_render($atom, $context)),
+      'contexts' => $context ? array($context => scald_render($atom, $context)) : array(),
       'meta' => array(
         'title' => $atom->title,
         'type' => $atom->type,
         'legend' => '',
       ),
+      'actions' => scald_action_bitmask_to_array(scald_user_actions($atom)),
     );
   }
   drupal_json_output($output);

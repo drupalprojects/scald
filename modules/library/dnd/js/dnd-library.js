@@ -71,10 +71,11 @@ Drupal.dnd = {
     atom_ids = atom_ids.filter(Number);
 
     if (atom_ids.length) {
-      $.getJSON(Drupal.settings.basePath + 'atom/fetch/' + context + '/' + atom_ids.join(), function(data) {
+      $.getJSON(Drupal.settings.basePath + 'atom/fetch/' + atom_ids.join() + '?context=' + context, function(data) {
         for (atom_id in data) {
           if (Drupal.dnd.Atoms[atom_id]) {
-            Drupal.dnd.Atoms[atom_id].contexts[context] = data[atom_id].contexts[context];
+            // Merge old data into the new return atom.
+            $.extend(true, Drupal.dnd.Atoms[atom_id], data[atom_id]);
           }
           else {
             Drupal.dnd.Atoms[atom_id] = data[atom_id];
