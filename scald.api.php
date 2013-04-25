@@ -75,6 +75,7 @@ function hook_scald_atom_providers() {
  *   - "description": The longer description of the player.
  *   - "type": The type array that is compatible with the player. The special
  *     value '*' means this player is compatible with all atom types.
+ *   - "settings": The default settings array.
  */
 function hook_scald_player() {
   return array(
@@ -82,6 +83,10 @@ function hook_scald_player() {
       'name' => 'HTML5 player',
       'description' => 'The HTML5 player for images and videos.',
       'type' => array('image', 'video'),
+      'settings' => array(
+        'classes' => '',
+        'caption' => '[atom:title], by [atom:author]',
+      ),
     ),
   );
 }

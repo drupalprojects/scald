@@ -498,6 +498,7 @@ function scald_admin_contexts_player_ajax($form, $form_state) {
 function scald_admin_contexts_form_submit($form, &$form_state) {
   drupal_set_message(t('Context transcoders settings saved'));
   $typename = $form_state['build_info']['args'][0]->type;
+  $players = scald_players();
   foreach ($form_state['values'] as $key => $value) {
     switch (drupal_substr($key, -6)) {
       // Transcoders
@@ -524,6 +525,10 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
         $context = drupal_substr($key, 0, -6);
         $context_config = scald_context_config_load($context);
         $context_config->player[$typename]['*'] = $value;
+        // Load and save default settings for the player.
+        if (!isset($context_config->player[$typename]['settings']) && isset($players[$value]['settings'])) {
+          $context_config->player[$typename]['settings'] = $players[$value]['settings'];
+        }
         scald_context_config_save($context_config);
         break;
     }

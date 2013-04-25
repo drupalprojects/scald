@@ -324,6 +324,7 @@ function scald_scald_player() {
       'name' => 'Default player',
       'description' => 'The Scald default player for all atom types.',
       'type' => array('*'),
+      'settings' => array(),
     ),
   );
 }
