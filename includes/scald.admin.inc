@@ -484,9 +484,8 @@ function scald_admin_contexts_form($form, $form_state, $type) {
 }
 
 function scald_admin_contexts_player_ajax($form, $form_state) {
-  $context_name = substr($form_state['triggering_element']['#name'], -6);
-  $type_name = $form_state['build_info']['args'][0]->type;
-  return $form[$type_name][$type_name . '_player_settings'];
+  $context_name = substr($form_state['triggering_element']['#name'], 0, -6);
+  return $form[$context_name][$context_name . '_player_settings'];
 }
 
 /**
