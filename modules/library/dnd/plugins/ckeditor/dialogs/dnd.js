@@ -18,7 +18,8 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
         }
         return;
       }
-      var data, sid, context, options, legend;
+      var elm, data, sid, context, options, legend;
+      elm = $(Drupal.dnd.atomCurrent.$);
       // Get the data directly from the comment markup.
       data = Drupal.dnd.atomCurrent.getChild(0).getHtml()
         .replace(/<!--\{cke_protected\}\{C\}([\s\S]+?)-->.*/, function(match, data) {
@@ -38,7 +39,8 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
         sid: sid,
         context: context,
         options: options,
-        legend: legend
+        legend: legend,
+        align: elm.hasClass('atom-align-left') ? 'left' : elm.hasClass('atom-align-right') ? 'right' : elm.hasClass('atom-align-center') ? 'center' : 'none'
       };
       var me = this;
       Drupal.dnd.fetchAtom(context, sid, function() {
@@ -54,6 +56,7 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
     onOk: function() {
       Drupal.dnd.Atoms[atom.sid] = Drupal.dnd.Atoms[atom.sid] || {sid: atom.sid, contexts:{}, meta: {}};
       Drupal.dnd.Atoms[atom.sid].meta.legend = this.getValueOf('info', 'txtLegend');
+      Drupal.dnd.Atoms[atom.sid].meta.align = this.getValueOf('info', 'cmbAlign');
       var context = this.getValueOf('info', 'cmbContext');
       atom.options.link = this.getValueOf('info', 'txtLink');
       Drupal.dnd.fetchAtom(context, atom.sid, function() {
@@ -86,6 +89,15 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
             items: [],
             setup: function(atom) {
               this.setValue(atom.context);
+            }
+          },
+          {
+            id: 'cmbAlign',
+            type: 'select',
+            label: 'Alignment',
+            items: [['None', 'none'], ['Left', 'left'], ['Right', 'right'], ['Center', 'center']],
+            setup: function(atom) {
+              this.setValue(atom.align);
             }
           },
           // @todo Expose a hook to remove this hardcoded option.
