@@ -173,13 +173,15 @@ function dnd_library_add_ctools_modal(&$libraries) {
     'type' => 'setting',
     'data' => $settings,
   );
+  $modal_width = (float) variable_get('dnd_modal_width', 500);
+  $modal_height = (float) variable_get('dnd_modal_height', 300);
   // Create our own javascript that will be used to theme a modal.
   $sample_style = array(
     'custom-style' => array(
       'modalSize' => array(
-        'type' => 'fixed',
-        'width' => 500,
-        'height' => 300,
+        'type' => ($modal_width <= 1 ? 'scale' : 'fixed'),
+        'width' => $modal_width,
+        'height' => $modal_height,
         'addWidth' => 20,
         'addHeight' => 15,
       ),
