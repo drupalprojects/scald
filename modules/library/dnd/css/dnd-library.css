@@ -87,6 +87,7 @@
 .dnd-library-wrapper .editor-item .image img {
   width: 48px;
   height: auto;
+  cursor: move;
 }
 .dnd-library-wrapper .editor-item:hover img,
 .dnd-library-wrapper .editor-item.bt-active img {
