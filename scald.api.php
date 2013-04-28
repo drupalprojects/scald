@@ -255,3 +255,14 @@ function hook_scald_render_options_alter(&$options, &$atom, &$context) {
 function hook_scald_rendered_to_sas_LANGUAGE($text) {
 }
 
+/**
+ * Alters contexts available in the wysiwyg editor, per atom type.
+ *
+ * Allows modules to modify the context list that will be available to choose
+ * from in the wysiwyg editor's "Edit atom properties" dialog.
+ */
+function hook_scald_wysiwyg_context_list_alter(&$contexts) {
+  unset($contexts['image']['Library_representation']);
+  $contexts['image']['sdl_editor_representation'] = t('Default');
+}
+

@@ -85,13 +85,22 @@ function dnd_process_textarea($element, $form_state) {
  */
 function dnd_library() {
   $path = drupal_get_path('module', 'dnd');
+  $types = scald_types();
   $contexts = array();
   foreach (scald_contexts() as $name => $definition) {
     if (!empty($definition['hidden']) || empty($definition['parseable'])) {
       continue;
     }
-    $contexts[$name] = $definition['title'];
+
+    // There "formats" is actually used nowhere in Scald. Every context is
+    // available to all atom types.
+    $definition['formats'] = $types;
+
+    foreach ($definition['formats'] as $type => $data) {
+      $contexts[$type][$name] = $definition['title'];
+    }
   }
+  drupal_alter('scald_wysiwyg_context_list', $contexts);
   $libraries['library'] = array(
     'title' => 'DnD Library',
     'website' => 'http://drupal.org/project/scald',

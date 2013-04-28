@@ -1,9 +1,6 @@
 (function($) {
 CKEDITOR.dialog.add('atomProperties', function(editor) {
-  var lang = editor.lang.dnd, element, atom, cmbContext = [];
-  for (context in Drupal.settings.dnd.contexts) {
-    cmbContext.push([Drupal.settings.dnd.contexts[context], context]);
-  }
+  var lang = editor.lang.dnd, element, atom;
 
   return {
     title: lang.atom_properties,
@@ -45,6 +42,12 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
       };
       var me = this;
       Drupal.dnd.fetchAtom(context, sid, function() {
+        var type = Drupal.dnd.Atoms[atom.sid].meta.type;
+        var cmbContext = me.getContentElement('info', 'cmbContext');
+        cmbContext.clear();
+        for (context in Drupal.settings.dnd.contexts[type]) {
+          cmbContext.add(Drupal.settings.dnd.contexts[type][context], context);
+        }
         me.setupContent(atom);
       });
     },
@@ -80,7 +83,7 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
             id: 'cmbContext',
             type: 'select',
             label: 'Context',
-            items: cmbContext,
+            items: [],
             setup: function(atom) {
               this.setValue(atom.context);
             }
