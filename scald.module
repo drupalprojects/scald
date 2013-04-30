@@ -1314,11 +1314,11 @@ function scald_prerender(&$atom, $context, $options) {
  *   A Scald ID *OR* a Scald Atom object.
  * @param string $context
  *   A valid Scald Context slug (a text string)
- * @param string $options
- *   An optional text string specifying additional Scald Context-specific
- *   options that get passed to the Scald Context for rendering (e.g. a
- *   mechanism for specifying the size of an image). Usually it is the JSON
- *   format of an array of options.
+ * @param mixed $options
+ *   An optional text string or array specifying additional Scald
+ *   Context-specific options that get passed to the Scald Context for rendering
+ *   (e.g. a mechanism for specifying the size of an image). Usually it is the
+ *   JSON format of an array of options.
  * @param bool $rebuild
  *   Set to true to force a rebuild of the rendering.
  *
@@ -1326,7 +1326,7 @@ function scald_prerender(&$atom, $context, $options) {
  *   The rendered Scald Atom (usually an XHTML string ready for display)
  *   FALSE if the rendering failed for whatever reason
  */
-function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
+function scald_render($sid, $context, $options = array(), $rebuild = FALSE) {
   // Validates the arguments.
   if (!is_numeric($sid)) {
     if (!empty($sid->sid)) {
@@ -1390,13 +1390,9 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
     }
   }
 
-  // Convert $options into an array.
-  if (!$options) {
-    $options = array();
-  }
   // If $options is not a JSON string or a single value, give other modules a
   // chance to handle it.
-  elseif (!is_array($decoded = drupal_json_decode($options))) {
+  if ($options && !is_array($decoded = drupal_json_decode($options))) {
     $options = array('option' => $options);
     drupal_alter('scald_render_options', $options, $atom, $context);
   }
@@ -1657,7 +1653,7 @@ function scald_scald_prerender($atom, $context, $options, $mode) {
 /**
  * Implements hook_scald_render().
  */
-function scald_scald_render($atom, $context, $options) {
+function scald_scald_render($atom, $context, $options = array()) {
   switch ($context) {
     case 'debug':
       return '<pre class="debug">' . print_r($atom, TRUE) . '</pre>';
