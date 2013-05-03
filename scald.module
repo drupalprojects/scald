@@ -1392,12 +1392,14 @@ function scald_render($sid, $context, $options = array(), $rebuild = FALSE) {
 
   // If $options is not a JSON string or a single value, give other modules a
   // chance to handle it.
-  if ($options && !is_array($decoded = drupal_json_decode($options))) {
-    $options = array('option' => $options);
-    drupal_alter('scald_render_options', $options, $atom, $context);
-  }
-  else {
-    $options = $decoded;
+  if ($options) {
+    if (!is_array($decoded = drupal_json_decode($options))) {
+      $options = array('option' => $options);
+      drupal_alter('scald_render_options', $options, $atom, $context);
+    }
+    else {
+      $options = $decoded;
+    }
   }
 
   scald_prerender($atom, $context, $options);
