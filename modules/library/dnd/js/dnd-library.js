@@ -139,7 +139,15 @@ $.extend($.expr[":"], {
  */
 Drupal.theme.prototype.scaldEmbed = function(atom, context, options) {
   context = context ? context : Drupal.settings.dnd.contextDefault;
-  var output = '<div class="dnd-atom-wrapper' + (atom.meta.align && atom.meta.align != 'none' ? ' atom-align-' + atom.meta.align : '') + ' type-' + atom.meta.type + '"><div class="dnd-drop-wrapper">' + atom.contexts[context] + '</div>';
+
+  var classname = 'dnd-atom-wrapper';
+  classname += ' type-' + atom.meta.type;
+  classname += ' context-' + context;
+  if (atom.meta.align && atom.meta.align != 'none') {
+    classname += ' atom-align-' + atom.meta.align;
+  }
+
+  var output = '<div class="' + classname + '"><div class="dnd-drop-wrapper">' + atom.contexts[context] + '</div>';
   if (atom.meta.legend) {
     output += '<div class="dnd-legend-wrapper">' + atom.meta.legend + '</div>';
   }
