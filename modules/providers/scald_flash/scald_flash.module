@@ -17,8 +17,9 @@ function scald_flash_scald_atom_providers() {
 
 
 function scald_flash_scald_add_form(&$form, &$form_state) {
+  $defaults = scald_atom_defaults('flash');
   $form['file_swf'] = array(
-    '#type' => 'managed_file',
+    '#type' => $defaults->upload_type,
     '#title' => t('SWF File'),
     '#upload_location' => 'public://atoms/swf/',
     '#upload_validators' => array('file_validate_extensions' => array('swf')),
@@ -26,17 +27,36 @@ function scald_flash_scald_add_form(&$form, &$form_state) {
 }
 
 /**
+ * Implements hook_scald_add_atom_count().
+ */
+function scald_flash_scald_add_atom_count(&$form, &$form_state) {
+  if (is_array($form_state['values']['file_swf'])) {
+    return max(count($form_state['values']['file_swf']), 1);
+  }
+  return 1;
+}
+
+
+/**
  * Implements hook_scald_add_form_fill.
  */
-function scald_flash_scald_add_form_fill(&$atom, $form, $form_state) {
-  $file = file_load($form_state['values']['file_swf']);
-  $atom->title = $file->filename;
-  $atom->base_id = $file->fid;
-  $size_infos = getimagesize($file->uri);
-  $atom->data['flash_width'] = $size_infos[0];
-  $atom->data['flash_height'] = $size_infos[1];
-  $atom->scald_width[LANGUAGE_NONE][0]['value'] = $size_infos[0];
-  $atom->scald_height[LANGUAGE_NONE][0]['value'] = $size_infos[1];
+function scald_flash_scald_add_form_fill(&$atoms, $form, $form_state) {
+  foreach ($atoms as $delta => $atom) {
+    if (is_array($form_state['values']['file_swf']) && module_exists('plupload')) {
+      module_load_include('inc', 'scald', 'includes/scald.plupload');
+      $file = scald_plupload_save_file($form_state['values']['file_swf'][$delta]['tmppath'], $form['file_swf']['#upload_location'] . $form_state['values']['file_swf'][$delta]['name']);
+    }
+    else {
+      $file = file_load($form_state['values']['file_swf']);
+    }
+    $atom->title = $file->filename;
+    $atom->base_id = $file->fid;
+    $size_infos = getimagesize($file->uri);
+    $atom->data['flash_width'] = $size_infos[0];
+    $atom->data['flash_height'] = $size_infos[1];
+    $atom->scald_width[LANGUAGE_NONE][0]['value'] = $size_infos[0];
+    $atom->scald_height[LANGUAGE_NONE][0]['value'] = $size_infos[1];
+  }
 }
 
 /**

@@ -131,6 +131,18 @@ function scald_admin_type_form($form, $form_state, $type) {
     '#maxlength'      => 255,
     '#required'       => TRUE,
   );
+  $options = array(
+    'managed_file' => t('Managed file'),
+  );
+  if (module_exists('plupload')) {
+    $options['plupload'] = t('Plupload');
+  }
+  $form['defaults']['type_' . $type_name . '_utype'] = array(
+    '#type'           => 'select',
+    '#title'          => t('Upload type'),
+    '#default_value'  => $default->upload_type,
+    '#options' => $options
+  );
   // Create checkboxes for the defined actions.
   $actions = scald_actions();
   $options = array();
@@ -191,6 +203,10 @@ function scald_admin_type_form_submit($form, &$form_state) {
 
         case '_descr':
           $scald_atom_defaults[$type]->description = $value;
+          break;
+
+        case '_utype':
+          $scald_atom_defaults[$type]->upload_type = $value;
           break;
 
         case '_actin':

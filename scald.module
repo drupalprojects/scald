@@ -392,6 +392,7 @@ function scald_atom_defaults($type) {
     $actions = scald_actions();
     $default = new stdClass();
     $default->actions = $actions['view']['bitmask'] + $actions['fetch']['bitmask'];
+    $default->upload_type = 'managed_file';
     $default->description = '';
 
     $thumbnail = in_array($type, array('image', 'audio', 'video')) ? $type . '.png' : 'thumbnail_default.png';
@@ -2396,3 +2397,4 @@ function scald_atom_user_build_actions_links($atom, $query = NULL) {
 
   return $links;
 }
+

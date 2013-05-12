@@ -111,7 +111,8 @@ function dnd_library() {
     'js' => array(
       // Drag and drop
       $path . '/js/dnd-library.js' => array(),
-
+      // javascript workaround for the continue button
+      $path . '/js/dnd-modal.js' => array(),
       // Settings for the library url
       array(
         'type' => 'setting',

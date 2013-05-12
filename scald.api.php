@@ -266,3 +266,78 @@ function hook_scald_wysiwyg_context_list_alter(&$contexts) {
   $contexts['image']['sdl_editor_representation'] = t('Default');
 }
 
+/**
+ * @defgroup scald_atom_provider Hooks related to Atom provider modules.
+ * @{
+ * Theses hooks are implemented by the Atom provider modules.
+ *
+ * Only module that is declared as provider for the atom is invoked.
+ */
+
+/**
+ * Provides a form using to add an atom.
+ *
+ * @param array $form
+ *
+ * @param array $form_state
+ */
+function hook_scald_add_form(&$form, &$form_state) {
+  $defaults = scald_atom_defaults('image');
+  $form['file'] = array(
+    '#type' => $defaults->upload_type,
+    '#title' => t('Image'),
+    '#upload_location' => 'public://atoms/images/',
+    '#upload_validators' => array('file_validate_extensions' => array('jpg jpeg png gif')),
+  );
+}
+
+/**
+ * Provides number of atoms available when a form is submitted.
+ *
+ * Some widgets are able to create multiple atoms at a time. This hook is
+ * usually used to check number of atoms available in a form. If a provider does
+ * not support multiple atom creation, return 1.
+ *
+ * @param array $form
+ *
+ * @param array $form_state
+ */
+function hook_scald_add_atom_count(&$form, &$form_state) {
+  if (is_array($form_state['values']['file'])) {
+    return max(count($form_state['values']['file']), 1);
+  }
+  return 1;
+}
+
+/**
+ * Fills default atom data.
+ *
+ * When a form is uploaded, one or more atoms are created, but it is not saved.
+ * This is a last chance for atom provider to add default data, maybe from the
+ * form, into atoms.
+ *
+ * @param array $atoms
+ *
+ * @param array $form
+ *
+ * @param array $form_state
+ */
+function scald_image_scald_add_form_fill(&$atoms, $form, $form_state) {
+  foreach ($atoms as $delta => $atom) {
+    if (is_array($form_state['values']['file']) && module_exists('plupload')) {
+      module_load_include('inc', 'scald', 'includes/scald.plupload');
+      $file = scald_plupload_save_file($form_state['values']['file'][$delta]['tmppath'], $form['file']['#upload_location'] . $form_state['values']['file'][$delta]['name']);
+    }
+    else {
+      $file = file_load($form_state['values']['file']);
+    }
+    $atom->title = $file->filename;
+    $atom->base_id = $file->fid;
+    $atom->scald_thumbnail[LANGUAGE_NONE][0] = (array)$file;
+  }
+}
+
+/**
+ * @} End of "defgroup scald_atom_provider".
+ */
+
