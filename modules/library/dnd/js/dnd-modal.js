@@ -15,13 +15,6 @@
             return false;
           }
         }
-        else if (form.find('.form-managed-file')) {
-          var file = form.find('.form-managed-file').first();
-          var name = file.attr('id').substr(5).replace('-', '_');
-          if (file.find("[name='" + name + "[fid]']").val() == 0) {
-            return false;
-          }
-        }
       });
     }
   };
