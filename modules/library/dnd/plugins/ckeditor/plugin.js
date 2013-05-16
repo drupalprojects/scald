@@ -32,6 +32,7 @@ CKEDITOR.plugins.add('dnd', {
       var editor = evt.editor;
       if (editor.mode == 'wysiwyg') {
         editor.document.appendStyleSheet(path + '../../css/editor.css');
+        editor.document.appendStyleSheet(path + '../../css/editor-global.css');
         // Prevents atom from being edited inside the editor.
         $(editor.document.$).find('div.dnd-atom-wrapper').attr('contentEditable', false);
       }
@@ -40,7 +41,7 @@ CKEDITOR.plugins.add('dnd', {
     CKEDITOR.dialog.add('atomProperties', this.path + 'dialogs/dnd.js' );
 
     var command = editor.addCommand('atomProperties', new CKEDITOR.dialogCommand('atomProperties', {
-      allowedContent: 'div[*](*);iframe[*]'
+      allowedContent: 'div[*](*);iframe[*];img(*)'
     }));
 
     editor.addCommand('atomDelete', {

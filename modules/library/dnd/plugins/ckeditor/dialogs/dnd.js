@@ -1,9 +1,6 @@
 (function($) {
 CKEDITOR.dialog.add('atomProperties', function(editor) {
-  var lang = editor.lang.dnd, element, atom, cmbContext = [];
-  for (context in Drupal.settings.dnd.contexts) {
-    cmbContext.push([Drupal.settings.dnd.contexts[context], context]);
-  }
+  var lang = editor.lang.dnd, element, atom;
 
   return {
     title: lang.atom_properties,
@@ -21,13 +18,14 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
         }
         return;
       }
-      var data, sid, context, options, legend;
+      var elm, data, sid, context, options, legend;
+      elm = $(Drupal.dnd.atomCurrent.$);
       // Get the data directly from the comment markup.
       data = Drupal.dnd.atomCurrent.getChild(0).getHtml()
         .replace(/<!--\{cke_protected\}\{C\}([\s\S]+?)-->.*/, function(match, data) {
           return decodeURIComponent(data);
         })
-        .replace(/^<!--\s+scald=(.+?)\s+-->.*$/, '$1');
+        .replace(/^<!--\s+scald=(.+?)\s+-->[\s\S]*$/, '$1');
       legend = Drupal.dnd.atomCurrent.getChild(1);
       legend = legend ? legend.getHtml().replace( /<!--\{cke_protected\}\{C\}([\s\S]+?)-->/g, function(match, data) {
         return decodeURIComponent(data);
@@ -41,13 +39,24 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
         sid: sid,
         context: context,
         options: options,
-        legend: legend
+        legend: legend,
+        align: elm.hasClass('atom-align-left') ? 'left' : elm.hasClass('atom-align-right') ? 'right' : elm.hasClass('atom-align-center') ? 'center' : 'none'
       };
-      this.setupContent(atom);
+      var me = this;
+      Drupal.dnd.fetchAtom(context, sid, function() {
+        var type = Drupal.dnd.Atoms[atom.sid].meta.type;
+        var cmbContext = me.getContentElement('info', 'cmbContext');
+        cmbContext.clear();
+        for (context in Drupal.settings.dnd.contexts[type]) {
+          cmbContext.add(Drupal.settings.dnd.contexts[type][context], context);
+        }
+        me.setupContent(atom);
+      });
     },
     onOk: function() {
       Drupal.dnd.Atoms[atom.sid] = Drupal.dnd.Atoms[atom.sid] || {sid: atom.sid, contexts:{}, meta: {}};
       Drupal.dnd.Atoms[atom.sid].meta.legend = this.getValueOf('info', 'txtLegend');
+      Drupal.dnd.Atoms[atom.sid].meta.align = this.getValueOf('info', 'cmbAlign');
       var context = this.getValueOf('info', 'cmbContext');
       atom.options.link = this.getValueOf('info', 'txtLink');
       Drupal.dnd.fetchAtom(context, atom.sid, function() {
@@ -77,9 +86,18 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
             id: 'cmbContext',
             type: 'select',
             label: 'Context',
-            items: cmbContext,
+            items: [],
             setup: function(atom) {
               this.setValue(atom.context);
+            }
+          },
+          {
+            id: 'cmbAlign',
+            type: 'select',
+            label: 'Alignment',
+            items: [['None', 'none'], ['Left', 'left'], ['Right', 'right'], ['Center', 'center']],
+            setup: function(atom) {
+              this.setValue(atom.align);
             }
           },
           // @todo Expose a hook to remove this hardcoded option.
@@ -88,7 +106,14 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
             type: 'text',
             label: 'Link',
             setup: function(atom) {
-              this.setValue(atom.options.link);
+              if (Drupal.dnd.Atoms[atom.sid].meta.type === 'image') {
+                this.setValue(atom.options.link);
+                this.enable();
+              }
+              else {
+                this.setValue(editor.lang.dnd.link_image_only);
+                this.disable();
+              }
             }
           }
         ]

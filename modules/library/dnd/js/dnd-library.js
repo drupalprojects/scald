@@ -71,11 +71,15 @@ Drupal.dnd = {
     atom_ids = atom_ids.filter(Number);
 
     if (atom_ids.length) {
-      $.getJSON(Drupal.settings.basePath + 'atom/fetch/' + context + '/' + atom_ids.join(), function(data) {
+      $.getJSON(Drupal.settings.basePath + 'atom/fetch/' + atom_ids.join() + '?context=' + context, function(data) {
         for (atom_id in data) {
-          Drupal.dnd.Atoms[atom_id] = Drupal.dnd.Atoms[atom_id] || {sid: atom_id, contexts: {}};
-          Drupal.dnd.Atoms[atom_id].meta = Drupal.dnd.Atoms[atom_id].meta || {legend: ''};
-          Drupal.dnd.Atoms[atom_id].contexts = $.extend(Drupal.dnd.Atoms[atom_id].contexts, data[atom_id]);
+          if (Drupal.dnd.Atoms[atom_id]) {
+            // Merge old data into the new return atom.
+            $.extend(true, Drupal.dnd.Atoms[atom_id], data[atom_id]);
+          }
+          else {
+            Drupal.dnd.Atoms[atom_id] = data[atom_id];
+          }
         }
         if (callback) {
           callback();
@@ -135,7 +139,15 @@ $.extend($.expr[":"], {
  */
 Drupal.theme.prototype.scaldEmbed = function(atom, context, options) {
   context = context ? context : Drupal.settings.dnd.contextDefault;
-  var output = '<div class="dnd-atom-wrapper"><div class="dnd-drop-wrapper">' + atom.contexts[context] + '</div>';
+
+  var classname = 'dnd-atom-wrapper';
+  classname += ' type-' + atom.meta.type;
+  classname += ' context-' + context;
+  if (atom.meta.align && atom.meta.align != 'none') {
+    classname += ' atom-align-' + atom.meta.align;
+  }
+
+  var output = '<div class="' + classname + '"><div class="dnd-drop-wrapper">' + atom.contexts[context] + '</div>';
   if (atom.meta.legend) {
     output += '<div class="dnd-legend-wrapper">' + atom.meta.legend + '</div>';
   }
@@ -270,8 +282,16 @@ renderLibrary: function(data, editor) {
         }
         var id = $img.data('atom-id');
         dt.dropEffect = 'copy';
-        dt.setData('Text', Drupal.dnd.Atoms[id].sas);
-        dt.setData('text/html', Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[id]));
+        if (document.all) {
+          // IE does not follow HTML5 Drag and drop specifications. It accepts
+          // either "text" or "URL" for "format" and trigger an error if another
+          // format is used.
+          dt.setData('text', Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[id]));
+        }
+        else {
+          dt.setData('text', Drupal.dnd.Atoms[id].sas);
+          dt.setData('text/html', Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[id]));
+        }
         return true;
       })
       .bind('dragend', function(e) {

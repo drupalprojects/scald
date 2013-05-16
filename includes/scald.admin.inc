@@ -131,6 +131,18 @@ function scald_admin_type_form($form, $form_state, $type) {
     '#maxlength'      => 255,
     '#required'       => TRUE,
   );
+  $options = array(
+    'managed_file' => t('Managed file'),
+  );
+  if (module_exists('plupload')) {
+    $options['plupload'] = t('Plupload');
+  }
+  $form['defaults']['type_' . $type_name . '_utype'] = array(
+    '#type'           => 'select',
+    '#title'          => t('Upload type'),
+    '#default_value'  => $default->upload_type,
+    '#options' => $options
+  );
   // Create checkboxes for the defined actions.
   $actions = scald_actions();
   $options = array();
@@ -191,6 +203,10 @@ function scald_admin_type_form_submit($form, &$form_state) {
 
         case '_descr':
           $scald_atom_defaults[$type]->description = $value;
+          break;
+
+        case '_utype':
+          $scald_atom_defaults[$type]->upload_type = $value;
           break;
 
         case '_actin':
@@ -482,9 +498,8 @@ function scald_admin_contexts_form($form, $form_state, $type) {
  * Re-generates the player settings form.
  */
 function scald_admin_contexts_player_ajax($form, $form_state) {
-  $context_name = substr($form_state['triggering_element']['#name'], -6);
-  $type_name = $form_state['build_info']['args'][0]->type;
-  return $form[$type_name][$type_name . '_player_settings'];
+  $context_name = substr($form_state['triggering_element']['#name'], 0, -6);
+  return $form[$context_name][$context_name . '_player_settings'];
 }
 
 /**
@@ -496,6 +511,7 @@ function scald_admin_contexts_player_ajax($form, $form_state) {
 function scald_admin_contexts_form_submit($form, &$form_state) {
   drupal_set_message(t('Context transcoders settings saved'));
   $typename = $form_state['build_info']['args'][0]->type;
+  $players = scald_players();
   foreach ($form_state['values'] as $key => $value) {
     switch (drupal_substr($key, -6)) {
       // Handle transcoders submission.
@@ -512,6 +528,10 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
         $context = drupal_substr($key, 0, -6);
         $context_config = scald_context_config_load($context);
         $context_config->player[$typename]['*'] = $value;
+        // Load and save default settings for the player.
+        if (!isset($context_config->player[$typename]['settings']) && isset($players[$value]['settings'])) {
+          $context_config->player[$typename]['settings'] = $players[$value]['settings'];
+        }
         scald_context_config_save($context_config);
         break;
     }

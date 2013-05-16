@@ -324,6 +324,7 @@ function scald_scald_player() {
       'name' => 'Default player',
       'description' => 'The Scald default player for all atom types.',
       'type' => array('*'),
+      'settings' => array(),
     ),
   );
 }
@@ -391,6 +392,7 @@ function scald_atom_defaults($type) {
     $actions = scald_actions();
     $default = new stdClass();
     $default->actions = $actions['view']['bitmask'] + $actions['fetch']['bitmask'];
+    $default->upload_type = 'managed_file';
     $default->description = '';
 
     $thumbnail = in_array($type, array('image', 'audio', 'video')) ? $type . '.png' : 'thumbnail_default.png';
@@ -1152,6 +1154,19 @@ function scald_action_permitted($atom, $action = 'fetch', $account = NULL) {
 }
 
 /**
+ * Converts actions bitmask to array of action machine names.
+ */
+function scald_action_bitmask_to_array($bitmask) {
+  $names = array();
+  foreach (scald_actions() as $name => $action) {
+    if ($action['bitmask'] & $bitmask) {
+      $names[] = $name;
+    }
+  }
+  return $names;
+}
+
+/**
  * Implements hook_user_load().
  */
 function scald_user_load($users) {
@@ -1303,11 +1318,11 @@ function scald_prerender(&$atom, $context, $options) {
  *   A Scald ID *OR* a Scald Atom object.
  * @param string $context
  *   A valid Scald Context slug (a text string)
- * @param string $options
- *   An optional text string specifying additional Scald Context-specific
- *   options that get passed to the Scald Context for rendering (e.g. a
- *   mechanism for specifying the size of an image). Usually it is the JSON
- *   format of an array of options.
+ * @param mixed $options
+ *   An optional text string or array specifying additional Scald
+ *   Context-specific options that get passed to the Scald Context for rendering
+ *   (e.g. a mechanism for specifying the size of an image). Usually it is the
+ *   JSON format of an array of options.
  * @param bool $rebuild
  *   Set to true to force a rebuild of the rendering.
  *
@@ -1315,7 +1330,7 @@ function scald_prerender(&$atom, $context, $options) {
  *   The rendered Scald Atom (usually an XHTML string ready for display)
  *   FALSE if the rendering failed for whatever reason
  */
-function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
+function scald_render($sid, $context, $options = array(), $rebuild = FALSE) {
   // Validates the arguments.
   if (!is_numeric($sid)) {
     if (!empty($sid->sid)) {
@@ -1379,18 +1394,16 @@ function scald_render($sid, $context, $options = NULL, $rebuild = FALSE) {
     }
   }
 
-  // Convert $options into an array.
-  if (!$options) {
-    $options = array();
-  }
   // If $options is not a JSON string or a single value, give other modules a
   // chance to handle it.
-  elseif (!is_array($decoded = drupal_json_decode($options))) {
-    $options = array('option' => $options);
-    drupal_alter('scald_render_options', $options, $atom, $context);
-  }
-  else {
-    $options = $decoded;
+  if ($options) {
+    if (!is_array($decoded = drupal_json_decode($options))) {
+      $options = array('option' => $options);
+      drupal_alter('scald_render_options', $options, $atom, $context);
+    }
+    else {
+      $options = $decoded;
+    }
   }
 
   scald_prerender($atom, $context, $options);
@@ -1633,7 +1646,7 @@ function scald_scald_prerender($atom, $context, $options, $mode) {
 /**
  * Implements hook_scald_render().
  */
-function scald_scald_render($atom, $context, $options) {
+function scald_scald_render($atom, $context, $options = array()) {
   switch ($context) {
     case 'debug':
       $output = '<pre class="debug">' . print_r($atom, TRUE) . '</pre>';
@@ -2057,10 +2070,10 @@ function scald_menu() {
 
   // AJAX callback allowing to fetch atoms, which provides is usefull
   // for library implementations and RTE integrations.
-  $items['atom/fetch/%/%'] = array(
+  $items['atom/fetch/%'] = array(
     'title' => 'Fetch atoms',
     'page callback' => 'scald_atom_fetch_atoms',
-    'page arguments' => array(2, 3),
+    'page arguments' => array(2),
     'access callback' => TRUE,
     'file' => 'includes/scald.pages.inc',
     'theme callback' => 'ajax_base_page_theme',
@@ -2376,3 +2389,4 @@ function scald_atom_user_build_actions_links($atom, $query = NULL) {
 
   return $links;
 }
+

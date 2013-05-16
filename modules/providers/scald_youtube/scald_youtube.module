@@ -7,7 +7,7 @@
 define('YOUTUBE_WEB',         'http://www.youtube.com/watch');
 define('YOUTUBE_OEMBED',      'http://www.youtube.com/oembed');
 define('YOUTUBE_ID_REGEXP',   '/^[a-zA-Z0-9\-_]+$/');
-define('YOUTUBE_WEB_REGEXP',  '#http://www\.youtube\.com/\S+[\?&]v=([a-zA-Z0-9\-_]+)#');
+define('YOUTUBE_WEB_REGEXP',  '#https?://www\.youtube\.com/\S+[\?&]v=([a-zA-Z0-9\-_]+)#');
 define('YOUTUBE_RSS',         'http://gdata.youtube.com/feeds/api/videos/');
 define('YOUTUBE_MEDIA',       'http://search.yahoo.com/mrss/');
 
