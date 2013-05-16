@@ -282,15 +282,11 @@ renderLibrary: function(data, editor) {
         }
         var id = $img.data('atom-id');
         dt.dropEffect = 'copy';
-        if (document.all) {
-          // IE does not follow HTML5 Drag and drop specifications. It accepts
-          // either "text" or "URL" for "format" and trigger an error if another
-          // format is used.
-          dt.setData('text', Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[id]));
+        dt.setData("Text", Drupal.dnd.Atoms[id].sas);
+        try {
+          dt.setData("text/html", Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[id]));
         }
-        else {
-          dt.setData('text', Drupal.dnd.Atoms[id].sas);
-          dt.setData('text/html', Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[id]));
+        catch(e) {
         }
         return true;
       })
