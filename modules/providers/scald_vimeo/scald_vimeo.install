@@ -18,4 +18,3 @@ function scald_vimeo_install() {
 function scald_vimeo_uninstall() {
   scald_remove_type('video');
 }
-

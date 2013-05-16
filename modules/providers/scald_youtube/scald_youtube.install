@@ -18,4 +18,3 @@ function scald_youtube_install() {
 function scald_youtube_uninstall() {
   scald_remove_type('video');
 }
-

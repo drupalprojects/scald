@@ -191,17 +191,18 @@ function hook_scald_action($atom, $action, $mode) {
 /**
  * Respond to atom prerender.
  *
- * @param $atom
- *   The atom being created.
- *
- * @param $mode
- *   Role of the callee function. Can have the following values:
- *   - "type" (not really, as we don't have type provider now)
- *   - "atom"
- *   - "transcoder"
- *   - "context"
- *   - "player"
- *
+ * @param ScaldAtom $atom
+ *   the scald atom object to prepare for rendering.
+ * @param string $context
+ *   the scald context slug.  must be optional since scald core implements
+ *   multiple providers which require hook_scald_prerender().
+ * @param string $options
+ *   a string which represents any context options.  must be optional since
+ *   scald core implements multiple providers which require
+ *   hook_scald_prerender().
+ * @param string $mode
+ *   a string indicating which mode the prerender function is being called in
+ *   ('type', 'atom', 'context', 'player' or 'transcoder').
  */
 function hook_scald_prerender($atom, $context, $options, $mode) {
 }

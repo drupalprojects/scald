@@ -14,7 +14,7 @@ class scald_plugin_display_library extends views_plugin_display_page {
    * We won't be returning anything, which tells Drupal that everything
    * is already rendered.
    */
-  function execute() {
+  public function execute() {
     $library = array();
     $summary = array('criteria' => array());
 

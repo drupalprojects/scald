@@ -1200,8 +1200,11 @@ function _scald_user_combine_actions($account) {
  * Prepare a Scald Atom for rendering.
  *
  * @param ScaldAtom $atom
+ *   The atom to prerender.
  * @param string $context
+ *   The context in which to render the atom?
  * @param array $options
+ *   An array of options to pass down to the rendering pipeline.
  */
 function scald_prerender(&$atom, $context, $options) {
   $types = scald_types();
@@ -1607,19 +1610,6 @@ function scald_scald_actions() {
  * Scald Contexts 'debug', 'no-access', 'invalid-id', 'deleted', 'title' and
  * UI-created contexts, and for its role as a Scald Transcoder Provider of Scald
  * Transcoder 'passthrough'.
- *
- * @param ScaldAtom $atom
- *   The Scald Atom object to prepare for rendering.
- * @param string $context
- *   The Scald Context slug.  Must be optional since Scald Core implements
- *   multiple Providers which require hook_scald_prerender().
- * @param string $options
- *   A string which represents any Context options.  Must be optional since
- *   Scald Core implements multiple Providers which require
- *   hook_scald_prerender().
- * @param string $mode
- *   A string indicating which mode the prerender function is being called in
- *   ('type', 'atom', 'context', 'player' or 'transcoder').
  */
 function scald_scald_prerender($atom, $context, $options, $mode) {
   switch ($mode) {
@@ -1646,19 +1636,19 @@ function scald_scald_prerender($atom, $context, $options, $mode) {
 function scald_scald_render($atom, $context, $options) {
   switch ($context) {
     case 'debug':
-      return '<pre class="debug">' . print_r($atom, TRUE) . '</pre>';
+      $output = '<pre class="debug">' . print_r($atom, TRUE) . '</pre>';
       break;
 
     case 'no-access':
-      return theme('scald_render_error', array('context' => $context, 'message' => t('You do not have access to view this Atom.')));
+      $output = theme('scald_render_error', array('context' => $context, 'message' => t('You do not have access to view this Atom.')));
       break;
 
     case 'invalid-id':
-      return theme('scald_render_error', array('context' => $context, 'message' => t('Invalid Scald ID.')));
+      $output = theme('scald_render_error', array('context' => $context, 'message' => t('Invalid Scald ID.')));
       break;
 
     case 'deleted':
-      return theme('scald_render_error', array('context' => $context, 'message' => t('Atom deleted!')));
+      $output = theme('scald_render_error', array('context' => $context, 'message' => t('Atom deleted!')));
       break;
 
     default:
@@ -1667,14 +1657,16 @@ function scald_scald_render($atom, $context, $options) {
       $system = _scald_system_contexts();
       if ($context == 'full' || empty($system[$context])) {
         $content = scald_atom_view($atom, $context);
-        return drupal_render($content);
+        $output = drupal_render($content);
       }
       // Else, returns the title as we don't know what to render.
       else {
-        return $atom->rendered->title;
+        $output = $atom->rendered->title;
       }
       break;
   }
+
+  return $output;
 }
 
 /*******************************************************************************
@@ -1840,7 +1832,7 @@ function scald_field_extra_fields() {
 }
 
 /**
- * Implements hook_form_FORM_ID_alter() of field_ui_display_overview_form().
+ * Implements hook_form_FORM_ID_alter() for field_ui_display_overview_form().
  */
 function scald_form_field_ui_display_overview_form_alter(&$form, $form_state) {
   if ($form['#entity_type'] !== 'scald_atom') {
@@ -2185,7 +2177,7 @@ function scald_context_config_load($name) {
     $context_config->context = $name;
   }
 
-  // Add default settings
+  // Add default settings.
   foreach (scald_types() as $type) {
     if (!isset($context_config->transcoder[$type->type]['*'])) {
       $context_config->transcoder[$type->type]['*'] = 'passthrough';
