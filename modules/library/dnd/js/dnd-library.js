@@ -115,6 +115,18 @@ Drupal.dnd = {
       }
     }
     return text;
+  },
+
+  // Convert SAS to an array of atom attributes.
+  sas2array: function(sas) {
+    matches = sas.match(/\[scald=(\d+)(:([^\s]+))?(.*)]/);
+    if (matches.length) {
+      return {
+        sid: matches[1],
+        context: matches[3],
+        options: matches[4]
+      };
+    }
   }
 }
 
