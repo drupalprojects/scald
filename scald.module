@@ -1067,7 +1067,43 @@ function scald_rendered_to_sas($string, $render_language = 'XHTML') {
  */
 
 /**
+ * Invokes the hook_scald_atom_access() and collects the results.
+ *
+ * Requires the same parameters as the hook itself.
+ *
+ * - Deny: at least one of the hook implementations denies access.
+ * - Allow: none denies and at least one of the hook implementations allows access.
+ * - Ignore: otherwise.
+ *
+ * @param $atom
+ *
+ * @param $action
+ *
+ * @param $account
+ *   (Optional)
+ *
+ * @return SCALD_ATOM_ACCESS_ALLOW or SCALD_ATOM_ACCESS_DENY or SCALD_ATOM_ACCESS_IGNORE
+ */
+function scald_invoke_atom_access($atom, $action, $account = NULL) {
+  if (user_access('administer scald atoms')) {
+    return SCALD_ATOM_ACCESS_ALLOW;
+  }
+
+  $access = module_invoke_all('scald_atom_access', $atom, $action, $account);
+  if (in_array(SCALD_ATOM_ACCESS_DENY, $access, TRUE)) {
+    return SCALD_ATOM_ACCESS_DENY;
+  }
+  elseif (in_array(SCALD_ATOM_ACCESS_ALLOW, $access, TRUE)) {
+    return SCALD_ATOM_ACCESS_ALLOW;
+  }
+
+  return SCALD_ATOM_ACCESS_IGNORE;
+}
+
+/**
  * Determine the Scald Actions Bitstring for a given Atom for a given User.
+ *
+ * The action bitstring is built based on the user permission system and does not take into account hook_scald_atom_access(). It is preferred to use scald_action_permitted().
  *
  * @param ScaldAtom $atom
  *   A Scald Atom
@@ -1078,6 +1114,8 @@ function scald_rendered_to_sas($string, $render_language = 'XHTML') {
  * @return mixed
  *   A Scald Actions Bitstring
  *   FALSE if the Atom is invalid
+ *
+ * @see scald_action_permitted
  */
 function scald_user_actions($atom, $account = NULL) {
   // Validate the function arguments.
@@ -1101,7 +1139,6 @@ function scald_user_actions($atom, $account = NULL) {
 
   // The Account in question belongs to the Scald Publisher of this Atom.
   $actions_key = ($atom->publisher == $account->uid) ? 'own' : 'any';
-
   // Check for the "bypass atom access restrictions" permission for this user
   // if it is set, OR the  "Atom" and the "User Action" rather than ANDing them.
   return user_access('bypass atom access restrictions') ?
@@ -1114,47 +1151,63 @@ function scald_user_actions($atom, $account = NULL) {
  *
  * @param ScaldAtom $atom
  *   A Scald Atom
- * @param string $action
+ * @param mixed $action
  *   A Scald Action slug or an array of actions with operator AND or OR (by
  *   default). Examples:
  *   - 'fetch'
  *   - array('fetch', 'view', 'op' => 'AND')
  * @param object $account
- *   A Drupal user account
- *   Defaults to the current $user
+ *   A Drupal user account. Defaults to the current $user.
  *
  * @return bool
  *   TRUE if the action is allowed, FALSE otherwise.
  */
 function scald_action_permitted($atom, $action = 'fetch', $account = NULL) {
-  $actions = is_array($action) ? $action : array($action);
-  if (!isset($actions['op']) || $actions['op'] !== 'AND') {
-    $actions['op'] = 'OR';
-  }
-
-  $bitmask = 0;
-  $scald_actions = scald_actions();
-  foreach ($actions as $key => $action) {
-    if (is_numeric($key)) {
-      // If asked for an unknown action, simply return FALSE if 'op' = AND,
-      // otherwise ignore it.
-      if (!isset($scald_actions[$action])) {
-        if ($actions['op'] === 'AND') {
-          return FALSE;
+  if (is_array($action)) {
+    $operator = (!isset($actions['op']) || $actions['op'] !== 'AND') ? 'OR' : 'AND';
+    foreach ($action as $key => $name) {
+      // If the key is 'op', continue.
+      if (!is_numeric($key)) {
+        continue;
+      }
+      // If the decision can be taken immediately, do it.
+      if (scald_action_permitted($atom, $name)) {
+        if ($operator === 'OR') {
+          return TRUE;
         }
       }
       else {
-        $bitmask += $scald_actions[$action]['bitmask'];
+        if ($operator === 'AND') {
+          return FALSE;
+        }
       }
     }
+    return $operator === 'OR' ? FALSE : TRUE;
   }
 
-  $check = scald_user_actions($atom, $account) & $bitmask;
-  return $actions['op'] === 'OR' ? $check > 0 : $check == $bitmask;
+  // Check hook based permissions first, because role based permissions are
+  // "ALLOW-like" and therefore can not negate hook based permission.
+  $access = scald_invoke_atom_access($atom, $action, $account);
+  if ($access === SCALD_ATOM_ACCESS_ALLOW) {
+    return TRUE;
+  }
+  elseif ($access === SCALD_ATOM_ACCESS_DENY) {
+    return FALSE;
+  }
+
+  $scald_actions = scald_actions();
+  // If asked for an unknown action, simply return.
+  if (!isset($scald_actions[$action])) {
+    return FALSE;
+  }
+
+  return (bool) (scald_user_actions($atom, $account) & $scald_actions[$action]['bitmask']);
 }
 
 /**
  * Converts actions bitmask to array of action machine names.
+ *
+ * @deprecated This function is no longer used in core.
  */
 function scald_action_bitmask_to_array($bitmask) {
   $names = array();
@@ -1369,7 +1422,11 @@ function scald_render($sid, $context, $options = array(), $rebuild = FALSE) {
   }
 
   // Check the cache unless explicitly rebuilding the rendering of the Atom.
-  $cache_parts = array_merge(array($sid, $context, scald_user_actions($atom)), drupal_render_cid_parts());
+  $action_bitstream = 0;
+  foreach (scald_atom_actions_available($atom) as $action) {
+    $action_bitstream |= $action['bitmask'];
+  }
+  $cache_parts = array_merge(array($sid, $context, $action_bitstream), drupal_render_cid_parts());
   if (!empty($options)) {
     $cache_parts[] = $options;
   }
@@ -1682,6 +1739,23 @@ function scald_scald_render($atom, $context, $options = array()) {
   return $output;
 }
 
+/**
+ * Implements hook_scald_atom_access().
+ *
+ * Currently only 'create' action is implemented.
+ */
+function scald_scald_atom_access($atom, $action, $account = NULL) {
+  switch ($action) {
+    case 'create':
+      if (user_access('create atom of any type') || user_access('create atom of ' . $atom->type . ' type')) {
+        return SCALD_ATOM_ACCESS_ALLOW;
+      }
+      break;
+  }
+
+  return SCALD_ATOM_ACCESS_IGNORE;
+}
+
 /*******************************************************************************
  * DRUPAL HOOK IMPLEMENTATIONS
  */
@@ -1873,9 +1947,13 @@ function scald_permission() {
       'title' => t('Administer Scald Atoms'),
       'restrict access' => TRUE,
     ),
+    'restrict atom access' => array(
+      'title' => t('Restrict atom access'),
+      'description' => t('User can restrict access to own atoms.'),
+    ),
     'bypass atom access restrictions' => array(
       'title' => t('Bypass atom access restrictions'),
-      'description' => t('Grants access to all atoms.'),
+      'description' => t('Bypass the access restriction implemented by atom publisher.'),
       'restrict access' => TRUE,
     ),
     'create atom of any type' => array(
@@ -2242,20 +2320,16 @@ function scald_context_config_features_revert($module) {
  * Access callback for the atom add page.
  */
 function scald_atom_add_access($type = NULL) {
-  if (user_access('administer scald atoms') || user_access('create atom of any type')) {
-    return TRUE;
-  }
-
   // If we got a type, check that the user can create atom of this type.
   if (!empty($type)) {
-    return user_access('create atom of ' . $type->type . ' type');
+    return scald_action_permitted(new ScaldAtom($type->type), 'create');
   }
 
   // Otherwise, iterate over our atom types to check if there's one that the
   // current user is allowed to create.
   $types = scald_types();
   foreach ($types as $type) {
-    if (user_access('create atom of ' . $type->type . ' type')) {
+    if (scald_action_permitted(new ScaldAtom($type->type), 'create')) {
       return TRUE;
     }
   }
@@ -2358,18 +2432,30 @@ function scald_permissions_submit($form, &$form_state) {
 }
 
 /**
+ * Builds an array of action available for a given atom.
+ */
+function scald_atom_actions_available($atom, $account = NULL) {
+  $actions = array();
+  foreach (scald_actions() as $action => $details) {
+    if (scald_action_permitted($atom, $action, $account)) {
+      $actions[$action] = $details;
+    }
+  }
+  return $actions;
+}
+
+/**
  * Builds an array of action links for a given atom.
  */
 function scald_atom_user_build_actions_links($atom, $query = NULL) {
   $actions = scald_actions();
   $supported_actions = array('view', 'edit', 'delete');
-  $current_actions = scald_user_actions($atom);
 
   $links = array();
-  foreach ($actions as $action => $details) {
-    if (in_array($action, $supported_actions) && ($current_actions & $details['bitmask'])) {
+  foreach ($supported_actions as $action) {
+    if (scald_action_permitted($atom, $action)) {
       $links[$action] = array(
-        'title' => $details['title'],
+        'title' => $actions[$action]['title'],
         'href' => 'atom/' . $atom->sid . ($action == 'view' ? '' : "/$action"),
       );
 
@@ -2389,4 +2475,3 @@ function scald_atom_user_build_actions_links($atom, $query = NULL) {
 
   return $links;
 }
-

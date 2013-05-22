@@ -65,6 +65,27 @@ function hook_scald_atom_providers() {
 }
 
 /**
+ * Define information about atom actions.
+ *
+ * The 'create' action machine name is reserved by Scald core and must not be used.
+ *
+ * @return array
+ *   The array is keyed by action machine name, each array element is another array, keyed by
+ *   - 'title'
+ *   - 'adjective': with -able suffix to generate permission name
+ *   - 'description'
+ */
+function hook_scald_actions() {
+  return array(
+    'embed' => array(
+      'title' => t('Embed'),
+      'adjective' => t('Embedable'),
+      'description' => t('Allows to embed atom in a 3rd website.'),
+    ),
+  );
+}
+
+/**
  * Define information about atom players provided by a module.
  *
  * @return
@@ -265,6 +286,27 @@ function hook_scald_rendered_to_sas_LANGUAGE($text) {
 function hook_scald_wysiwyg_context_list_alter(&$contexts) {
   unset($contexts['image']['Library_representation']);
   $contexts['image']['sdl_editor_representation'] = t('Default');
+}
+
+/**
+ * Control access to an atom.
+ *
+ * This hook can be used to grant or deny access for a specific atom and
+ * Scald action. It has the following possible return values:
+ *   SCALD_ATOM_ACCESS_ALLOW
+ *   SCALD_ATOM_ACCESS_DENY
+ *   SCALD_ATOM_ACCESS_IGNORE
+ *
+ * @param $atom
+ *   The atom being accessed.
+ *
+ * @param $action
+ *   The action being requested.
+ *
+ * @param $account
+ *   The user object of the current user. This is an optional parameter.
+ */
+function hook_scald_atom_access($atom, $action, $account = NULL) {
 }
 
 /**

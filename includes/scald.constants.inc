@@ -55,3 +55,22 @@ define('SCALD_ADMIN_ACTIONS_BATCH_LIMIT', 1);
 
 // How many users to register as Authors at a time during hook_enable().
 define('SCALD_ENABLE_BATCH_LIMIT', 100);
+
+/**
+ * Modules should return this value from hook_scald_atom_access() to allow
+ * access to an atom.
+ */
+define('SCALD_ATOM_ACCESS_ALLOW', TRUE);
+
+/**
+ * Modules should return this value from hook_scald_atom_access() to deny access
+ * to an atom.
+ */
+define('SCALD_ATOM_ACCESS_DENY', FALSE);
+
+/**
+ * Modules should return this value from hook_scald_atom_access() to not affect
+ * atom access.
+ */
+define('SCALD_ATOM_ACCESS_IGNORE', NULL);
+

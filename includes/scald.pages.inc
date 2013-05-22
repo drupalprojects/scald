@@ -18,11 +18,9 @@ function scald_atom_add() {
 
   $content = array();
 
-  // Check if the user is allowed to create atoms of any type.
-  $any = user_access('administer scald atoms') || user_access('create atom of any type');
   foreach ($types as $name => $type) {
     // Skip atom type the user isn't allowed to create.
-    if (!$any && !user_access('create atom of ' . $type->type . ' type')) {
+    if (!scald_action_permitted(new ScaldAtom($name), 'create')) {
       continue;
     }
     $content[] = array(
@@ -270,7 +268,7 @@ function scald_atom_add_form_options($form, &$form_state) {
       '#options' => $options,
       '#default_value' => $options_default,
       '#parents' => array('atom' . $delta, 'scald_actions'),
-      '#access' => user_access('administer scald atoms'),
+      '#access' => user_access('restrict atom access'),
     );
   }
 
@@ -424,7 +422,7 @@ function scald_atom_fetch_atoms($sids) {
         'type' => $atom->type,
         'legend' => '',
       ),
-      'actions' => scald_action_bitmask_to_array(scald_user_actions($atom)),
+      'actions' => array_keys(scald_atom_actions_available($atom)),
     );
   }
   drupal_json_output($output);

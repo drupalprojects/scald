@@ -8,7 +8,7 @@ class ScaldAtom {
   /**
    * Constructs a ScaldAtom object.
    */
-  public function __construct($type, $provider, array $values = array()) {
+  public function __construct($type, $provider = 'scald', array $values = array()) {
     // Add default values.
     $values += array(
       'title' => '',
