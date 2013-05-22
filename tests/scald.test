@@ -1,0 +1,91 @@
+<?php
+/**
+ * @file
+ * Tests for scald.module.
+ */
+
+/**
+ * Defines a base class for testing the Scald module.
+ */
+class ScaldWebTestCase extends DrupalWebTestCase {
+  function setUp() {
+    $modules = func_get_args();
+    if (isset($modules[0]) && is_array($modules[0])) {
+      $modules = $modules[0];
+    }
+    $modules[] = 'scald';
+    parent::setUp($modules);
+
+    // Create Article node type.
+    if ($this->profile != 'standard') {
+      //$this->drupalCreateContentType(array('type' => 'article', 'name' => 'Article'));
+    }
+  }
+}
+
+/**
+ * Test the Scald atom entities.
+ */
+class ScaldAtomEntityTestCase extends ScaldWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Scald atom entities',
+      'description' => 'Test the Scald atom entities.',
+      'group' => 'Scald',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('scald_image');
+    $web_user = $this->drupalCreateUser(array('create article content', 'create page content', 'create atom of image type', 'view any atom', 'fetch any atom'));
+    $this->drupalLogin($web_user);
+  }
+
+  function createAtom() {
+    $files = $this->drupalGetTestFiles('image');
+    $image = reset($files);
+    $edit = array();
+    $edit['files[file]'] = drupal_realpath($image->uri);
+    $this->drupalPost('atom/add/image', $edit, t('Continue'));
+    $this->assertFieldByName('atom0[title]', $image->filename);
+    $this->drupalPost(NULL, array(), t('Finish'));
+
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'scald_atom');
+    $query->propertyCondition('type', 'image');
+    $result = $query->execute();
+    $this->assertEqual(count($result['scald_atom']), 1, 'Image atom has been created.');
+  }
+
+  /**
+   * Create four nodes and ensure they're loaded correctly.
+   */
+  function testScaldAtomCRUD() {
+    $this->createAtom();
+    $atom = scald_atom_load(1);
+
+    $this->assertTrue($atom->fetched, 'Image atom has been loaded.');
+  }
+
+  /**
+   * Permission tests.
+   */
+  function testScaldAtomPermissions() {
+    $this->createAtom();
+    $atom = scald_atom_load(1);
+
+    // Try to view the atom.
+    $this->drupalGet('atom/' . $atom->sid);
+    $this->assertTitle($atom->title . ' | Drupal', 'Image atom can be accessed.');
+
+    // User without permission.
+    $web_user = $this->drupalCreateUser(array('fetch any atom'));
+    $this->drupalLogin($web_user);
+    $this->drupalGet('atom/' . $atom->sid);
+    $this->assertResponse(403);
+    $this->drupalLogout();
+    $this->drupalGet('atom/' . $atom->sid);
+    $this->assertResponse(404);
+  }
+}
