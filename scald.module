@@ -400,6 +400,9 @@ function scald_atom_defaults($type) {
     $default->thumbnail_source = 'public://atoms/' . $thumbnail;
 
     if (!file_exists($default->thumbnail_source)) {
+      // file_unmanaged_copy() does not create new directory, so it is necessary
+      // to create it before.
+      file_prepare_directory($default->thumbnail_source, FILE_CREATE_DIRECTORY);
       file_unmanaged_copy(drupal_get_path('module', 'scald') . '/assets/' . $thumbnail, $default->thumbnail_source);
     }
   }
