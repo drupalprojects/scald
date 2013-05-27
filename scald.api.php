@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Hooks related to Scald atoms and providers.
@@ -34,13 +33,12 @@
  *     -> {atom_provider}_scald_prerender($mode = 'atom')
  *     -> {transcoder_provider}_scald_prerender($mode = 'transcoder')
  *     -> {context_provider}_scald_prerender($mode = 'context')
+ *     -> {player_provider}_scald_prerender($mode = 'player')
  *   -> {context_provider}_scald_render()
  *
  * scald_register_atom(), scald_update_atom(), scald_unregister_atom()
- *   -> {type_provider}_scald_fetch($mode = 'type')
- *   -> {atom_provider}_scald_fetch($mode = 'atom')
- *   -> {relationship_provider}_scald_prerender($mode = 'relationship')
- *   -> {transcoder_provider}_scald_prerender($mode = 'transcoder')
+ *   -> {type_provider}_scald_{action}_atom($mode = 'type')
+ *   -> {atom_provider}_scald_{action}_atom($mode = 'atom')
  *
  * scald_rendered_to_sas()
  *   -> scald_rendered_to_sas_LANGUAGE()
@@ -50,9 +48,9 @@
  * Define information about atom providers provided by a module.
  *
  * @return
- *   An array of atom providers. This array is keyed on the unified atom type.
+ *   An array of atom providers. This array is keyed by the unified atom type.
  *   A module can define at most one provider for each atom type. Each provider
- *   is defined by a untranslated name.
+ *   is defined by an untranslated name.
  */
 function hook_scald_atom_providers() {
   return array(
@@ -67,10 +65,12 @@ function hook_scald_atom_providers() {
 /**
  * Define information about atom actions.
  *
- * The 'create' action machine name is reserved by Scald core and must not be used.
+ * The 'create' action machine name is reserved by Scald core and must not be
+ * used.
  *
  * @return array
- *   The array is keyed by action machine name, each array element is another array, keyed by
+ *   The array is keyed by action machine name, each array element is another
+ *   array, keyed by
  *   - 'title'
  *   - 'adjective': with -able suffix to generate permission name
  *   - 'description'
@@ -89,7 +89,7 @@ function hook_scald_actions() {
  * Define information about atom players provided by a module.
  *
  * @return
- *   An array of atom players. This array is keyed on the machine-readable
+ *   An array of atom players. This array is keyed by the machine-readable
  *   player name. Each player is defined as an associative array containing the
  *   following items:
  *   - "name": The untranslated human-readable name of the player.
@@ -115,7 +115,8 @@ function hook_scald_player() {
 /**
  * Settings form for player.
  *
- * It is not a really hook. Only one module is invoke.
+ * This hook is only invoked for the module providing the player that is being
+ * edited.
  *
  * @param $form
  *
@@ -129,9 +130,8 @@ function hook_scald_player_settings_form($form, &$form_state) {
 /**
  * Respond to atom insertion.
  *
- * It is not a really hook. Only one module is invoke. This function is a direct
- * port from Drupal 6 version of Scald. It is similar to hook_field_insert in
- * Drupal 7.
+ * This hook is only invoked for the module providing the atom type or atom
+ * after atom creation.
  *
  * @param $atom
  *   The atom being created.
@@ -140,7 +140,6 @@ function hook_scald_player_settings_form($form, &$form_state) {
  *   Role of the callee function. Can have the following values:
  *   - "type" (not really, as we don't have type provider now)
  *   - "atom"
- *   - "transcoder"
  */
 function hook_scald_register_atom($atom, $mode) {
 }
@@ -148,7 +147,7 @@ function hook_scald_register_atom($atom, $mode) {
 /**
  * Respond to atom update.
  *
- * Similar to hook_scald_register_atom(), but this hook is invoked for existing
+ /* Similar to hook_scald_register_atom(), but this hook is invoked for existing
  * atoms.
  *
  * @param $atom
@@ -158,7 +157,6 @@ function hook_scald_register_atom($atom, $mode) {
  *   Role of the callee function. Can have the following values:
  *   - "type" (not really, as we don't have type provider now)
  *   - "atom"
- *   - "transcoder"
  *
  * @see hook_scald_register_atom().
  */
@@ -236,7 +234,8 @@ function hook_scald_prerender($atom, $context, $options, $mode) {
 /**
  * Respond to atom render.
  *
- * It is not a really hook. Only one module is invoke.
+ * It is used by Scald and other modules to provide markup for contexts created
+ * in code.
  *
  * @param $atom
  *   The atom being rendered.
@@ -254,9 +253,9 @@ function hook_scald_render($atom, $context, $options) {
  * Handles the render options when it is not a JSON string.
  *
  * In the old version of Scald, $options could be a simple string. But modern
- * implementation requires it is a JSON string to interact with $options as an
- * array. This hook give modules a change to convert that simple string into an
- * array.
+ * implementation requires it to be a JSON string to interact with $options as
+ * an array. This hook gives modules a chance to convert that simple string into
+ * an array.
  *
  * @param array $options
  *   The $options array to be updated. The original options string is stored at
