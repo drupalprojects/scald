@@ -193,8 +193,15 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
     ';
   }
   elseif ($mode == 'atom') {
+    $attributes = array();
+    foreach (array('alt', 'title') as $attribute_name) {
+      if (isset($atom->scald_thumbnail[LANGUAGE_NONE][0][$attribute_name]) && $atom->scald_thumbnail[LANGUAGE_NONE][0][$attribute_name]) {
+        $attributes[$attribute_name] = $atom->scald_thumbnail[LANGUAGE_NONE][0][$attribute_name];
+      }
+    }
+
     if (!empty($style_name)) {
-      $atom->rendered->player = theme('image_style', array('path' => $atom->file_source, 'style_name' => $style_name));
+      $atom->rendered->player = theme('image_style', array('path' => $atom->file_source, 'style_name' => $style_name) + $attributes);
     }
     elseif (isset($mappings)) {
       foreach ($mappings->mapping as $breakpoint_name => $multipliers) {
@@ -210,12 +217,12 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
       // The fallback_image_style is the first image style we find, and so if it
       // is empty then we do not have any image style.
       if (!empty($fallback_image_style)) {
-        $atom->rendered->player = theme('picture', array('uri' => $atom->file_source, 'style_name' => $fallback_image_style, 'breakpoints' => $mappings->mapping));
+        $atom->rendered->player = theme('picture', array('uri' => $atom->file_source, 'style_name' => $fallback_image_style, 'breakpoints' => $mappings->mapping) + $attributes);
       }
     }
     else {
       $path = empty($atom->rendered->file_transcoded_url) ? $atom->file_source : $atom->rendered->file_transcoded_url;
-      $atom->rendered->player = theme('image', array('path' => $path));
+      $atom->rendered->player = theme('image', array('path' => $path) + $attributes);
     }
 
     if (!empty($options['link'])) {
