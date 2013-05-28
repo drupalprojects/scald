@@ -120,7 +120,7 @@ function dnd_library() {
           'dnd' => array(
             'url' => url(dnd_get_library()),
             'contexts' => $contexts,
-            'contextDefault' => 'sdl_editor_representation',
+            'contextDefault' => variable_get('dnd_context_default', 'sdl_editor_representation'),
           ),
         ),
       ),
