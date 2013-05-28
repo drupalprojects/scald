@@ -45,6 +45,14 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
   ctools_include('object-cache');
   ctools_include('wizard');
 
+  // If we are not currently edit an atom and there is a temporary saved atom,
+  // reopen it.
+  $cache = ctools_object_cache_get('scald_atom', 'edit:-1');
+  if (!$atom_id && $cache && $cache['atoms'][0]->type === $type->type) {
+    $atom_id = -1;
+    $step = 'options';
+  }
+
   $cache_id = isset($atom_id) ? 'edit:' . $atom_id : 'add';
 
   // Start by getting the list of all the modules that said they can provide
