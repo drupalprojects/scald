@@ -1431,6 +1431,8 @@ function scald_render($sid, $context, $options = array(), $rebuild = FALSE) {
     $action_bitstream |= $action['bitmask'];
   }
   $cache_parts = array_merge(array($sid, $context, $action_bitstream), drupal_render_cid_parts());
+  $cache_parts[] = $GLOBALS['is_https'] ? 'secure' : 'plain';
+
   if (!empty($options)) {
     $cache_parts[] = $options;
   }
