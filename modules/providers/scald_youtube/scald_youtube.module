@@ -114,6 +114,7 @@ function scald_youtube_scald_prerender($atom, $context, $options, $mode) {
           'video_height'  => ($atom->data['video_height'] ? $atom->data['video_height'] : 365),
           'thumbnail'     => $atom->rendered->thumbnail_source_url,
         ),
+        'atom' => $atom,
       )
     );
   }
@@ -125,7 +126,7 @@ function scald_youtube_scald_prerender($atom, $context, $options, $mode) {
 function scald_youtube_theme() {
   return array(
     'scald_youtube_player' => array(
-      'variables' => array('vars' => NULL),
+      'variables' => array('vars' => NULL, 'atom' => NULL),
       'template' => 'scald_youtube_player'
     ),
   );

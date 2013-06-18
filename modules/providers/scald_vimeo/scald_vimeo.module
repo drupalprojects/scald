@@ -106,6 +106,7 @@ function scald_vimeo_scald_prerender($atom, $context, $options, $mode) {
           'video_height'  => ($atom->data['video_height'] ? $atom->data['video_height'] : 365),
           'thumbnail'     => $atom->thumbnail_source
         ),
+        'atom' => $atom,
       )
     );
   }
@@ -117,7 +118,7 @@ function scald_vimeo_scald_prerender($atom, $context, $options, $mode) {
 function scald_vimeo_theme() {
   return array(
     'scald_vimeo_player' => array(
-      'variables' => array('vars' => NULL),
+      'variables' => array('vars' => NULL, 'atom' => NULL),
       'template' => 'scald_vimeo_player'
     ),
   );
