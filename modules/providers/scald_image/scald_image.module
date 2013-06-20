@@ -194,7 +194,7 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
   }
   elseif ($mode == 'atom') {
     $attributes = array();
-    foreach (array('alt', 'title') as $attribute_name) {
+    foreach (array('alt', 'title', 'width', 'height') as $attribute_name) {
       if (isset($atom->scald_thumbnail[LANGUAGE_NONE][0][$attribute_name]) && $atom->scald_thumbnail[LANGUAGE_NONE][0][$attribute_name]) {
         $attributes[$attribute_name] = $atom->scald_thumbnail[LANGUAGE_NONE][0][$attribute_name];
       }
