@@ -18,8 +18,35 @@ class ScaldWebTestCase extends DrupalWebTestCase {
 
     // Create Article node type.
     if ($this->profile != 'standard') {
-      //$this->drupalCreateContentType(array('type' => 'article', 'name' => 'Article'));
+      $this->drupalCreateContentType(array('type' => 'article', 'name' => 'Article'));
     }
+  }
+}
+
+/**
+ * Test the Scald base functionality.
+ */
+class ScaldBaseTestCase extends ScaldWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Scald base',
+      'description' => 'Test the Scald base functionality.',
+      'group' => 'Scald',
+    );
+  }
+
+  function setUp() {
+    parent::setUp();
+    $web_user = $this->drupalCreateUser(array('create article content', 'create page content', 'view any atom', 'fetch any atom'));
+    $this->drupalLogin($web_user);
+  }
+
+  function testScaldBaseAtomType() {
+    module_enable(array('scald_audio'));
+    $default = scald_atom_defaults('audio');
+    $this->assertEqual($default->thumbnail_source, 'public://atoms/audio.png', 'Default thumbnail for audios set correctly.');
+    $this->assertTrue(file_exists($default->thumbnail_source), 'Default thumbnail for audios exists.');
   }
 }
 
