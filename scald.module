@@ -402,7 +402,8 @@ function scald_atom_defaults($type) {
     if (!file_exists($default->thumbnail_source)) {
       // file_unmanaged_copy() does not create new directory, so it is necessary
       // to create it before.
-      file_prepare_directory(dirname($default->thumbnail_source), FILE_CREATE_DIRECTORY);
+      $directory = dirname($default->thumbnail_source);
+      file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
       file_unmanaged_copy(drupal_get_path('module', 'scald') . '/assets/' . $thumbnail, $default->thumbnail_source);
     }
   }
