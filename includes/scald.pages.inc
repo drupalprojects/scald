@@ -141,7 +141,7 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
   else {
     if ($output === FALSE || !empty($form_state['complete'])) {
       $atom = $form_state['scald']['atoms'][0];
-      drupal_goto('atom/' . $atom->sid . '/view');
+      drupal_goto('atom/' . $atom->sid);
     }
     elseif (!empty($form_state['cancel'])) {
       drupal_goto('atom/add');
