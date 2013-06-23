@@ -180,9 +180,10 @@ function atom_reference_field_widget_form(&$form, &$form_state, $field, $instanc
     array('%types' => implode(', ', $options))
   );
 
+  $return['#required'] = $element['#required'];
+  $element['#required'] = FALSE;
   $return['sid'] = $element;
   $return['sid']['#description'] .= ' ' . $help;
-
   $return['sid']['#type'] = 'textfield';
   $return['sid']['#attributes'] = array('data-types' => implode(',', array_keys($options)));
   $return['sid']['#default_value'] = isset($items[$delta]) ? $items[$delta]['sid'] : '';
