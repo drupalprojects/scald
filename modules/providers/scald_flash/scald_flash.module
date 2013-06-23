@@ -63,7 +63,7 @@ function scald_flash_scald_add_form_fill(&$atoms, $form, $form_state) {
 * Implements hook_scald_fetch.
 */
 function scald_flash_scald_fetch($atom, $type) {
-  // Get the tweet thumbnail
+  // Get the flash thumbnail
   $file = file_load($atom->base_id);
   $atom->base_entity = $file;
   $atom->file_source = $file->uri;
@@ -72,9 +72,20 @@ function scald_flash_scald_fetch($atom, $type) {
     $file_image = $atom->scald_thumbnail[LANGUAGE_NONE][0];
     $atom->thumbnail_source = $file_image['uri'];
   }
+}
 
-  // remove the legend, not needed for a tweet
-  $atom->omit_legend = TRUE;
+/**
+ * Implements hook_scald_atom_insert().
+ */
+function scald_flash_scald_atom_insert($atom) {
+  if ($atom->provider == 'scald_flash') {
+    $file = file_load($atom->base_id);
+    if ($file) {
+      $file->status = FILE_STATUS_PERMANENT;
+      file_save($file);
+      file_usage_add($file, 'scald_flash', 'scald_atom', $atom->sid);
+    }
+  }
 }
 
 /**
