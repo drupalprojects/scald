@@ -103,7 +103,7 @@ INSTALLATION
 Scald depends on Views, CTools and has integration for Edit, CKEditor or
 WYSIWYG, Token.
 
-Other than type/context/action/transcoder/player providers, Scald have 3 types
+Other than type/context/action/transcoder/player providers, Scald has 3 types
 of modules:
 
 - Drag and Drop integration: the DnD module features drag and drop interface
