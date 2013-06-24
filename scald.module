@@ -1210,6 +1210,18 @@ function scald_action_permitted($atom, $action = 'fetch', $account = NULL) {
 }
 
 /**
+ * Entity integration for access callback.
+ *
+ * It does exactly what scald_action_permitted does, but with different argument
+ * order to be conform with Entity module's expection.
+ *
+ * @see scald_action_permitted()
+ */
+function scald_atom_access($op, $atom, $account = NULL) {
+  return scald_action_permitted($atom, $op, $account);
+}
+
+/**
  * Converts actions bitmask to array of action machine names.
  *
  * @deprecated This function is no longer used in core.
@@ -1779,6 +1791,7 @@ function scald_entity_info() {
       'controller class' => 'ScaldAtomController',
       'base table' => 'scald_atoms',
       'uri callback' => 'scald_atom_uri',
+      'access callback' => 'scald_atom_access',
       'fieldable' => TRUE,
       'entity keys' => array(
         'id' => 'sid',
