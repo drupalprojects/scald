@@ -547,3 +547,13 @@ body {
   background-color: #fff;
   border-color: #6bf;
 }
+
+/* Override CTools' modal */
+
+
+/* Override CTools' modal */
+div.ctools-modal-content .field-type-atom-reference .form-item.form-type-textfield:first-child label {
+  /* Don't use a fixed width label for the dropbox */
+  width: auto;
+}
+
