@@ -58,7 +58,8 @@ function scald_image_scald_add_form_fill(&$atoms, $form, $form_state) {
     }
     $atom->title = $file->filename;
     $atom->base_id = $file->fid;
-    $atom->scald_thumbnail[LANGUAGE_NONE][0] = (array)$file;
+    $langcode = field_language('scald_atom', $atom, 'scald_thumbnail');
+    $atom->scald_thumbnail[$langcode][0] = (array) $file;
   }
 }
 
@@ -194,9 +195,10 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
   }
   elseif ($mode == 'atom') {
     $attributes = array();
+    $langcode = field_language('scald_atom', $atom, 'scald_thumbnail');
     foreach (array('alt', 'title', 'width', 'height') as $attribute_name) {
-      if (isset($atom->scald_thumbnail[LANGUAGE_NONE][0][$attribute_name]) && $atom->scald_thumbnail[LANGUAGE_NONE][0][$attribute_name]) {
-        $attributes[$attribute_name] = $atom->scald_thumbnail[LANGUAGE_NONE][0][$attribute_name];
+      if (isset($atom->scald_thumbnail[$langcode][0][$attribute_name]) && $atom->scald_thumbnail[$langcode][0][$attribute_name]) {
+        $attributes[$attribute_name] = $atom->scald_thumbnail[$langcode][0][$attribute_name];
       }
     }
 
@@ -257,7 +259,8 @@ function scald_image_scald_register_atom($atom, $mode) {
  */
 function _scald_image_sync_thumbnail($atom) {
   if ($atom->scald_thumbnail) {
-    $atom->base_id = $atom->scald_thumbnail[LANGUAGE_NONE][0]['fid'];
+    $items = field_get_items('scald_atom', $atom, 'scald_thumbnail');
+    $atom->base_id = $items[0]['fid'];
   }
 }
 

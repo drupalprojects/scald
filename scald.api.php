@@ -375,7 +375,8 @@ function scald_image_scald_add_form_fill(&$atoms, $form, $form_state) {
     }
     $atom->title = $file->filename;
     $atom->base_id = $file->fid;
-    $atom->scald_thumbnail[LANGUAGE_NONE][0] = (array)$file;
+    $langcode = field_language('scald_atom', $atom, 'scald_thumbnail');
+    $atom->scald_thumbnail[$langcode][0] = (array) $file;
   }
 }
 

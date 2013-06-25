@@ -87,13 +87,15 @@ function scald_audio_scald_add_form_fill(&$atoms, $form, $form_state) {
         $atom->title = !empty($ret['tags']['title']) ? $ret['tags']['title'] : $file->filename;
 
         // Prefill the author
-        $atom->scald_authors[LANGUAGE_NONE][0] = array(
+        $langcode = field_language('scald_atom', $atom, 'scald_authors');
+        $atom->scald_authors[$langcode][0] = array(
           'tid' => 0,
           'taxonomy_term' => (object)(array('name' => isset($ret['tags']['artist'])?$ret['tags']['artist']:t('Unknown')))
         );
 
         // Prefill tags
-        $atom->scald_tags[LANGUAGE_NONE][0] = array(
+        $langcode = field_language('scald_atom', $atom, 'scald_tags');
+        $atom->scald_tags[$langcode][0] = array(
           'tid' => 0,  // Beware, this is not a real tid, it's just an index
           'taxonomy_term' => (object)(array('name' => isset($ret['tags']['genre'])?$ret['tags']['genre']:t('Unknown')))
         );
@@ -115,14 +117,17 @@ function scald_audio_scald_add_form_fill(&$atoms, $form, $form_state) {
             $extension = '.gif';
           }
           $dest = $dir_audio_thumb . '/' . $file->filename . $extension;
-          $thumbnail = file_save_data($ret['images'][0]['data'], $dest);
-          // Set the file status to temporary (image thumb)
-          db_update('file_managed')
-            ->condition('fid', $thumbnail->fid)
-            ->fields(array('status' => 0))
-            ->execute();
+          $file = file_save_data($ret['images'][0]['data'], $dest);
 
-          $atom->scald_thumbnail[LANGUAGE_NONE][0] = (array)$thumbnail;
+          if ($file) {
+            // Set the file status to temporary (image thumb)
+            db_update('file_managed')
+              ->condition('fid', $file->fid)
+              ->fields(array('status' => 0))
+              ->execute();
+            $langcode = field_language('scald_atom', $atom, 'scald_thumbnail');
+            $atom->scald_thumbnail[$langcode][0] = (array) $file;
+          }
         }
       }
     }
@@ -186,3 +191,4 @@ function scald_audio_theme() {
     )
   );
 }
+

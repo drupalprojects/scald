@@ -54,8 +54,9 @@ function scald_flash_scald_add_form_fill(&$atoms, $form, $form_state) {
     $size_infos = getimagesize($file->uri);
     $atom->data['flash_width'] = $size_infos[0];
     $atom->data['flash_height'] = $size_infos[1];
-    $atom->scald_width[LANGUAGE_NONE][0]['value'] = $size_infos[0];
-    $atom->scald_height[LANGUAGE_NONE][0]['value'] = $size_infos[1];
+    $langcode = field_language('scald_atom', $atom, 'scald_width');
+    $atom->scald_width[$langcode][0]['value'] = $size_infos[0];
+    $atom->scald_height[$langcode][0]['value'] = $size_infos[1];
   }
 }
 
@@ -68,9 +69,8 @@ function scald_flash_scald_fetch($atom, $type) {
   $atom->base_entity = $file;
   $atom->file_source = $file->uri;
 
-  if (!empty($atom->scald_thumbnail)) {
-    $file_image = $atom->scald_thumbnail[LANGUAGE_NONE][0];
-    $atom->thumbnail_source = $file_image['uri'];
+  if ($items = field_get_items('scald_atom', $atom, 'scald_thumbnail')) {
+    $atom->thumbnail_source = $items[0]['uri'];
   }
 }
 
@@ -93,12 +93,13 @@ function scald_flash_scald_atom_insert($atom) {
  */
 function scald_flash_scald_prerender($atom, $context, $options, $mode) {
   if ($mode == 'atom') {
+    $langcode = field_language('scald_atom', $atom, 'scald_width');
     $atom->rendered->player = theme('scald_flash_object',
       array('vars' =>
         array(
           'flash_uri'      => file_create_url($atom->file_source),
-          'flash_width'   => ($atom->scald_width[LANGUAGE_NONE][0]['value'] ? $atom->scald_width[LANGUAGE_NONE][0]['value'] : 480),
-          'flash_height'  => ($atom->scald_height[LANGUAGE_NONE][0]['value'] ? $atom->scald_height[LANGUAGE_NONE][0]['value'] : 365),
+          'flash_width'   => ($atom->scald_width[$langcode][0]['value'] ? $atom->scald_width[$langcode][0]['value'] : 480),
+          'flash_height'  => ($atom->scald_height[$langcode][0]['value'] ? $atom->scald_height[$langcode][0]['value'] : 365),
           'thumbnail'     => $atom->thumbnail_source,
         ),
       )
@@ -117,3 +118,4 @@ function scald_flash_theme() {
     ),
   );
 }
+
