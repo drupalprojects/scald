@@ -1797,6 +1797,7 @@ function scald_entity_info() {
         'id' => 'sid',
         'bundle' => 'type',
         'label' => 'title',
+        'language' => 'language',
       ),
       'bundle keys' => array(
         'bundle' => 'type',

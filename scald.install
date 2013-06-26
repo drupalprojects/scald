@@ -54,6 +54,13 @@ function scald_schema() {
         'not null'    => FALSE,
         'default'     => NULL,
       ),
+      'language' => array(
+        'description' => 'The {languages}.language of this atom.',
+        'type' => 'varchar',
+        'length' => 12,
+        'not null' => TRUE,
+        'default' => '',
+      ),
       'publisher' => array(
         'description' => 'The Drupal User ID of the user who *registered* this Atom.  Makes no implications about the Authorship.  FK {users}.uid',
         'type'        => 'int',
@@ -558,6 +565,20 @@ function scald_update_7008() {
     array('provider', 64),
     array('type', 64),
     array('base_id', 64),
+  ));
+  return array();
+}
+
+/**
+ * Add language property for atoms.
+ */
+function scald_update_7009() {
+  db_add_field('scald_atom', 'language', array(
+    'description' => 'The {languages}.language of this atom.',
+    'type' => 'varchar',
+    'length' => 12,
+    'not null' => TRUE,
+    'default' => '',
   ));
   return array();
 }
