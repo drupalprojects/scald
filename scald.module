@@ -100,6 +100,9 @@ function scald_add_type($type, $title, $description) {
         'type' => 'hidden',
       ),
     ),
+    'settings' => array(
+      'file_directory' => 'thumbnails/' . $type,
+    ),
   );
   if (!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
     field_create_instance($instance);
@@ -2496,3 +2499,16 @@ function scald_atom_user_build_actions_links($atom, $query = NULL) {
 
   return $links;
 }
+
+/**
+ * Prepares and returns the default thumbnail path for an atom type.
+ */
+function scald_atom_thumbnail_path($type) {
+  $field = field_info_field('scald_thumbnail');
+  $instance = field_info_instance('scald_atom', 'scald_thumbnail', $type);
+  $directory = file_field_widget_uri($field, $instance);
+  if (file_prepare_directory($directory, FILE_CREATE_DIRECTORY)) {
+    return $directory;
+  }
+}
+
