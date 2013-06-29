@@ -21,6 +21,39 @@ class ScaldWebTestCase extends DrupalWebTestCase {
       $this->drupalCreateContentType(array('type' => 'article', 'name' => 'Article'));
     }
   }
+
+  /**
+   * Create a new atom.
+   */
+  protected function createAtom($type = 'image') {
+    module_enable(array('scald_image'));
+
+    $files = $this->drupalGetTestFiles('image');
+    $image = reset($files);
+
+    $edit = array(
+      'files[file]' => drupal_realpath($image->uri),
+    );
+    $this->drupalPost('atom/add/image', $edit, t('Continue'));
+    $this->assertFieldByName('atom0[title]', $image->filename);
+
+    // Change atom title.
+    $title = 'Image ' . $this->randomName(20);
+    $edit = array(
+      'atom0[title]' => $title,
+    );
+    $this->drupalPost(NULL, $edit, t('Finish'));
+
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'scald_atom');
+    $query->propertyCondition('title', $title);
+    $result = $query->execute();
+    $this->assertEqual(count($result['scald_atom']), 1, 'Image atom has been created.');
+
+    $atom = reset($result['scald_atom']);
+    return scald_fetch($atom->sid, TRUE);
+  }
+
 }
 
 /**
@@ -79,6 +112,8 @@ class ScaldBaseTestCase extends ScaldWebTestCase {
 
     $web_user = $this->drupalCreateUser(array(
       'administer scald',
+      'view any atom',
+      'create atom of any type',
     ));
     $this->drupalLogin($web_user);
 
@@ -117,8 +152,14 @@ class ScaldBaseTestCase extends ScaldWebTestCase {
     );
     $this->drupalPost(NULL, $edit, t('Update'));
 
-    // Verify new context settings.
-
+    // Verify new context settings. There is no easy way to verify a context
+    // other than "full".
+    $atom = $this->createAtom();
+    $content = scald_render($atom, $name);
+    $this->assertIdentical(1, preg_match('/class="[^"]*' . $class . '[^"]*"/', $content), 'Player class is correct.');
+    $this->assertNotIdentical(FALSE, strpos($content, '<figcaption>//' . $atom->title . '//</figcaption>'), 'Player caption is correct.');
+    $this->drupalGet('atom/' . $atom->sid);
+    $this->assertRaw(image_style_url('large', $atom->base_entity->uri), 'Transcoder is correct.');
   }
 }
 
@@ -137,33 +178,19 @@ class ScaldAtomEntityTestCase extends ScaldWebTestCase {
 
   function setUp() {
     parent::setUp('scald_image');
-    $web_user = $this->drupalCreateUser(array('create article content', 'create page content', 'create atom of image type', 'view any atom', 'fetch any atom'));
-    $this->drupalLogin($web_user);
-  }
-
-  function createAtom() {
-    $files = $this->drupalGetTestFiles('image');
-    $image = reset($files);
-    $edit = array();
-    $edit['files[file]'] = drupal_realpath($image->uri);
-    $this->drupalPost('atom/add/image', $edit, t('Continue'));
-    $this->assertFieldByName('atom0[title]', $image->filename);
-    $this->drupalPost(NULL, array(), t('Finish'));
-
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'scald_atom');
-    $query->propertyCondition('type', 'image');
-    $result = $query->execute();
-    $this->assertEqual(count($result['scald_atom']), 1, 'Image atom has been created.');
+    $this->web_user = $this->drupalCreateUser(array(
+      'create atom of image type',
+      'view any atom',
+      'fetch any atom',
+    ));
+    $this->drupalLogin($this->web_user);
   }
 
   /**
    * Create four nodes and ensure they're loaded correctly.
    */
   function testScaldAtomCRUD() {
-    $this->createAtom();
-    $atom = scald_atom_load(1);
-
+    $atom = $this->createAtom();
     $this->assertTrue($atom->fetched, 'Image atom has been loaded.');
   }
 
@@ -171,12 +198,37 @@ class ScaldAtomEntityTestCase extends ScaldWebTestCase {
    * Permission tests.
    */
   function testScaldAtomPermissions() {
-    $this->createAtom();
-    $atom = scald_atom_load(1);
+    $atom = $this->createAtom();
+    $atom2 = $this->createAtom();
+
+    // Switch user so that we can test directly with scald_render() with the
+    // correct permission.
+    global $user;
+    $user = user_load($this->web_user->uid);
 
     // Try to view the atom.
     $this->drupalGet('atom/' . $atom->sid);
     $this->assertTitle($atom->title . ' | Drupal', 'Image atom can be accessed.');
+
+    // Revoke the atom.
+    $this->drupalGet('atom/' . $atom2->sid);
+    $this->assertResponse(200, 'Atom is available.');
+    $this->assertTitle($atom2->title . ' | Drupal', 'Image atom can be accessed.');
+    $actions = scald_actions();
+    $atom2->actions -= $actions['view']['bitmask'];
+    scald_atom_save($atom2);
+
+    $this->drupalGet('atom/' . $atom2->sid);
+    $this->assertResponse(403);
+    $atom2->actions -= $actions['fetch']['bitmask'];
+    scald_atom_save($atom2);
+
+    $this->drupalGet('atom/' . $atom2->sid);
+    $this->assertResponse(404);
+
+    // Now for embedded atoms. Use the easy way.
+    $content = scald_render($atom2, 'full');
+    $this->assertNotIdentical(FALSE, strpos($content, t('You do not have access to view this Atom.')), 'Atom can no longer be viewed.');
 
     // User without permission.
     $web_user = $this->drupalCreateUser(array('fetch any atom'));
@@ -188,3 +240,4 @@ class ScaldAtomEntityTestCase extends ScaldWebTestCase {
     $this->assertResponse(404);
   }
 }
+
