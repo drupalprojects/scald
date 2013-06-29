@@ -573,7 +573,7 @@ function scald_update_7008() {
  * Add language property for atoms.
  */
 function scald_update_7009() {
-  db_add_field('scald_atom', 'language', array(
+  db_add_field('scald_atoms', 'language', array(
     'description' => 'The {languages}.language of this atom.',
     'type' => 'varchar',
     'length' => 12,
