@@ -36,17 +36,89 @@ class ScaldBaseTestCase extends ScaldWebTestCase {
     );
   }
 
-  function setUp() {
-    parent::setUp();
-    $web_user = $this->drupalCreateUser(array('create article content', 'create page content', 'view any atom', 'fetch any atom'));
-    $this->drupalLogin($web_user);
-  }
-
   function testScaldBaseAtomType() {
     module_enable(array('scald_audio'));
+
+    $web_user = $this->drupalCreateUser(array('create article content', 'create page content', 'view any atom', 'fetch any atom'));
+    $this->drupalLogin($web_user);
+
     $default = scald_atom_defaults('audio');
     $this->assertEqual($default->thumbnail_source, 'public://atoms/audio.png', 'Default thumbnail for audios set correctly.');
     $this->assertTrue(file_exists($default->thumbnail_source), 'Default thumbnail for audios exists.');
+  }
+
+  /**
+   * Test Scald admin.
+   */
+  function testScaldAdmin() {
+    $web_user = $this->drupalCreateUser(array(
+    ));
+    $this->drupalLogin($web_user);
+    $this->drupalGet('admin/structure/scald');
+    $this->assertResponse(403, 'Normal user cannot administer Scald');
+    $this->drupalLogout();
+
+    $admin_user = $this->drupalCreateUser(array(
+      'administer scald',
+    ));
+    $this->drupalLogin($admin_user);
+    $this->drupalGet('admin/structure/scald');
+    $this->assertResponse(200, 'Admin user can administer Scald');
+  }
+
+  /**
+   * Test Scald context.
+   */
+  function testScaldContext() {
+    module_enable(array('scald_image'));
+
+    // Prefix to avoid invalid names.
+    $title = 'context' . $this->randomName(10);
+    $name = strtolower($title);
+    $description = $this->randomName(20);
+
+    $web_user = $this->drupalCreateUser(array(
+      'administer scald',
+    ));
+    $this->drupalLogin($web_user);
+
+    $this->drupalGet('admin/structure/scald');
+    $this->clickLink('Add context');
+    $edit = array(
+      'title' => $title,
+      // There is no JavaScript in the SimpleBrowser, thus machine name must be
+      // filled manually.
+      'name' => $name,
+      'description' => $description,
+    );
+    $this->drupalPost(NULL, $edit, t('Add context'));
+
+    $this->assertText($title, 'Context created.');
+    $this->assertText($description, 'Context description is correct.');
+    $this->assertLinkByHref('admin/structure/scald/context/edit/' . $name, 0, 'New context can be edited.');
+
+    $this->clickLink('contexts');
+    $edit = array(
+      'full_trans' => 'style-large',
+      $name . '_trans' => 'style-thumbnail',
+      $name . '_playe' => 'image_figure',
+    );
+    $this->drupalPost(NULL, $edit, t('Save'));
+    $this->assertField('full_trans', 'style-large', 'Context transcoder updated.');
+    $this->assertField($name . '_playe', 'image_figure', 'Context player updated.');
+
+    // Player settings.
+    $this->clickLink('settings');
+    $class = 'class-' . $this->randomName(5);
+    $caption = '//[atom:title]//';
+    $edit = array(
+      'classes' => $class,
+      'caption' => $caption,
+    );
+    $this->drupalPost(NULL, $edit, t('Update'));
+
+    // Verify new context settings.
+
   }
 }
 
