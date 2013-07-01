@@ -8,7 +8,10 @@
  * Defines a base class for testing the Scald module.
  */
 class ScaldWebTestCase extends DrupalWebTestCase {
-  function setUp() {
+  /**
+   * Sets up a Drupal site for running functional and integration tests.
+   */
+  protected function setUp() {
     $modules = func_get_args();
     if (isset($modules[0]) && is_array($modules[0])) {
       $modules = $modules[0];
@@ -23,14 +26,26 @@ class ScaldWebTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Retrieves a sample file of the specified type.
+   */
+  protected function getTestFile($type_name, $size = NULL) {
+    // Get a file to upload.
+    $files = $this->drupalGetTestFiles($type_name, $size);
+    $file = reset($files);
+
+    // Add a filesize property to files as would be read by file_load().
+    $file->filesize = filesize($file->uri);
+
+    return $file;
+  }
+
+  /**
    * Create a new atom.
    */
   protected function createAtom($type = 'image') {
     module_enable(array('scald_image'));
 
-    $files = $this->drupalGetTestFiles('image');
-    $image = reset($files);
-
+    $image = $this->getTestFile('image');
     $edit = array(
       'files[file]' => drupal_realpath($image->uri),
     );
@@ -54,6 +69,25 @@ class ScaldWebTestCase extends DrupalWebTestCase {
     return scald_fetch($atom->sid, TRUE);
   }
 
+  /**
+   * Delete an action bit.
+   */
+  protected function deleteAtomAction($atom, $action_name) {
+    $actions = scald_actions();
+    $atom->actions &= ~$actions[$action_name]['bitmask'];
+    scald_atom_save($atom);
+    $atom = scald_fetch($atom->sid, TRUE);
+  }
+
+  /**
+   * Add an action bit.
+   */
+  protected function addAtomAction($atom, $action_name) {
+    $actions = scald_actions();
+    $atom->actions |= $actions[$action_name]['bitmask'];
+    scald_atom_save($atom);
+    $atom = scald_fetch($atom->sid, TRUE);
+  }
 }
 
 /**
@@ -61,6 +95,9 @@ class ScaldWebTestCase extends DrupalWebTestCase {
  */
 class ScaldBaseTestCase extends ScaldWebTestCase {
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Scald base',
@@ -69,12 +106,11 @@ class ScaldBaseTestCase extends ScaldWebTestCase {
     );
   }
 
-  function testScaldBaseAtomType() {
+  /**
+   * Test Scald type defaults.
+   */
+  public function testScaldBaseAtomType() {
     module_enable(array('scald_audio'));
-
-    $web_user = $this->drupalCreateUser(array('create article content', 'create page content', 'view any atom', 'fetch any atom'));
-    $this->drupalLogin($web_user);
-
     $default = scald_atom_defaults('audio');
     $this->assertEqual($default->thumbnail_source, 'public://atoms/audio.png', 'Default thumbnail for audios set correctly.');
     $this->assertTrue(file_exists($default->thumbnail_source), 'Default thumbnail for audios exists.');
@@ -168,6 +204,9 @@ class ScaldBaseTestCase extends ScaldWebTestCase {
  */
 class ScaldAtomEntityTestCase extends ScaldWebTestCase {
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Scald atom entities',
@@ -176,12 +215,16 @@ class ScaldAtomEntityTestCase extends ScaldWebTestCase {
     );
   }
 
-  function setUp() {
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp() {
     parent::setUp('scald_image');
     $this->web_user = $this->drupalCreateUser(array(
       'create atom of image type',
       'view any atom',
       'fetch any atom',
+      'edit own atom',
     ));
     $this->drupalLogin($this->web_user);
   }
@@ -189,7 +232,7 @@ class ScaldAtomEntityTestCase extends ScaldWebTestCase {
   /**
    * Create four nodes and ensure they're loaded correctly.
    */
-  function testScaldAtomCRUD() {
+  public function testScaldAtomCRUD() {
     $atom = $this->createAtom();
     $this->assertTrue($atom->fetched, 'Image atom has been loaded.');
   }
@@ -197,7 +240,7 @@ class ScaldAtomEntityTestCase extends ScaldWebTestCase {
   /**
    * Permission tests.
    */
-  function testScaldAtomPermissions() {
+  public function testScaldAtomPermissions() {
     $atom = $this->createAtom();
     $atom2 = $this->createAtom();
 
@@ -209,20 +252,21 @@ class ScaldAtomEntityTestCase extends ScaldWebTestCase {
     // Try to view the atom.
     $this->drupalGet('atom/' . $atom->sid);
     $this->assertTitle($atom->title . ' | Drupal', 'Image atom can be accessed.');
+    $this->assertNoLink(t('Edit'), 'User cannot edit own atom.');
+
+    // Enable the edit action bit.
+    $this->addAtomAction($atom, 'edit');
+    $this->drupalGet('atom/' . $atom->sid);
+    $this->assertLink(t('Edit'), 0, 'User can edit own atom.');
 
     // Revoke the atom.
     $this->drupalGet('atom/' . $atom2->sid);
     $this->assertResponse(200, 'Atom is available.');
     $this->assertTitle($atom2->title . ' | Drupal', 'Image atom can be accessed.');
-    $actions = scald_actions();
-    $atom2->actions -= $actions['view']['bitmask'];
-    scald_atom_save($atom2);
-
+    $this->deleteAtomAction($atom2, 'view');
     $this->drupalGet('atom/' . $atom2->sid);
     $this->assertResponse(403);
-    $atom2->actions -= $actions['fetch']['bitmask'];
-    scald_atom_save($atom2);
-
+    $this->deleteAtomAction($atom2, 'fetch');
     $this->drupalGet('atom/' . $atom2->sid);
     $this->assertResponse(404);
 
@@ -238,6 +282,57 @@ class ScaldAtomEntityTestCase extends ScaldWebTestCase {
     $this->drupalLogout();
     $this->drupalGet('atom/' . $atom->sid);
     $this->assertResponse(404);
+  }
+
+  /**
+   * Manual atom CRUD test.
+   */
+  public function testScaldAtomManual() {
+    $image = $this->getTestFile('image');
+    $title = $this->randomName(30);
+    $author = $this->randomName(10);
+
+    $this->drupalLogout();
+    $web_user = $this->drupalCreateUser(array(
+      'view any atom',
+      'fetch any atom',
+      'edit own atom',
+      'create atom of image type',
+    ));
+    $this->drupalLogin($web_user);
+
+    // Create an image atom.
+    $edit = array(
+      'files[file]' => drupal_realpath($image->uri),
+    );
+    $this->drupalPost('atom/add/image', $edit, t('Continue'));
+    if ($this->xpath('//input[@name="atom0[title]"]')) {
+      $edit = array(
+        'atom0[title]' => $title,
+      );
+      $this->drupalPost(NULL, $edit, t('Finish'));
+    }
+
+    // Check that an image file has been created.
+    $files = file_load_multiple(array(), array('filename' => $image->filename));
+    $file = reset($files);
+    $this->assertTrue($file, t('Image file found in database.'));
+
+    $atom = scald_fetch(1, TRUE);
+    $this->addAtomAction($atom, 'edit');
+
+    // Check that an image atom has been created.
+    $this->drupalGet('atom/' . $atom->sid);
+    $this->assertTitle($title . ' | Drupal', 'Image atom can be accessed.');
+    $this->assertLink(t('Edit'), 0, 'User can edit atom.');
+
+    // Add an author.
+    $langcode = LANGUAGE_NONE;
+    $edit = array(
+      'atom0[scald_authors][' . $langcode . ']' => $author,
+    );
+    $this->drupalPost('atom/1/edit', $edit, t('Finish'));
+    $this->assertText($author, 'Atom author has been updated.');
   }
 }
 
