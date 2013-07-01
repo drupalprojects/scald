@@ -195,7 +195,7 @@ class ScaldBaseTestCase extends ScaldWebTestCase {
     $this->assertIdentical(1, preg_match('/class="[^"]*' . $class . '[^"]*"/', $content), 'Player class is correct.');
     $this->assertNotIdentical(FALSE, strpos($content, '<figcaption>//' . $atom->title . '//</figcaption>'), 'Player caption is correct.');
     $this->drupalGet('atom/' . $atom->sid);
-    $this->assertRaw(image_style_url('large', $atom->base_entity->uri), 'Transcoder is correct.');
+    $this->assertRaw(check_plain(image_style_url('large', $atom->base_entity->uri)), 'Transcoder is correct.');
   }
 }
 
