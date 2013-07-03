@@ -197,6 +197,25 @@ class ScaldBaseTestCase extends ScaldWebTestCase {
     $this->drupalGet('atom/' . $atom->sid);
     $this->assertRaw(check_plain(image_style_url('large', $atom->base_entity->uri)), 'Transcoder is correct.');
   }
+
+  /**
+   * Test the uninstall process.
+   */
+  public function testScaldUninstall() {
+    module_enable(array('scald_audio'));
+    $web_user = $this->drupalcreateuser(array(
+      'administer modules',
+    ));
+    $this->drupallogin($web_user);
+
+    // Disable, then uninstall all Scald modules.
+    $this->drupalPost('admin/modules', array('modules[Scald Providers][scald_audio][enable]' => FALSE), t('Save configuration'));
+    $this->drupalPost(NULL, array('modules[Scald][scald][enable]' => FALSE), t('Save configuration'));
+    $this->clickLink(t('Uninstall'));
+    $this->drupalPost(NULL, array('uninstall[scald_audio]' => 1), t('Uninstall'));
+    $this->drupalPost(NULL, array(), t('Uninstall'));
+    $this->assertText(t('The selected modules have been uninstalled.'), t('Scald Audio has been uninstalled.'));
+  }
 }
 
 /**
