@@ -395,7 +395,7 @@ class ScaldAtomEntityTestCase extends ScaldWebTestCase {
     // Check that the image is accessible.
     $this->assertIdentical(1, preg_match('/scald=1:full --><img.*?src="(.+?)"/', $this->drupalGetContent(), $match), 'Found image in the atom full page.');
     $url = $match[1];
-    $this->assertNotIdentical(FALSE, strpos($url, '/system/files'), 'Private file system is used for this atom.');
+    $this->assertNotIdentical(FALSE, strpos($url, 'system/files/'), 'Private file system is used for this atom.');
     $this->drupalGet($url);
     $this->assertResponse(200, 'Private image inside the atom is accessible.');
   }
