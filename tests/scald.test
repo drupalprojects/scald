@@ -258,7 +258,6 @@ class ScaldBaseTestCase extends ScaldWebTestCase {
     $output2 = scald_render($atom->sid, 'full');
     $is_https = !$is_https;
     $base_url = str_replace('https://', 'http://', $base_url);
-    print "$output1\n$output2\n";
     $this->assertNotIdentical($output1, $output2, 'Different renders in http and https versions.');
   }
 }
