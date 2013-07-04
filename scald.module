@@ -1917,6 +1917,15 @@ function scald_entity_property_info() {
 }
 
 /**
+ * Implements hook_file_download_access().
+ */
+function scald_file_download_access($field, $entity_type, $entity) {
+  if ($entity_type == 'scald_atom') {
+    return scald_atom_access('view', $entity);
+  }
+}
+
+/**
  * Implements hook_field_extra_fields().
  */
 function scald_field_extra_fields() {
