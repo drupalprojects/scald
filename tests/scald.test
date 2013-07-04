@@ -41,6 +41,9 @@ class ScaldWebTestCase extends DrupalWebTestCase {
 
   /**
    * Create a new atom.
+   *
+   * Atom is created via the simple browser, thus the current user must have
+   * "create atom of image type" permission.
    */
   protected function createAtom($type = 'image') {
     module_enable(array('scald_image'));
@@ -231,6 +234,32 @@ class ScaldBaseTestCase extends ScaldWebTestCase {
     $this->drupalPost(NULL, array('uninstall[scald_audio]' => 1), t('Uninstall'));
     $this->drupalPost(NULL, array(), t('Uninstall'));
     $this->assertText(t('The selected modules have been uninstalled.'), t('Scald Audio has been uninstalled.'));
+  }
+
+  /**
+   * Test Scald caching system.
+   */
+  public function testScaldCache() {
+    global $is_https, $base_url;
+    module_enable(array('scald_image'));
+    $image = $this->getTestFile('image');
+
+    $web_user = $this->drupalCreateUser(array(
+      'view any atom',
+      'fetch any atom',
+      'create atom of any type',
+    ));
+    $this->drupalLogin($web_user);
+
+    $atom = $this->createAtom();
+    $output1 = scald_render($atom->sid, 'full');
+    $is_https = !$is_https;
+    $base_url = str_replace('http://', 'https://', $base_url);
+    $output2 = scald_render($atom->sid, 'full');
+    $is_https = !$is_https;
+    $base_url = str_replace('https://', 'http://', $base_url);
+    print "$output1\n$output2\n";
+    $this->assertNotIdentical($output1, $output2, 'Different renders in http and https versions.');
   }
 }
 
