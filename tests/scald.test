@@ -88,6 +88,22 @@ class ScaldWebTestCase extends DrupalWebTestCase {
     scald_atom_save($atom);
     $atom = scald_fetch($atom->sid, TRUE);
   }
+
+  /**
+   * Enable private file system and use it.
+   */
+  public function enablePrivateFileSystem() {
+    module_enable(array('scald_image'));
+    $web_user = $this->drupalcreateuser(array(
+      'administer site configuration',
+      'administer scald',
+    ));
+    $this->drupallogin($web_user);
+
+    $this->drupalPost('admin/config/media/file-system', array('file_private_path' => 'sites/default/files/private'), t('Save configuration'));
+    $this->drupalPost('admin/structure/scald/image/fields/scald_thumbnail', array('field[settings][uri_scheme]' => 'private'), t('Save settings'));
+    $this->assertRaw(t('Saved %label configuration.', array('%label' => 'Image')), 'Use private file for Scald Image.');
+  }
 }
 
 /**
@@ -353,5 +369,34 @@ class ScaldAtomEntityTestCase extends ScaldWebTestCase {
     $this->drupalPost('atom/1/edit', $edit, t('Finish'));
     $this->assertText($author, 'Atom author has been updated.');
   }
-}
 
+  /**
+   * Test Scald with private file system.
+   */
+  public function testScaldPrivateFileSystem() {
+    $this->enablePrivateFileSystem();
+    $image = $this->getTestFile('image');
+
+    $this->drupalLogout();
+    $web_user = $this->drupalCreateUser(array(
+      'view any atom',
+      'fetch any atom',
+      'create atom of image type',
+    ));
+    $this->drupalLogin($web_user);
+
+    // Create an image atom.
+    $edit = array(
+      'files[file]' => drupal_realpath($image->uri),
+    );
+    $this->drupalPost('atom/add/image', $edit, t('Continue'));
+    $this->drupalPost(NULL, array(), t('Finish'));
+
+    // Check that the image is accessible.
+    $this->assertIdentical(1, preg_match('/scald=1:full --><img.*?src="(.+?)"/', $this->drupalGetContent(), $match), 'Found image in the atom full page.');
+    $url = $match[1];
+    $this->assertNotIdentical(FALSE, strpos($url, '/system/files'), 'Private file system is used for this atom.');
+    $this->drupalGet($url);
+    $this->assertResponse(200, 'Private image inside the atom is accessible.');
+  }
+}
