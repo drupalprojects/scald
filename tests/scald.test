@@ -363,6 +363,7 @@ class ScaldAtomEntityTestCase extends ScaldWebTestCase {
       'fetch any atom',
       'edit own atom',
       'create atom of image type',
+      'delete own atom',
     ));
     $this->drupalLogin($web_user);
 
@@ -398,6 +399,22 @@ class ScaldAtomEntityTestCase extends ScaldWebTestCase {
     );
     $this->drupalPost('atom/1/edit', $edit, t('Finish'));
     $this->assertText($author, 'Atom author has been updated.');
+
+    // Delete an atom.
+    $this->addAtomAction($atom, 'delete');
+    $this->drupalGet('atom/' . $atom->sid);
+    $this->assertLink(t('Delete'), 0, 'User can delete own atom.');
+    $this->clickLink(t('Delete'));
+    $this->drupalPost(NULL, array(), t('Delete'));
+    $this->drupalGet('atom/' . $atom->sid);
+    $this->assertResponse(404);
+
+    // Check that the atom has really gone.
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'scald_atom');
+    $query->propertyCondition('sid', $atom->sid);
+    $result = $query->execute();
+    $this->assertIdentical(array(), $result, 'Atom has been deleted.');
   }
 
   /**
