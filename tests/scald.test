@@ -59,6 +59,7 @@ class ScaldWebTestCase extends DrupalWebTestCase {
     $title = 'Image ' . $this->randomName(20);
     $edit = array(
       'atom0[title]' => $title,
+      'atom0[scald_authors][und]' => $this->randomName(10),
     );
     $this->drupalPost(NULL, $edit, t('Finish'));
 
@@ -200,7 +201,7 @@ class ScaldBaseTestCase extends ScaldWebTestCase {
     // Player settings.
     $this->clickLink('settings');
     $class = 'class-' . $this->randomName(5);
-    $caption = '//[atom:title]//';
+    $caption = '//[atom:title]//[atom:author]//';
     $edit = array(
       'classes' => $class,
       'caption' => $caption,
@@ -211,8 +212,9 @@ class ScaldBaseTestCase extends ScaldWebTestCase {
     // other than "full".
     $atom = $this->createAtom();
     $content = scald_render($atom, $name);
+    $author = $atom->rendered->authors[0]->link;
     $this->assertIdentical(1, preg_match('/class="[^"]*' . $class . '[^"]*"/', $content), 'Player class is correct.');
-    $this->assertNotIdentical(FALSE, strpos($content, '<figcaption>//' . $atom->title . '//</figcaption>'), 'Player caption is correct.');
+    $this->assertNotIdentical(FALSE, strpos($content, '<figcaption>//' . $atom->title . '//' . $author . '//</figcaption>'), 'Player caption is correct.');
     $this->drupalGet('atom/' . $atom->sid);
     $this->assertRaw(check_plain(image_style_url('large', $atom->base_entity->uri)), 'Transcoder is correct.');
   }
