@@ -262,6 +262,31 @@ class ScaldBaseTestCase extends ScaldWebTestCase {
     $base_url = str_replace('https://', 'http://', $base_url);
     $this->assertNotIdentical($output1, $output2, 'Different renders in http and https versions.');
   }
+
+  /**
+   * Test Scald search.
+   */
+  public function testScaldSearch() {
+    module_enable(array('scald_image'));
+    $image = $this->getTestFile('image');
+
+    $web_user = $this->drupalCreateUser(array(
+      'view any atom',
+      'fetch any atom',
+      'create atom of any type',
+    ));
+    $this->drupalLogin($web_user);
+
+    $atom1 = $this->createAtom();
+    $atom2 = $this->createAtom();
+    $this->assertEqual(1, count(scald_search(array('title' => $atom1->title))), 'Search atoms by title.');
+    $this->assertIdentical(FALSE, scald_search(array('title' => substr($atom1->title, 2))), 'Search atoms by partial title.');
+    $this->assertEqual(1, count(scald_search(array('title' => substr($atom1->title, 2)), TRUE)), 'Search atoms by partial title using fuzzy.');
+    $this->assertEqual(2, count(scald_search(array('title' => array($atom1->title, $atom2->title)))), 'Search atoms by multiple titles.');
+    $this->assertIdentical(FALSE, scald_search(array('title' => $this->randomName(10))), 'Search atoms by wrong title.');
+    $this->assertEqual(1, count(scald_search(array('title' => $atom1->title, 'provider' => 'scald_image'))), 'Search atoms by title and provider.');
+    $this->assertIdentical(FALSE, scald_search(array('title' => $atom1->title, 'provider' => 'scald_video')), 'Search atoms by title and wrong provider.');
+  }
 }
 
 /**
