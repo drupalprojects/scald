@@ -848,6 +848,8 @@ function scald_is_fetched($atom = NULL) {
  * @return mixed
  *   An array of SIDs that match the characteristics specified
  *   FALSE on bad input or no results
+ *
+ * @todo convert to dynamic query.
  */
 function scald_search($query = array(), $fuzzy = FALSE, $singular = FALSE) {
   // Validate the arguments.
@@ -875,30 +877,25 @@ function scald_search($query = array(), $fuzzy = FALSE, $singular = FALSE) {
   $wheres = array();
   $data = array();
   foreach ($query as $field => $value) {
+    $placeholder = ':' . $field;
     switch ($field) {
       case 'title':
       case 'type':
       case 'base_id':
       case 'provider':
         if (is_array($value)) {
-          $condition = db_placeholders($value, 'text');
-          $wheres[] = $field . " IN($condition)";
-          $data = array_merge($data, $value);
+          $wheres[] = $field . " IN ($placeholder)";
         }
         else {
-          $placeholder = ":" . $field;
+          $wheres[] = $field . " LIKE " . $placeholder;
           if ($fuzzy) {
-            $wheres[] = $field . " LIKE '%%" . $placeholder . "%%'";
+            $value = '%' . db_like($value) . '%';
           }
-          else {
-            $wheres[] = $field . " = " . $placeholder;
-          }
-          $data[$placeholder] = $value;
         }
+        $data[$placeholder] = $value;
         break;
 
       case 'publisher':
-        $placeholder = ":" . $field;
         $wheres[] = $field . " = " . $placeholder;
         $data[$placeholder] = $value;
         break;
