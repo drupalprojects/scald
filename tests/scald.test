@@ -471,4 +471,25 @@ class ScaldAtomEntityTestCase extends ScaldWebTestCase {
     $this->drupalGet($url);
     $this->assertResponse(200, 'Private image inside the atom is accessible.');
   }
+
+  /**
+   * Test saving malformed and minimal atoms.
+   */
+  public function testScaldSaveAtom() {
+    $atom = new stdClass();
+    $this->assertFalse(scald_atom_save($atom), 'Cannot save an atom without type.');
+
+    $atom->type = 'blabla';
+    $this->assertFalse(scald_atom_save($atom), 'Cannot save an atom with wrong type.');
+
+    $atom->type = 'image';
+    $atom->provider = 'scald_image';
+    $sid = scald_atom_save($atom);
+    $this->assertTrue(is_numeric($sid), 'Can save an atom with minimal information.');
+
+    scald_atom_save($atom);
+    $this->assertIdentical($sid, $atom->sid, 'Atom sid does not change when being updated.');
+    $this->assertIdentical('image', $atom->type, 'Atom type does not change when being updated.');
+    $this->assertIdentical('scald_image', $atom->provider, 'Atom provider does not change when being updated.');
+  }
 }
