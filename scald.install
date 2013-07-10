@@ -242,12 +242,16 @@ function scald_install() {
  * Uninstall the DB schema and clean up as much as is feasible.
  */
 function scald_uninstall() {
+  variable_del('scald_always_rebuild');
   variable_del('scald_config');
   variable_del('scald_providers');
   variable_del('scald_atom_defaults');
   variable_del('scald_context_fallbacks');
+  variable_del('scald_actions_powers');
   variable_del('scald_actions_publisher');
   variable_del('scald_custom_contexts');
+  variable_del('scald_author_vocabulary');
+  variable_del('scald_tags_vocabulary');
 }
 
 /**
