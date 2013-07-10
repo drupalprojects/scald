@@ -358,7 +358,9 @@ function hook_scald_add_atom_count(&$form, &$form_state) {
  * This is a last chance for atom provider to add default data, maybe from the
  * form, into atoms.
  *
- * @param array $atoms
+ * @param mixed $atoms
+ *   An array of atoms if the provider implements
+ *   hook_scald_add_atom_account_count(), otherwise a single atom.
  *
  * @param array $form
  *
@@ -383,4 +385,3 @@ function scald_image_scald_add_form_fill(&$atoms, $form, $form_state) {
 /**
  * @} End of "defgroup scald_atom_provider".
  */
-
