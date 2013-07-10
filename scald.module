@@ -848,8 +848,6 @@ function scald_is_fetched($atom = NULL) {
  * @return mixed
  *   An array of SIDs that match the characteristics specified
  *   FALSE on bad input or no results
- *
- * @todo convert to dynamic query.
  */
 function scald_search($query = array(), $fuzzy = FALSE, $singular = FALSE) {
   // Validate the arguments.
@@ -873,34 +871,26 @@ function scald_search($query = array(), $fuzzy = FALSE, $singular = FALSE) {
     return FALSE;
   }
 
-  // Build the query & execute.
-  $wheres = array();
-  $data = array();
+  $efq = new EntityFieldQuery();
+  $efq->entityCondition('entity_type', 'scald_atom');
+
   foreach ($query as $field => $value) {
-    $placeholder = ':' . $field;
     switch ($field) {
       case 'title':
       case 'type':
       case 'base_id':
       case 'provider':
-        if (is_array($value)) {
-          $wheres[] = $field . " IN ($placeholder)";
+        if (is_array($value) || !$fuzzy) {
+          $efq->propertyCondition($field, $value);
         }
         else {
-          $wheres[] = $field . " LIKE " . $placeholder;
-          if ($fuzzy) {
-            $value = '%' . db_like($value) . '%';
-          }
+          $efq->propertyCondition($field, '%' . $value . '%', 'LIKE');
         }
-        $data[$placeholder] = $value;
         break;
 
       case 'publisher':
-        $wheres[] = $field . " = " . $placeholder;
-        $data[$placeholder] = $value;
-        break;
-
       case 'actions':
+        $efq->propertyCondition($field, $value);
         break;
 
       default:
@@ -908,35 +898,20 @@ function scald_search($query = array(), $fuzzy = FALSE, $singular = FALSE) {
     }
   }
 
-  $search_results = db_query(
-    "
-      SELECT
-        sid
-      FROM
-        {scald_atoms}
-      WHERE "
-      . implode(' AND ', $wheres)
-      . ($singular ? " LIMIT 1" : '')
-    , $data
-  );
+  if ($singular) {
+    $efq->range(0, 1);
+  }
+
+  $results = $efq->execute();
 
   // Compose and return result.
-  $sids = array();
-  foreach ($search_results as $result) {
-    $sids[] = $result->sid;
-  }
+  $sids = !empty($results['scald_atom']) ? array_keys($results['scald_atom']) : array();
 
   if (!count($sids)) {
     return FALSE;
   }
 
-  if ($singular) {
-    return $sids[0];
-  }
-  else {
-    return $sids;
-  }
-
+  return $singular ? $sids[0] : $sids;
 }
 
 /*******************************************************************************
