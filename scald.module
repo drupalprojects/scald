@@ -464,7 +464,7 @@ function scald_atom_save(&$atom) {
   $types = scald_types();
 
   // Verify type.
-  if (empty($types[$atom->type])) {
+  if (empty($atom->type) || empty($atom->provider) || empty($types[$atom->type])) {
     return FALSE;
   }
 
@@ -505,11 +505,7 @@ function scald_atom_save(&$atom) {
 
   // Another round of member validation is necessary due to the potential for
   // the Providers to modify them.  By design!
-  if (empty($atom->type) || empty($atom->provider)) {
-    return FALSE;
-  }
-
-  if (empty($types[$atom->type])) {
+  if (empty($atom->type) || empty($atom->provider) || empty($types[$atom->type])) {
     return FALSE;
   }
 

@@ -258,7 +258,7 @@ function scald_image_scald_register_atom($atom, $mode) {
  * when user update that field.
  */
 function _scald_image_sync_thumbnail($atom) {
-  if ($atom->scald_thumbnail) {
+  if (!empty($atom->scald_thumbnail)) {
     $items = field_get_items('scald_atom', $atom, 'scald_thumbnail');
     $atom->base_id = $items[0]['fid'];
   }
