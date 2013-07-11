@@ -261,6 +261,15 @@ class ScaldBaseTestCase extends ScaldWebTestCase {
     $is_https = !$is_https;
     $base_url = str_replace('https://', 'http://', $base_url);
     $this->assertNotIdentical($output1, $output2, 'Different renders in http and https versions.');
+
+    // Check if cached content is served. Change the atom directly from the
+    // database to avoid cached content being changed.
+    $title = 'Title has been changed';
+    db_query('UPDATE {scald_atoms} SET title = :title WHERE sid = :sid', array(':title' => $title, ':sid' => $atom->sid));
+    $atom = scald_fetch($atom->sid, TRUE);
+    $this->assertIdentical($title, $atom->title);
+    $output3 = scald_render($atom->sid, 'full');
+    $this->assertIdentical($output1, $output3);
   }
 
   /**
