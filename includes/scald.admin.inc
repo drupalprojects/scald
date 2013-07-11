@@ -129,7 +129,6 @@ function scald_admin_type_form($form, $form_state, $type) {
     '#default_value'  => $default->description,
     '#size'           => 40,
     '#maxlength'      => 255,
-    '#required'       => TRUE,
   );
   $options = array(
     'managed_file' => t('Managed file'),
