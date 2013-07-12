@@ -8,7 +8,7 @@
 /**
  * Implements hook_migrate_api().
  */
-function entityreference_migrate_api() {
+function atom_reference_migrate_api() {
   return array(
     'api' => 2,
     'field_handlers' => array('MigrateAtomReferenceFieldHandler'),
@@ -28,4 +28,3 @@ class MigrateAtomReferenceFieldHandler extends MigrateSimpleFieldHandler {
     $this->registerTypes(array('atom_reference'));
   }
 }
-
