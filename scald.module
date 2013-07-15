@@ -1323,15 +1323,15 @@ function scald_prerender(&$atom, $context, $options) {
     'link' => l($name, 'user/' . $atom->publisher),
   );
 
-  // Invoke the Type & Atom prerenders hooks.
-  module_invoke($types[$atom->type]->provider, 'scald_prerender', $atom, $context, $options, 'type');
-  module_invoke($atom->provider, 'scald_prerender', $atom, $context, $options, 'atom');
-
   // Invoke the Transcoder Provider prerender hook -- only if there is a
   // Transcoder specified for this Context.
   if (!empty($context_config['type_format']) && !empty($context_config['type_format'][$atom->type])) {
     module_invoke($transcoders[$context_config['type_format'][$atom->type]['transcoder']]['provider'], 'scald_prerender', $atom, $context, $options, 'transcoder');
   }
+
+  // Invoke the Type & Atom prerenders hooks.
+  module_invoke($atom->provider, 'scald_prerender', $atom, $context, $options, 'atom');
+  module_invoke($types[$atom->type]->provider, 'scald_prerender', $atom, $context, $options, 'type');
 
   // Invoke the Context prerender hook.
   module_invoke($context_config['provider'], 'scald_prerender', $atom, $context, $options, 'context');
@@ -1674,6 +1674,10 @@ function scald_scald_actions() {
 function scald_scald_prerender($atom, $context, $options, $mode) {
   switch ($mode) {
     case 'type':
+      if ($atom->type == 'image') {
+        $url = isset($atom->rendered->file_transcoded_url) ? $atom->rendered->file_transcoded_url : $atom->rendered->file_source_url;
+        $atom->rendered->player = theme('image', array('path' => $url));
+      }
       break;
 
     case 'context':
