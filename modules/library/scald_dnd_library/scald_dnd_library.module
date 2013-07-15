@@ -164,14 +164,8 @@ function scald_dnd_library_scald_render($atom, $context, $options) {
   if (!empty($atom->rendered->thumbnail_transcoded_url)) {
     $path = $atom->rendered->thumbnail_transcoded_url;
   }
-  elseif (!empty($atom->rendered->thumbnail_source_url)) {
-    $path = $atom->rendered->thumbnail_source_url;
-  }
-  elseif (!empty($atom->rendered->file_transcoded_url)) {
-    $path = $atom->rendered->file_transcoded_url;
-  }
   else {
-    $path = $atom->rendered->file_source_url;
+    $path = image_style_url('Library', $atom->thumbnail_source);
   }
 
   $attributes = array();
