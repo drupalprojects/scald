@@ -175,12 +175,6 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
       $atom->file_transcoded = image_style_path($preset['name'], $atom->file_source);
       $atom->rendered->file_transcoded_url = image_style_url($preset['name'], $atom->file_source);
     }
-    if (!empty($atom->thumbnail_source)) {
-      // Deprecated. Thumbnail will no longer be transcoded, it would be managed
-      // though Field API.
-      $atom->thumbnail_transcoded = image_style_path($preset['name'], $atom->thumbnail_source);
-      $atom->rendered->thumbnail_transcoded_url = image_style_url($preset['name'], $atom->thumbnail_source);
-    }
   }
   elseif ($mode == 'player') {
     $settings = $config->player[$atom->type]['settings'];
