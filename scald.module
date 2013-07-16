@@ -1674,7 +1674,7 @@ function scald_scald_actions() {
 function scald_scald_prerender($atom, $context, $options, $mode) {
   switch ($mode) {
     case 'type':
-      if ($atom->type == 'image') {
+      if ($atom->type == 'image' && !isset($atom->rendered->player)) {
         $url = isset($atom->rendered->file_transcoded_url) ? $atom->rendered->file_transcoded_url : $atom->rendered->file_source_url;
         $atom->rendered->player = theme('image', array('path' => $url));
       }
