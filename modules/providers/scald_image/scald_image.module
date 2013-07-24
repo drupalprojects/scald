@@ -183,7 +183,7 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
     $atom->rendered->player = '
       <figure class="' . implode(' ', $classes) . '">
         ' . $atom->rendered->player . '
-        <figcaption>' . $caption . '</figcaption>
+        <figcaption>' . filter_xss_admin($caption) . '</figcaption>
       </figure>
     ';
   }

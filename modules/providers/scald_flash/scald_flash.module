@@ -97,13 +97,22 @@ function scald_flash_scald_prerender($atom, $context, $options, $mode) {
     $atom->rendered->player = theme('scald_flash_object',
       array('vars' =>
         array(
-          'flash_uri'      => file_create_url($atom->file_source),
+          'flash_uri'      => $atom->rendered->file_source_url,
           'flash_width'   => ($atom->scald_width[$langcode][0]['value'] ? $atom->scald_width[$langcode][0]['value'] : 480),
           'flash_height'  => ($atom->scald_height[$langcode][0]['value'] ? $atom->scald_height[$langcode][0]['value'] : 365),
           'thumbnail'     => $atom->thumbnail_source,
         ),
       )
     );
+  }
+}
+
+/**
+ * Preprocess variables for the Scald Flash Object template.
+ */
+function template_preprocess_scald_flash_object(&$vars) {
+  foreach (array('flash_width', 'flash_height') as $attribute) {
+    $vars['vars'][$attribute] = check_plain($vars['vars'][$attribute]);
   }
 }
 
