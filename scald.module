@@ -1780,6 +1780,12 @@ function scald_entity_info() {
       'bundles' => array(),
       'view modes' => array(),
       'view callback' => 'scald_render_multiple',
+      'translation' => array(
+        'entity_translation' => array(
+          'base path' => 'atom/%scald_atom',
+          'edit form' => 'atom',
+        ),
+      ),
     ),
   );
 

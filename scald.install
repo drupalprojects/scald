@@ -584,6 +584,9 @@ function scald_update_7009() {
     'not null' => TRUE,
     'default' => '',
   ));
+  db_update('scald_atoms')
+    ->fields(array('language' => LANGUAGE_NONE))
+    ->execute();
   return array();
 }
 

@@ -13,6 +13,7 @@ class ScaldAtom {
     $values += array(
       'title' => '',
       'type' => $type,
+      'language' => LANGUAGE_NONE,
       'provider' => $provider,
       'publisher' => $GLOBALS['user']->uid,
       'actions' => scald_atom_defaults($type)->actions,

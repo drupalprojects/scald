@@ -78,6 +78,8 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
     'scald' => ctools_object_cache_get('scald_atom', $cache_id),
   );
 
+  $form_state['atom'] = $form_state['scald']['atoms'][0];
+
   if (empty($form_state['scald'])) {
     $form_state['scald'] = array(
       'type' => $type,
@@ -243,6 +245,8 @@ function scald_atom_add_form_options($form, &$form_state) {
 
   $actions = scald_actions();
 
+  $form['#entity_type'] = 'scald_atom';
+
   foreach ($atoms as $delta => $atom) {
     $form['atom' . $delta] = array(
       '#prefix' => '<div class="atom-wrapper">',
@@ -256,6 +260,10 @@ function scald_atom_add_form_options($form, &$form_state) {
       '#default_value' => $atom->title,
       '#parents' => array('atom' . $delta, 'title'),
       '#weight' => -10,
+    );
+    $form['language'] = array(
+      '#type' => 'value',
+      '#value' => $atom->language,
     );
     field_attach_form('scald_atom', $atom, $form['atom' . $delta], $form_state);
     $instances = field_info_instances('scald_atom', $atom->type);
