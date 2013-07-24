@@ -477,7 +477,9 @@ function mee_textarea_process($element, $edit, $form_state, $form) {
     if (!is_object($atom)) {
       continue;
     }
-    $title = $atom->title;
+
+    // Render the atom to get sanitized values.
+    $title = scald_render($atom, 'title');
 
     $element['mee']['ressource_manager'][$sid] = array(
       'title' => array(
