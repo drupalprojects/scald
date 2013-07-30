@@ -359,8 +359,8 @@ function hook_scald_add_atom_count(&$form, &$form_state) {
  * form, into atoms.
  *
  * @param mixed $atoms
- *   An array of atoms if the provider implements
- *   hook_scald_add_atom_account_count(), otherwise a single atom.
+ *   An array of atoms if the provider implements hook_scald_add_atom_count(),
+ *   otherwise a single atom.
  *
  * @param array $form
  *
