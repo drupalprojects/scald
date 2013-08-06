@@ -8,7 +8,7 @@
  * Implements hook_install().
  */
 function scald_image_install() {
-  scald_add_type('image', 'Image', 'Image');
+  ScaldAtomController::addType('image', 'Image', 'Image');
   $instance = field_read_instance('scald_atom', 'scald_thumbnail', 'image');
   if ($instance) {
     $instance['label'] = 'Image';
@@ -30,7 +30,7 @@ function scald_image_install() {
  */
 function scald_image_uninstall() {
   drupal_load('module', 'scald');
-  scald_remove_type('image');
+  ScaldAtomController::removeType('image');
 }
 
 /**

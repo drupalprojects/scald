@@ -9,7 +9,7 @@
  * Implements hook_install().
  */
 function scald_dailymotion_install() {
-  scald_add_type('video', 'Video', 'Video');
+  ScaldAtomController::addType('video', 'Video', 'Video');
 }
 
 /**
@@ -17,5 +17,5 @@ function scald_dailymotion_install() {
  */
 function scald_dailymotion_uninstall() {
   drupal_load('module', 'scald');
-  scald_remove_type('video');
+  ScaldAtomController::removeType('video');
 }
