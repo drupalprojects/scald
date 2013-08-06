@@ -366,7 +366,7 @@ function hook_scald_add_atom_count(&$form, &$form_state) {
  *
  * @param array $form_state
  */
-function scald_image_scald_add_form_fill(&$atoms, $form, $form_state) {
+function hook_scald_add_form_fill(&$atoms, $form, $form_state) {
   foreach ($atoms as $delta => $atom) {
     if (is_array($form_state['values']['file']) && module_exists('plupload')) {
       module_load_include('inc', 'scald', 'includes/scald.plupload');
