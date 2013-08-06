@@ -51,7 +51,8 @@ function scald_image_scald_add_form_fill(&$atoms, $form, $form_state) {
   foreach ($atoms as $delta => $atom) {
     if (is_array($form_state['values']['file']) && module_exists('plupload')) {
       module_load_include('inc', 'scald', 'includes/scald.plupload');
-      $file = scald_plupload_save_file($form_state['values']['file'][$delta]['tmppath'], $form['file']['#upload_location'] . $form_state['values']['file'][$delta]['name']);
+      $destination = $form['file']['#upload_location'] . '/' . $form_state['values']['file'][$delta]['name'];
+      $file = scald_plupload_save_file($form_state['values']['file'][$delta]['tmppath'], $destination);
     }
     else {
       $file = file_load($form_state['values']['file']);
