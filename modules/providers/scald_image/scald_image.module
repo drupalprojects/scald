@@ -69,12 +69,13 @@ function scald_image_scald_add_form_fill(&$atoms, $form, $form_state) {
 function scald_image_scald_transcoders() {
   $transcoders = array();
   foreach (image_styles() as $name => $style) {
+    $label = isset($style['label']) ? $style['label'] : $style['name'];
     $transcoders['style-' . $name] = array(
-      'title' => t('@style (Image style)', array('@style' => $name)),
-      'description' => t('Use the Image style @style to prepare the image', array('@style' => $name)),
+      'title' => t('@style (Image style)', array('@style' => $label)),
+      'description' => t('Use the Image style @style to prepare the image', array('@style' => $label)),
       'formats' => array(
-        'image' => 'passthrough'
-      )
+        'image' => 'passthrough',
+      ),
     );
   }
   if (module_exists('picture')) {
@@ -84,7 +85,7 @@ function scald_image_scald_transcoders() {
         'description' => t('Use the Picture group @group to prepare the image', array('@group' => $name)),
         'formats' => array(
           'image' => 'passthrough',
-        )
+        ),
       );
     }
   }
