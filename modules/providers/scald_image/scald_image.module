@@ -29,7 +29,7 @@ function scald_image_scald_add_form(&$form, &$form_state) {
   $form['file'] = array(
     '#type' => $defaults->upload_type,
     '#title' => t('Image'),
-    '#upload_location' => scald_atom_thumbnail_path('image'),
+    '#upload_location' => ScaldAtomController::getThumbnailPath('image'),
     '#upload_validators' => array('file_validate_extensions' => array('jpg jpeg png gif')),
   );
 }

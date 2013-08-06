@@ -45,7 +45,7 @@ function scald_audio_scald_add_atom_count(&$form, &$form_state) {
  * Implements hook_scald_add_form_fill().
  */
 function scald_audio_scald_add_form_fill(&$atoms, $form, $form_state) {
-  $dir_audio_thumb = scald_atom_thumbnail_path('audio');
+  $dir_audio_thumb = ScaldAtomController::getThumbnailPath('audio');
   foreach ($atoms as $delta => $atom) {
     if (is_array($form_state['values']['file']) && module_exists('plupload')) {
       module_load_include('inc', 'scald', 'includes/scald.plupload');

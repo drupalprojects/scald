@@ -76,7 +76,7 @@ function scald_youtube_scald_add_form_fill(&$atom, $form, $form_state) {
   // Download a copy of the video thumbnail. This makes it possible
   // to do interesting manipulation with image styles presets.
   $thumb = drupal_http_request($infos->thumbnail['src']);
-  if ($thumb->code == 200 && $directory = scald_atom_thumbnail_path('video')) {
+  if ($thumb->code == 200 && $directory = ScaldAtomController::getThumbnailPath('video')) {
     $dest = $directory . '/youtube-' . $infos->id . '.jpg';
     $file = file_save_data($thumb->data, $dest);
 
