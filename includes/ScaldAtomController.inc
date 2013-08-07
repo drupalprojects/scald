@@ -34,14 +34,6 @@ class ScaldAtomController extends DrupalDefaultEntityController {
         return $directory;
       }
     }
-
-    // If there is no scald_thumbnail field, return the old image atom path, which
-    // is probably the only atom type that asks for thumbnail path even when there
-    // is no thumbnail field.
-    $directory = 'public://atoms/images';
-    if (file_prepare_directory($directory, FILE_CREATE_DIRECTORY)) {
-      return $directory;
-    }
   }
 
   /**
