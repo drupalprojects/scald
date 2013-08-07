@@ -42,9 +42,9 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
         legend: legend,
         align: elm.hasClass('atom-align-left') ? 'left' : elm.hasClass('atom-align-right') ? 'right' : elm.hasClass('atom-align-center') ? 'center' : 'none'
       };
-      var me = this;
       Drupal.dnd.fetchAtom(context, sid, function() {
         var type = Drupal.dnd.Atoms[atom.sid].meta.type;
+        var me = CKEDITOR.dialog.getCurrent();
         var cmbContext = me.getContentElement('info', 'cmbContext');
         cmbContext.clear();
         for (context in Drupal.settings.dnd.contexts[type]) {
