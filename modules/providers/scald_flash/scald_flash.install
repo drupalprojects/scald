@@ -32,6 +32,9 @@ function scald_flash_uninstall() {
   $defaults = variable_set('scald_atom_defaults', $defaults);
 
   drupal_load('module', 'scald');
+  // If Scald is disabled, its classes are not autoloaded.
+  module_load_include('inc', 'scald', 'includes/ScaldAtomController');
+
   ScaldAtomController::removeType('flash');
 }
 

@@ -17,5 +17,8 @@ function scald_audio_install() {
  */
 function scald_audio_uninstall() {
   drupal_load('module', 'scald');
+  // If Scald is disabled, its classes are not autoloaded.
+  module_load_include('inc', 'scald', 'includes/ScaldAtomController');
+
   ScaldAtomController::removeType('audio');
 }
