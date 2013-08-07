@@ -590,3 +590,19 @@ function scald_update_7009() {
   return array();
 }
 
+/**
+ * Update the thumbnail field path to match the old defaults.
+ */
+function scald_update_7010() {
+  $field = field_info_field('scald_thumbnail');
+  if (!empty($field['bundles']['scald_atom'])) {
+    foreach ($field['bundles']['scald_atom'] as $type) {
+      $instance = field_info_instance('scald_atom', 'scald_thumbnail', $type);
+      // Only update the field instance if it is not modified since.
+      if (empty($instance['settings']['file_directory'])) {
+        $instance['settings']['file_directory'] = 'thumbnails/' . $type;
+        field_update_instance($instance);
+      }
+    }
+  }
+}
