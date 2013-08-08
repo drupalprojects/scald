@@ -170,9 +170,6 @@ Drupal.theme.prototype.scaldEmbed = function(atom, context, options) {
     output = output.replace(/<!-- scald=\d+(.+?) -->/, '<!-- scald=' + atom.sid + ':' + context + ' ' + JSON.stringify(options) + ' -->');
   }
 
-  // Trick: if not the image might come out and go into the current hovered
-  // paragraph.
-  output = '<p>&nbsp;</p>' + output;
   return output;
 }
 
@@ -296,7 +293,10 @@ renderLibrary: function(data, editor) {
         dt.dropEffect = 'copy';
         dt.setData("Text", Drupal.dnd.Atoms[id].sas);
         try {
-          dt.setData("text/html", Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[id]));
+          // Trick: if not the image might come out and go into the current hovered
+          // paragraph.
+          var markup = '<p>&nbsp;</p>' + Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[id]);
+          dt.setData("text/html", markup);
         }
         catch(e) {
         }

@@ -61,8 +61,7 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
       atom.options.link = this.getValueOf('info', 'txtLink');
       Drupal.dnd.fetchAtom(context, atom.sid, function() {
         var html = Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[atom.sid], context, atom.options);
-        // Remove the first 13 characters '<p>&nbsp;</p>'
-        CKEDITOR.dom.element.createFromHtml(html.substr(13)).replace(Drupal.dnd.atomCurrent);
+        CKEDITOR.dom.element.createFromHtml(html).replace(Drupal.dnd.atomCurrent);
       });
     },
     contents: [

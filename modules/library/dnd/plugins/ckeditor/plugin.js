@@ -85,7 +85,7 @@ CKEDITOR.plugins.add('dnd', {
         catch(e) {
           var atom = Drupal.dnd.sas2array(evt.data.$.dataTransfer.getData('Text'));
           if (atom && Drupal.dnd.Atoms[atom.sid]) {
-            var markup = Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[atom.sid], atom.context, atom.options);
+            var markup = '<p>&nbsp;</p>' + Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[atom.sid], atom.context, atom.options);
             editor.insertHtml(markup);
             evt.data.preventDefault();
           }
