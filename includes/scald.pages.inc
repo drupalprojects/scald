@@ -279,7 +279,7 @@ function scald_atom_add_form_options($form, &$form_state) {
     }
     $form['atom' . $delta]['scald_actions'] = array(
       '#type' => 'checkboxes',
-      '#title' => 'Openly available actions',
+      '#title' => t('Openly available actions'),
       '#group' => 'additional_settings',
       '#options' => $options,
       '#default_value' => $options_default,
