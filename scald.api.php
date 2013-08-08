@@ -19,11 +19,6 @@
  * variables being passed to the hooks.
  *
  *
- * system_modules_submit() [The form at /admin/build/modules is submitted]
- *   -> {provider}_install() [Drupal hook]
- *   -> {provider}_enable() [Drupal hook]
- *   -> {provider}_scald_provider()
- *
  * scald_render()
  *   -> scald_fetch()
  *     -> {type_provider}_scald_fetch($mode = 'type')
