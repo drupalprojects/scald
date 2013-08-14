@@ -208,6 +208,10 @@ class ScaldBaseTestCase extends ScaldWebTestCase {
     );
     $this->drupalPost(NULL, $edit, t('Update'));
 
+    // We are in another request, static cache is no longer relevant and needs
+    // to be cleared.
+    drupal_static_reset('_scald_get_info');
+
     // Verify new context settings. There is no easy way to verify a context
     // other than "full".
     $atom = $this->createAtom();

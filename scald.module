@@ -274,6 +274,15 @@ function scald_atom_providers($reset = FALSE) {
  * Get the info from all modules on a specific scald item type.
  */
 function _scald_get_info($type, $reset = FALSE) {
+  $data = &drupal_static(__FUNCTION__);
+  if (!isset($data)) {
+    $data = array();
+  }
+
+  if (!$reset && isset($data[$type])) {
+    return $data[$type];
+  }
+
   $info = cache_get($type, 'cache_scald');
   if ($reset || empty($info)) {
     $info = array();
@@ -291,6 +300,7 @@ function _scald_get_info($type, $reset = FALSE) {
   else {
     $info = $info->data;
   }
+  $data[$type] = $info;
   return $info;
 }
 
