@@ -95,7 +95,7 @@ Drupal.dnd = {
 
   // Refresh the library.
   refreshLibraries: function() {
-    $('.dnd-library-wrapper .view-filters input[type=submit]').click();
+    $('.dnd-library-wrapper .view-filters').find('input[type=submit], button[type=submit]').click();
   },
 
   // Convert HTML to SAS. We consider there is no nested elements.
@@ -316,7 +316,7 @@ renderLibrary: function(data, editor) {
   });
 
   // Turns Views exposed filters' submit button into an ajaxSubmit trigger
-  $('.view-filters input[type=submit]', $this).click(function(e) {
+  $('.view-filters', $this).find('input[type=submit], button[type=submit]').click(function(e) {
     var submit = $(this);
     settings = Drupal.settings.dnd;
     $('.view-filters form', $this).ajaxSubmit({
@@ -334,7 +334,7 @@ renderLibrary: function(data, editor) {
 
   // Makes Views exposed filters' reset button submit the form via ajaxSubmit,
   // without data, to get all the default values back.
-  $('.view-filters input[type=reset]', $this).click(function(e) {
+  $('.view-filters', $this).find('input[type=reset], button[type=reset]').click(function(e) {
     var reset = $(this);
     $('.view-filters form', $this).ajaxSubmit({
       'url' : Drupal.settings.dnd.url,
@@ -355,7 +355,7 @@ renderLibrary: function(data, editor) {
   });
 
   // Deals with Views Saved Searches "Save" button
-  $('#views-savedsearches-save-search-form input[type=submit]', $this).click(function() {
+  $('#views-savedsearches-save-search-form', $this).find('input[type=submit], button[type=submit]').click(function() {
     var submit = $(this);
     url = submit.parents('div.dnd-library-wrapper').get(0).library_url;
     $('#views-savedsearches-save-search-form', $this).ajaxSubmit({
@@ -371,7 +371,7 @@ renderLibrary: function(data, editor) {
   });
 
   // Deals with Views Saved Searches "Delete" button
-  $('#views-savedsearches-delete-search-form input[type=submit]', $this).click(function() {
+  $('#views-savedsearches-delete-search-form', $this).find('input[type=submit], button[type=submit]').click(function() {
     var submit = $(this);
     $('#views-savedsearches-delete-search-form', $this).ajaxSubmit({
       'url' : settings.url,
