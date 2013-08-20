@@ -1233,7 +1233,7 @@ function scald_render($sid, $context, $options = array(), $rebuild = FALSE) {
     if (!empty($cache)) {
       $data = $cache->data;
       $atom->rendered = $data['rendered'];
-      return $data['content'];
+      return is_array($data['content']) ? drupal_render($data['content']) : $data['content'];
     }
   }
 
@@ -1260,21 +1260,29 @@ function scald_render($sid, $context, $options = array(), $rebuild = FALSE) {
   scald_prerender($atom, $context, $options);
 
   // Context Provider does the final rendering.
-  $rendered = module_invoke($contexts[$context]['provider'], 'scald_render', $atom, $context, $options);
+  $content = module_invoke($contexts[$context]['provider'], 'scald_render', $atom, $context, $options);
 
   // The Context exists but rendering is failing hard for some reason.  Output
   // still needs to be ensured, however.  Also note that an empty string is
   // valid output.  However, hook_scald_render() should return FALSE upon
   // failure and module_invoke() will return NULL if the function does not
   // exist.
-  if ($rendered === FALSE || is_null($rendered)) {
+  if ($content === FALSE || is_null($content)) {
     return scald_render($atom, _scald_context_fallback($atom->type, $context), $options, $rebuild);
   }
 
+  if (!is_array($content)) {
+    $content = array('#markup' => $content);
+  }
   // For so-called "parsable" Contexts, ensure a standard format for the
   // enclosing comments.
   if ($contexts[$context]['parseable']) {
-    $rendered = '<!-- scald=' . $atom->sid . ':' . $context . ($options ? ' ' . drupal_json_encode($options) : '') . ' -->' . $rendered . '<!-- END scald=' . $atom->sid . ' -->';
+    $content += array(
+      '#prefix' => '',
+      '#suffix' => '',
+    );
+    $content['#prefix'] = '<!-- scald=' . $atom->sid . ':' . $context . ($options ? ' ' . drupal_json_encode($options) : '') . ' -->' . $content['#prefix'];
+    $content['#suffix'] .= '<!-- END scald=' . $atom->sid . ' -->';
   }
 
   // Only cache the Atom if Contexts, etc. have not indicated that the rendering
@@ -1285,13 +1293,12 @@ function scald_render($sid, $context, $options = array(), $rebuild = FALSE) {
     // responsibility of the Atom Provider as it has the best idea when the base
     // entity is changing.
     $data = array(
-      'content' => $rendered,
+      'content' => $content,
       'rendered' => $atom->rendered,
     );
     cache_set($cache_id, $data, 'cache_scald', CACHE_PERMANENT);
   }
-
-  return $rendered;
+  return drupal_render($content);
 }
 
 /**
@@ -1524,8 +1531,7 @@ function scald_scald_render($atom, $context, $options = array()) {
       // render.
       $system = _scald_system_contexts();
       if ($context == 'full' || empty($system[$context])) {
-        $content = scald_atom_view($atom, $context);
-        $output = drupal_render($content);
+        $output = scald_atom_view($atom, $context);
       }
       // Else, returns the title as we don't know what to render.
       else {
