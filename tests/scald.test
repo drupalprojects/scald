@@ -108,6 +108,13 @@ class ScaldWebTestCase extends DrupalWebTestCase {
     $this->drupalPost('admin/structure/scald/image/fields/scald_thumbnail', array('field[settings][uri_scheme]' => 'private'), t('Save settings'));
     $this->assertRaw(t('Saved %label configuration.', array('%label' => 'Image')), 'Use private file for Scald Image.');
   }
+
+  /**
+   * Make a HTML markup parseable.
+   */
+  public function makeParseable($markup, $atom, $context) {
+    return '<!-- scald=' . $atom->sid . ':' . $context . ' -->' . $markup . '<!-- END scald=' . $atom->sid . ' -->';
+  }
 }
 
 /**
@@ -504,5 +511,50 @@ class ScaldAtomEntityTestCase extends ScaldWebTestCase {
     $this->assertIdentical($sid, $atom->sid, 'Atom sid does not change when being updated.');
     $this->assertIdentical('image', $atom->type, 'Atom type does not change when being updated.');
     $this->assertIdentical('scald_image', $atom->provider, 'Atom provider does not change when being updated.');
+  }
+}
+
+/**
+ * Test the Scald DnD functionality.
+ */
+class ScaldDnDTestCase extends ScaldWebTestCase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Scald DnD',
+      'description' => 'Test the Scald DnD functionality.',
+      'group' => 'Scald',
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp() {
+    parent::setUp(array('scald_image', 'scald_dnd_library'));
+    $this->web_user = $this->drupalCreateUser(array(
+      'create atom of image type',
+      'view any atom',
+      'fetch any atom',
+      'edit own atom',
+    ));
+    $this->drupalLogin($this->web_user);
+  }
+
+  /**
+   * Test Scald DnD Library.
+   */
+  function testScaldDndLibrary() {
+    $atom = $this->createAtom();
+    $content = scald_render($atom, 'sdl_editor_representation');
+
+    // Check if the widely used context sdl_editor_representation is correct.
+    $langcode = field_language('scald_atom', $atom, 'scald_thumbnail');
+    $thumbnail = field_view_value('scald_atom', $atom, 'scald_thumbnail', $atom->scald_thumbnail[$langcode][0]);
+    $expected = $this->makeParseable('<div class=\'image\'>' . drupal_render($thumbnail) . '</div>', $atom, 'sdl_editor_representation');
+    $this->assertEqual($content, $expected, 'Context: sdl_editor_representation works correctly.');
   }
 }
