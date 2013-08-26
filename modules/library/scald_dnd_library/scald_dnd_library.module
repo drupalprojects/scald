@@ -187,7 +187,11 @@ function scald_dnd_library_scald_render($atom, $context, $options) {
       $render = theme('sdl_library_item', array('atom' => $atom, 'image' => $image));
       break;
     default:
-      $render = theme('sdl_editor_item', array('informations' => $atom->rendered, 'image' => $image));
+      $render = array(
+        '#theme' => 'sdl_editor_item',
+        '#informations' => $atom->rendered,
+        '#image' => $image,
+      );
   }
 
   return $render;
@@ -239,8 +243,18 @@ function theme_sdl_library_item($variables) {
  * Returns HTML for an atom rendered in the "Editor Representation" context.
  */
 function theme_sdl_editor_item($variables) {
-  $data = !empty($variables['informations']->player) ? $variables['informations']->player : $variables['image'];
-  return "<div class='image'>{$data}</div>";
+  if (empty($variables['informations']->player)) {
+    return $variables['image'];
+  }
+  else {
+    $player = $variables['informations']->player;
+    $output = is_array($player) ? $player : array('#markup' => $player);
+    $output += array(
+      '#prefix' => '<div class=\'image\'>',
+      '#suffix' => '</div>',
+    );
+    return drupal_render($output);
+  }
 }
 
 /**
