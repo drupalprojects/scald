@@ -68,7 +68,7 @@ class scald_plugin_display_library extends views_plugin_display_page {
         elseif ($filter instanceof views_handler_filter_user_name && is_array($value)) {
           $names = array();
           foreach ($value as $uid) {
-            $account = user_load(array('uid' => $uid));
+            $account = user_load($uid);
             $names[] = $account->name;
           }
           $value = $names;
