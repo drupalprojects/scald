@@ -6,14 +6,23 @@ if (typeof dnd === 'undefined') {
 
 dnd.atomCut = null;
 dnd.atomCurrent = null;
+
+/**
+ * Prevents atom from being edited inside the editor.
+ */
+dnd.protectAtom = function(element) {
+  element
+    .attr('contentEditable', false)
+    // Allows atom legend to be edited inside the editor.
+    .find('.dnd-legend-wrapper').attr('contentEditable', true);
+}
+
 dnd.getWrapperElement = function(element) {
   while (element && !(element.type === CKEDITOR.NODE_ELEMENT && element.hasClass('dnd-atom-wrapper'))) {
     element = element.getParent();
   }
   if (element) {
-    element.setAttributes({
-      contentEditable: 'false'
-    });
+    this.protectAtom($(element.$));
     this.atomCurrent = element;
   }
   return element;
@@ -33,8 +42,7 @@ CKEDITOR.plugins.add('dnd', {
       if (editor.mode == 'wysiwyg') {
         editor.document.appendStyleSheet(path + '../../css/editor.css');
         editor.document.appendStyleSheet(path + '../../css/editor-global.css');
-        // Prevents atom from being edited inside the editor.
-        $(editor.document.$).find('div.dnd-atom-wrapper').attr('contentEditable', false);
+        dnd.protectAtom($(editor.document.$).find('.dnd-atom-wrapper'));
       }
     });
 
@@ -90,8 +98,7 @@ CKEDITOR.plugins.add('dnd', {
             evt.data.preventDefault();
           }
         }
-        // Prevents atom from being edited inside the editor.
-        $(editor.document.$).find('div.dnd-atom-wrapper').attr('contentEditable', false);
+        dnd.protectAtom($(editor.document.$).find('.dnd-atom-wrapper'));
       });
 
       editor.document.on('click', function (evt) {
