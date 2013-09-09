@@ -78,7 +78,11 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
     'scald' => ctools_object_cache_get('scald_atom', $cache_id),
   );
 
-  $form_state['atom'] = $form_state['scald']['atoms'][0];
+  // Entity Translation workaround when the fix https://drupal.org/node/2027513
+  // is not corporated in a stable release.
+  if (isset($form_state['scald']['atoms'][0])) {
+    $form_state['atom'] = $form_state['scald']['atoms'][0];
+  }
 
   if (empty($form_state['scald'])) {
     $form_state['scald'] = array(
