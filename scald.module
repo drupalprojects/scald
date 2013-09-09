@@ -308,6 +308,15 @@ function _scald_get_info($type, $reset = FALSE) {
  * Get the defaults options for a specific Atom type.
  */
 function scald_atom_defaults($type) {
+  $defaults = &drupal_static(__FUNCTION__);
+  if (!isset($defaults)) {
+    $defaults = array();
+  }
+
+  if (isset($defaults[$type])) {
+    return $defaults[$type];
+  }
+
   $all = variable_get('scald_atom_defaults', array());
   if (isset($all[$type])) {
     $default = $all[$type];
@@ -337,7 +346,8 @@ function scald_atom_defaults($type) {
   if ($default->upload_type == 'plupload' && !function_exists('plupload_element_info')) {
     $default->upload_type = 'managed_file';
   }
-  return $default;
+
+  return $defaults[$type] = $default;
 }
 
 
