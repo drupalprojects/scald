@@ -284,7 +284,8 @@ function _scald_get_info($type, $reset = FALSE) {
   }
 
   global $language;
-  $info = cache_get('info:' . $language->language . ':' . $type, 'cache_scald');
+  $key = 'info:' . $language->language . ':' . $type;
+  $info = cache_get($key, 'cache_scald');
   if ($reset || empty($info)) {
     $info = array();
     $hook = 'scald_' . $type;
@@ -296,7 +297,7 @@ function _scald_get_info($type, $reset = FALSE) {
       $info = array_merge($info, $list);
     }
     drupal_alter($hook, $info);
-    cache_set($type, $info, 'cache_scald');
+    cache_set($key, $info, 'cache_scald');
   }
   else {
     $info = $info->data;
