@@ -283,7 +283,8 @@ function _scald_get_info($type, $reset = FALSE) {
     return $data[$type];
   }
 
-  $info = cache_get($type, 'cache_scald');
+  global $language;
+  $info = cache_get('info:' . $language->language . ':' . $type, 'cache_scald');
   if ($reset || empty($info)) {
     $info = array();
     $hook = 'scald_' . $type;

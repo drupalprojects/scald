@@ -558,3 +558,71 @@ class ScaldDnDTestCase extends ScaldWebTestCase {
     $this->assertEqual($content, $expected, 'Context: sdl_editor_representation works correctly.');
   }
 }
+/**
+ * Test the Scald localization.
+ */
+class ScaldLocalizeTestCase extends ScaldWebTestCase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Scald Localize',
+      'description' => 'Test the Scald localization functionality.',
+      'group' => 'Scald',
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp() {
+    parent::setUp(array('scald_image', 'locale'));
+    $this->web_user = $this->drupalCreateUser(array(
+      'administer scald',
+      'create atom of image type',
+      'view any atom',
+      'fetch any atom',
+      'edit own atom',
+      'administer languages',
+      'access administration pages',
+      'translate interface',
+    ));
+    $this->drupalLogin($this->web_user);
+  }
+
+  /**
+   * Adds a language and tests string translation.
+   */
+  public function testStringTranslation() {
+    $langcode = 'fr';
+
+    // Add predefined language.
+    $this->drupalPost('admin/config/regional/language/add', array('langcode' => $langcode), t('Add language'));
+    // Enable URL language detection and selection.
+    $edit = array('language[enabled][locale-url]' => '1');
+    $this->drupalPost('admin/config/regional/language/configure', $edit, t('Save settings'));
+    // Go to Scald page in another language to add action name into translation
+    // database.
+    $this->drupalGet('fr/admin/structure/scald/image');
+    // Translate an action name.
+    $edit = array(
+      'string' => 'Edit',
+    );
+    $this->drupalPost('admin/config/regional/translate/translate', $edit, t('Filter'));
+    // The first result is an exact match, because we don't surf much.
+    $this->clickLink(t('edit'));
+    $edit = array(
+      "translations[$langcode]" => 'Modifier',
+    );
+    $this->drupalPost(NULL, $edit, t('Save translations'));
+
+    cache_clear_all('*', 'cache_scald', TRUE);
+    $this->drupalGet('fr/admin/structure/scald/image');
+    $this->assertFieldByXPath('//label[@for="edit-type-image-actin-edit"]', 'Modifier ', 'Action name is correctly translated.');
+    $this->drupalGet('admin/structure/scald/image');
+    $this->assertFieldByXPath('//label[@for="edit-type-image-actin-edit"]', 'Edit ', 'Action name is correctly cached per language.');
+  }
+}
+
