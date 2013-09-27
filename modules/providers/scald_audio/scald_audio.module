@@ -83,7 +83,7 @@ function scald_audio_scald_add_form_fill(&$atoms, $form, $form_state) {
           $ret['images'][0]['image_mime'] = $info['id3v2']['APIC'][0]['image_mime'];
         }
       }
-      if ($ret) {
+      if (!empty($ret)) {
         $atom->title = !empty($ret['tags']['title']) ? $ret['tags']['title'] : $file->filename;
 
         // Prefill the author
