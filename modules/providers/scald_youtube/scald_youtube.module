@@ -173,6 +173,23 @@ function scald_youtube_register($video) {
     'title' => $infos->title,
   ));
 
+  // Save video width and height
+  if (!isset($atom->data)) {
+    $atom->data = array();
+  }
+  $atom->data['video_width'] = $infos->width;
+  $atom->data['video_height'] = $infos->height;
+
+  // Set file
+  if ($file) {
+    $query = db_update('file_managed')
+      ->condition('fid', $file->fid)
+      ->fields(array('status' => 0))
+      ->execute();
+    $langcode = field_language('scald_atom', $atom, 'scald_thumbnail');
+    $atom->scald_thumbnail[$langcode][0] = (array) $file;
+  }
+
   // And save it
   $atom_sid = scald_atom_save($atom);
   // Finally, return this id
