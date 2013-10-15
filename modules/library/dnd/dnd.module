@@ -113,6 +113,10 @@ function dnd_library() {
       $path . '/js/dnd-library.js' => array(),
       // javascript workaround for the continue button
       $path . '/js/dnd-modal.js' => array(),
+      // This file is included automatically if the CKEditor plugin is enabled.
+      // However we need to load it directly in Drupal so that strings can be
+      // translated.
+      $path . '/plugins/ckeditor/lang/en.js' => array(),
       // Settings for the library url
       array(
         'type' => 'setting',

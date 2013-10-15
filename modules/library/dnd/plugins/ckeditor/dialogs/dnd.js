@@ -76,7 +76,7 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
             id: 'txtLegend',
             type: 'textarea',
             rows: 5,
-            label: 'Legend',
+            label: lang.properties_legend,
             setup: function(atom) {
               this.setValue(atom.legend);
             }
@@ -84,7 +84,7 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
           {
             id: 'cmbContext',
             type: 'select',
-            label: 'Context',
+            label: lang.properties_context,
             items: [],
             setup: function(atom) {
               this.setValue(atom.context);
@@ -93,8 +93,8 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
           {
             id: 'cmbAlign',
             type: 'select',
-            label: 'Alignment',
-            items: [['None', 'none'], ['Left', 'left'], ['Right', 'right'], ['Center', 'center']],
+            label: lang.properties_alignment,
+            items: [[lang.alignment_none, 'none'], [lang.alignment_left, 'left'], [lang.alignment_right, 'right'], [lang.alignment_center, 'center']],
             setup: function(atom) {
               this.setValue(atom.align);
             }
