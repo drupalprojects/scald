@@ -341,22 +341,18 @@ function scald_dailymotion_taxonomy_get_create($name, $vid) {
 }
 
 /**
- * Analyze a Dailymotion RSS feed, reformating the informations about its
- * items in an easy to manipulate objects containing the informations we're
- * interested in.
+ * Analyze a Dailymotion RSS feed, reformating the informations about its items
+ * in an easy to manipulate objects containing the informations we're interested
+ * in.
+ *
  * @param $type
- *   Dailymotion RSS feed type. Examples include 'user', 'video', 'tag', 'search', ...
+ *   Dailymotion RSS feed type. Examples include 'user', 'video', 'tag', 'search'
  * @param $id
  *   The identifier, related to the type mentionned above. If you're requestion
  *   a user feed, then, its the username...
  * @return array
- *   Each array value is an object containing the following members:
- *     - id: the Dailymotion video id
- *     - author: the Dailymotion username of the user who uploaded the video
- *     - title: the video title
- *     - thumbnail: an associative array, containing the source ('src'), width
- *       and height of the video's thumbnail
- *     - pubDate: the publication date of the video
+ *
+ * @see scald_dailymotion_parse_item()
  */
 function scald_dailymotion_feed($type, $id) {
   $url = DAILYMOTION_RSS . $type . '/' . urlencode($id);
@@ -366,35 +362,7 @@ function scald_dailymotion_feed($type, $id) {
     $dom = new DOMDocument();
     if ($dom->loadXML($response->data)) {
       foreach ($dom->getElementsByTagName('item') as $item) {
-        $info = new stdClass();
-        // Fetch from the feed
-        // ... the video id
-        $info->id = $item->getElementsByTagNameNS(NS_DM, 'id')->item(0)->nodeValue;
-        // ... its title
-        $title = $item->getElementsByTagName('title')->item(0);
-        $info->title = $title->nodeValue;
-        // Video size
-        $player = $item->getElementsByTagNameNS(NS_MEDIA, 'player')->item(0);
-        $info->width = $player->getAttribute('width');
-        $info->height = $player->getAttribute('height');
-        // ... and usefull informations about its thumbnails
-        $thumb = $item->getElementsByTagNameNS(NS_MEDIA, 'thumbnail')->item(0);
-        $info->thumbnail = array(
-          'src'    => $thumb->getAttribute('url'),
-          'width'  => $thumb->getAttribute('width'),
-          'height' => $thumb->getAttribute('height')
-        );
-        // Tags
-        $info->tags = array();
-        foreach ($item->getElementsByTagNameNS(NS_MEDIA, 'category') as $tag) {
-          $info->tags[] = $tag->nodeValue;
-        }
-        // ... also get the author
-        $info->author = $item->getElementsByTagNameNS(NS_DM, 'author')->item(0)->nodeValue;
-        // ... and the publication date
-        $info->pubDate = date('c', strtotime($item->getElementsByTagName('pubDate')->item(0)->nodeValue));
-        $info->license = 'DM';
-        $items[] = $info;
+        $items[] = scald_dailymotion_parse_item($item);
       }
     }
   }
@@ -403,15 +371,62 @@ function scald_dailymotion_feed($type, $id) {
 
 /**
  * Get information on a specific video.
+ *
  * @param $id
  *   The video id
  * @return object
  *   An object containing the video informations. For information on
- *   the object format, see @scald_dailymotion_feed.
+ *   the object format, see scald_dailymotion_parse_item().
  */
 function scald_dailymotion_video($id) {
   $items = scald_dailymotion_feed('video', $id);
   return $items[0];
+}
+
+/**
+ * Analyze a XML DOMElement item to extract interesting info.
+ *
+ * @param $item
+ *   An object of classe DOMElement corresponding to an element of the feed.
+ * @return array
+ *   An object containing various video informations:
+ *     - id: the Dailymotion video id
+ *     - author: the Dailymotion username of the user who uploaded the video
+ *     - title: the video title
+ *     - thumbnail: an associative array, containing the source ('src'), width
+ *       and height of the video's thumbnail
+ *     - pubDate: the publication date of the video
+ */
+function scald_dailymotion_parse_item($item) {
+  $info = new stdClass();
+  // Fetch from the feed
+  // ... the video id
+  $info->id = $item->getElementsByTagNameNS(NS_DM, 'id')->item(0)->nodeValue;
+  // ... its title
+  $title = $item->getElementsByTagName('title')->item(0);
+  $info->title = $title->nodeValue;
+  // Video size
+  $player = $item->getElementsByTagNameNS(NS_MEDIA, 'player')->item(0);
+  $info->width = $player->getAttribute('width');
+  $info->height = $player->getAttribute('height');
+  // ... and usefull informations about its thumbnails
+  $thumb = $item->getElementsByTagNameNS(NS_MEDIA, 'thumbnail')->item(0);
+  $info->thumbnail = array(
+    'src'    => $thumb->getAttribute('url'),
+    'width'  => $thumb->getAttribute('width'),
+    'height' => $thumb->getAttribute('height')
+  );
+  // Tags
+  $info->tags = array();
+  foreach ($item->getElementsByTagNameNS(NS_MEDIA, 'category') as $tag) {
+    $info->tags[] = $tag->nodeValue;
+  }
+  // ... also get the author
+  $info->author = $item->getElementsByTagNameNS(NS_DM, 'author')->item(0)->nodeValue;
+  // ... and the publication date
+  $info->pubDate = date('c', strtotime($item->getElementsByTagName('pubDate')->item(0)->nodeValue));
+  $info->license = 'DM';
+  return $info;
 }
 
 /**
