@@ -361,7 +361,7 @@ function mee_field_text_validate($element, &$form_state) {
  * text_with_summary) are eligible due to the actual implementation.
  */
 function mee_field_types() {
-  return variable_get('mee_field_types', array('text_with_summary'));
+  return variable_get('mee_field_types', array('text', 'text_long', 'text_with_summary'));
 }
 
 /**
