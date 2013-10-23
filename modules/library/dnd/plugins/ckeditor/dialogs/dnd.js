@@ -1,6 +1,6 @@
 (function($) {
 CKEDITOR.dialog.add('atomProperties', function(editor) {
-  var lang = editor.lang.dnd, element, atom;
+  var lang = editor.lang.dnd, atom;
 
   return {
     title: lang.atom_properties,
@@ -10,8 +10,9 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
       if (!Drupal.dnd.atomCurrent) {
         this.hide();
         // If the library is hidden, show it
-        if ($('.dnd-library-wrapper').length && !$('.dnd-library-wrapper').hasClass('library-on')) {
-          $('.dnd-library-wrapper .scald-anchor').click();
+        var library_wrapper = $('.dnd-library-wrapper');
+        if (library_wrapper.length && !library_wrapper.hasClass('library-on')) {
+          $('.scald-anchor', library_wrapper).click();
         }
         else {
           alert(lang.atom_none);
@@ -47,7 +48,7 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
         var me = CKEDITOR.dialog.getCurrent();
         var cmbContext = me.getContentElement('info', 'cmbContext');
         cmbContext.clear();
-        for (context in Drupal.settings.dnd.contexts[type]) {
+        for (var context in Drupal.settings.dnd.contexts[type]) {
           cmbContext.add(Drupal.settings.dnd.contexts[type][context], context);
         }
         me.setupContent(atom);

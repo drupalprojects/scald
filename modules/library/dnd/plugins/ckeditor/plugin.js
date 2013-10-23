@@ -26,7 +26,7 @@ dnd.getWrapperElement = function(element) {
     this.atomCurrent = element;
   }
   return element;
-}
+};
 
 CKEDITOR.plugins.add('dnd', {
   lang: 'en',
@@ -48,7 +48,7 @@ CKEDITOR.plugins.add('dnd', {
 
     CKEDITOR.dialog.add('atomProperties', this.path + 'dialogs/dnd.js' );
 
-    var command = editor.addCommand('atomProperties', new CKEDITOR.dialogCommand('atomProperties', {
+    editor.addCommand('atomProperties', new CKEDITOR.dialogCommand('atomProperties', {
       allowedContent: 'div[*](*);iframe[*];img(*)'
     }));
 
@@ -102,14 +102,15 @@ CKEDITOR.plugins.add('dnd', {
       });
 
       editor.document.on('click', function (evt) {
-        if (element = dnd.getWrapperElement(evt.data.getTarget())) {
+        var element = dnd.getWrapperElement(evt.data.getTarget());
+        if (element) {
         }
       });
 
       editor.document.on('mousedown', function (evt) {
         var element = evt.data.getTarget();
         if (element.is('img')) {
-          var element = dnd.getWrapperElement(element);
+          element = dnd.getWrapperElement(element);
           if (element) {
             evt.cancel();
             //evt.data.preventDefault(true);

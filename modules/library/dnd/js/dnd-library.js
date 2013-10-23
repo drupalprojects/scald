@@ -7,7 +7,7 @@
  * the Wysiwyg plugin.
  */
 
-(function($) {
+(function($, Drupal) {
 /**
  * Initialize our namespace.
  */
@@ -72,7 +72,7 @@ Drupal.dnd = {
 
     if (atom_ids.length) {
       $.getJSON(Drupal.settings.basePath + 'atom/fetch/' + atom_ids.join() + '?context=' + context, function(data) {
-        for (atom_id in data) {
+        for (var atom_id in data) {
           if (Drupal.dnd.Atoms[atom_id]) {
             // Merge old data into the new return atom.
             $.extend(true, Drupal.dnd.Atoms[atom_id], data[atom_id]);
@@ -109,7 +109,7 @@ Drupal.dnd = {
   // scope of Drupal.dnd.Atoms
   sas2html: function(text) {
     for (var i in Drupal.dnd.Atoms) {
-      atom = Drupal.dnd.Atoms[i];
+      var atom = Drupal.dnd.Atoms[i];
       if (text.indexOf(atom.sas) > -1) {
         text = text.replace(atom.sas, atom.editor);
       }
@@ -128,7 +128,7 @@ Drupal.dnd = {
       };
     }
   }
-}
+};
 
 /**
  *  Extend jQuery a bit
@@ -171,7 +171,7 @@ Drupal.theme.prototype.scaldEmbed = function(atom, context, options) {
   }
 
   return output;
-}
+};
 
 /**
  * Initialize and load drag and drop library and pass off rendering and
@@ -187,7 +187,7 @@ attach: function(context, settings) {
 
   $('body').once('dnd', function() {
     var wrapper = $('<div class="dnd-library-wrapper"></div>').appendTo('body');
-    $editor = $("<a />");
+    var $editor = $("<a />");
     wrapper.library_url = Drupal.settings.dnd.url;
     $.getJSON(wrapper.library_url, function(data) {
       Drupal.behaviors.dndLibrary.renderLibrary.call(wrapper, data, $editor);
@@ -196,43 +196,45 @@ attach: function(context, settings) {
 },
 
 renderLibrary: function(data, editor) {
-  $this = $(this);
+  var $this = $(this);
+  var scald_menu = $this.find('.scald-menu');
+  var library_wrapper = $this.find('.dnd-library-wrapper');
 
   // Save the current status
   var dndStatus = {
-    search: $this.find('.scald-menu').hasClass('search-on')
-    ,library: $this.find('.dnd-library-wrapper').hasClass('library-on')
+    search: scald_menu.hasClass('search-on')
+    ,library: library_wrapper.hasClass('library-on')
   };
 
   $this.html(data.menu + data.anchor + data.library);
 
   // Rearrange some element for better logic and easier theming.
   // @todo We'd better do it on server side.
-  $this.find('.scald-menu')
+  scald_menu
     .prepend($this.find('.summary'))
     .append($this.find('.view-filters').addClass('filters'));
   if (dndStatus.search) {
-    $this.find('.scald-menu').addClass('search-on');
-    $this.find('.dnd-library-wrapper').addClass('library-on');
+    scald_menu.addClass('search-on');
+    library_wrapper.addClass('library-on');
   }
   $this.find('.summary .toggle').click(function() {
     // We toggle class only when animation finishes to avoid flash back.
-    $('.scald-menu').animate({left: $('.scald-menu').hasClass('search-on') ? '-42px' : '-256px'}, function() {
+    scald_menu.animate({left: scald_menu.hasClass('search-on') ? '-42px' : '-256px'}, function() {
       $(this).toggleClass('search-on');
     });
     // When display search, we certainly want to display the library, too.
-    if (!$('.scald-menu').hasClass('search-on') && !$('.dnd-library-wrapper').hasClass('library-on')) {
+    if (!scald_menu.hasClass('search-on') && !library_wrapper.hasClass('library-on')) {
       $('.scald-anchor').click();
     }
   });
   $this.find('.scald-anchor').click(function() {
     // We toggle class only when animation finishes to avoid flash back.
-    $('.dnd-library-wrapper').animate({right: $('.dnd-library-wrapper').hasClass('library-on') ? '-276px' : '0'}, function() {
-      $('.dnd-library-wrapper').toggleClass('library-on');
+    library_wrapper.animate({right: library_wrapper.hasClass('library-on') ? '-276px' : '0'}, function() {
+      library_wrapper.toggleClass('library-on');
     });
   });
 
-  for (atom_id in data.atoms) {
+  for (var atom_id in data.atoms) {
     // Store the atom data in our object
     Drupal.dnd.Atoms[atom_id] = Drupal.dnd.Atoms[atom_id] || {sid: atom_id};
     Drupal.dnd.Atoms[atom_id].contexts = Drupal.dnd.Atoms[atom_id].contexts || {};
@@ -263,9 +265,9 @@ renderLibrary: function(data, editor) {
 
   // Preload images in editor representations
   var cached = $.data($(editor), 'dnd_preload') || {};
-  for (editor_id in Drupal.dnd.Atoms) {
+  for (var editor_id in Drupal.dnd.Atoms) {
     if (!cached[editor_id]) {
-      $representation = $(Drupal.dnd.Atoms[editor_id].editor);
+      var $representation = $(Drupal.dnd.Atoms[editor_id].editor);
       if ($representation.is('img') && $representation.get(0).src) {
         $representation.attr('src', $representation.get(0).src);
       } else {
@@ -357,7 +359,7 @@ renderLibrary: function(data, editor) {
   // Deals with Views Saved Searches "Save" button
   $('#views-savedsearches-save-search-form', $this).find('input[type=submit], button[type=submit]').click(function() {
     var submit = $(this);
-    url = submit.parents('div.dnd-library-wrapper').get(0).library_url;
+    var url = submit.parents('div.dnd-library-wrapper').get(0).library_url;
     $('#views-savedsearches-save-search-form', $this).ajaxSubmit({
       'url' : url,
       'dataType' : 'json',
@@ -403,4 +405,4 @@ detach: function() {
 }
 }
 
-}) (jQuery);
+}) (jQuery, Drupal);
