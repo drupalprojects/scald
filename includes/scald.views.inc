@@ -18,6 +18,8 @@ function scald_views_data() {
     'help' => t("Views related to Scald Atoms."),
   );
 
+  $data['scald_atoms']['table']['entity type'] = 'scald_atom';
+
   $data['scald_atoms']['sid'] = array(
     'title' => t('Scald ID'),
     'help' => t("The atom's unique identifier"),
