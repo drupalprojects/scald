@@ -119,7 +119,7 @@ Drupal.dnd = {
 
   // Convert SAS to an array of atom attributes.
   sas2array: function(sas) {
-    matches = sas.match(/\[scald=(\d+)(:([^\s]+))?(.*)]/);
+    var matches = sas.match(/\[scald=(\d+)(:([^\s]+))?(.*)]/);
     if (matches.length) {
       return {
         sid: matches[1],
@@ -196,28 +196,27 @@ attach: function(context, settings) {
 },
 
 renderLibrary: function(data, editor) {
-  var $this = $(this);
+  var library_wrapper = $(this);
 
   // Save the current status
   var dndStatus = {
-    search: $this.find('.scald-menu').hasClass('search-on'),
-    library: $this.find('.dnd-library-wrapper').hasClass('library-on')
+    search: library_wrapper.find('.scald-menu').hasClass('search-on'),
+    library: library_wrapper.hasClass('library-on')
   };
 
-  $this.html(data.menu + data.anchor + data.library);
-  var scald_menu = $this.find('.scald-menu');
-  var library_wrapper = $this.find('.dnd-library-wrapper');
+  library_wrapper.html(data.menu + data.anchor + data.library);
+  var scald_menu = library_wrapper.find('.scald-menu');
 
   // Rearrange some element for better logic and easier theming.
   // @todo We'd better do it on server side.
   scald_menu
-    .prepend($this.find('.summary'))
-    .append($this.find('.view-filters').addClass('filters'));
+    .prepend(library_wrapper.find('.summary'))
+    .append(library_wrapper.find('.view-filters').addClass('filters'));
   if (dndStatus.search) {
     scald_menu.addClass('search-on');
     library_wrapper.addClass('library-on');
   }
-  $this.find('.summary .toggle').click(function() {
+  library_wrapper.find('.summary .toggle').click(function() {
     // We toggle class only when animation finishes to avoid flash back.
     scald_menu.animate({left: scald_menu.hasClass('search-on') ? '-42px' : '-256px'}, function() {
       $(this).toggleClass('search-on');
@@ -227,7 +226,7 @@ renderLibrary: function(data, editor) {
       $('.scald-anchor').click();
     }
   });
-  $this.find('.scald-anchor').click(function() {
+  library_wrapper.find('.scald-anchor').click(function() {
     // We toggle class only when animation finishes to avoid flash back.
     library_wrapper.animate({right: library_wrapper.hasClass('library-on') ? '-276px' : '0'}, function() {
       library_wrapper.toggleClass('library-on');
@@ -309,19 +308,19 @@ renderLibrary: function(data, editor) {
       });
   });
   // Makes pager links refresh the library instead of opening it in the browser window
-  $('.pager a', $this).click(function() {
-    $this.get(0).library_url = this.href;
+  library_wrapper.find('.pager a').click(function() {
+    library_wrapper.get(0).library_url = this.href;
     $.getJSON(this.href, function(data) {
-      Drupal.behaviors.dndLibrary.renderLibrary.call($this.get(0), data, $(editor));
+      Drupal.behaviors.dndLibrary.renderLibrary.call(library_wrapper.get(0), data, $(editor));
     });
     return false;
   });
 
   // Turns Views exposed filters' submit button into an ajaxSubmit trigger
-  $('.view-filters', $this).find('input[type=submit], button[type=submit]').click(function(e) {
+  library_wrapper.find('.view-filters').find('input[type=submit], button[type=submit]').click(function(e) {
     var submit = $(this);
     settings = Drupal.settings.dnd;
-    $('.view-filters form', $this).ajaxSubmit({
+    library_wrapper.find('.view-filters form').ajaxSubmit({
       'url' : settings.url,
       'dataType' : 'json',
       'success' : function(data) {
@@ -336,9 +335,9 @@ renderLibrary: function(data, editor) {
 
   // Makes Views exposed filters' reset button submit the form via ajaxSubmit,
   // without data, to get all the default values back.
-  $('.view-filters', $this).find('input[type=reset], button[type=reset]').click(function(e) {
+  library_wrapper.find('.view-filters').find('input[type=reset], button[type=reset]').click(function(e) {
     var reset = $(this);
-    $('.view-filters form', $this).ajaxSubmit({
+    library_wrapper.find('.view-filters form').ajaxSubmit({
       'url' : Drupal.settings.dnd.url,
       'dataType' : 'json',
       'success' : function(data) {
@@ -357,10 +356,10 @@ renderLibrary: function(data, editor) {
   });
 
   // Deals with Views Saved Searches "Save" button
-  $('#views-savedsearches-save-search-form', $this).find('input[type=submit], button[type=submit]').click(function() {
+  library_wrapper.find('#views-savedsearches-save-search-form').find('input[type=submit], button[type=submit]').click(function() {
     var submit = $(this);
     var url = submit.parents('div.dnd-library-wrapper').get(0).library_url;
-    $('#views-savedsearches-save-search-form', $this).ajaxSubmit({
+    library_wrapper.find('#views-savedsearches-save-search-form').ajaxSubmit({
       'url' : url,
       'dataType' : 'json',
       'success' : function(data) {
@@ -373,9 +372,9 @@ renderLibrary: function(data, editor) {
   });
 
   // Deals with Views Saved Searches "Delete" button
-  $('#views-savedsearches-delete-search-form', $this).find('input[type=submit], button[type=submit]').click(function() {
+  library_wrapper.find('#views-savedsearches-delete-search-form').find('input[type=submit], button[type=submit]').click(function() {
     var submit = $(this);
-    $('#views-savedsearches-delete-search-form', $this).ajaxSubmit({
+    library_wrapper.find('#views-savedsearches-delete-search-form').ajaxSubmit({
       'url' : settings.url,
       'dataType' : 'json',
       'success' : function(data) {
@@ -388,20 +387,16 @@ renderLibrary: function(data, editor) {
   });
 
   // Deals with Views Saved Searches search links
-  $('#views-savedsearches-delete-search-form label a', $this).click(function() {
-    $this.get(0).library_url = this.href;
+  library_wrapper.find('#views-savedsearches-delete-search-form label a').click(function() {
+    library_wrapper.get(0).library_url = this.href;
     $.getJSON(this.href, function(data) {
-      Drupal.behaviors.dndLibrary.renderLibrary.call($this.get(0), data, $(editor));
+      Drupal.behaviors.dndLibrary.renderLibrary.call(library_wrapper.get(0), data, $(editor));
     });
     return false;
   });
 
   // Attach all the behaviors to our new HTML fragment
-  Drupal.attachBehaviors($this);
-},
-
-// Do garbage collection on detach
-detach: function() {
+  Drupal.attachBehaviors(library_wrapper);
 }
 }
 
