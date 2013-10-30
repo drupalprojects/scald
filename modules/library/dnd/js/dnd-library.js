@@ -197,16 +197,16 @@ attach: function(context, settings) {
 
 renderLibrary: function(data, editor) {
   var $this = $(this);
-  var scald_menu = $this.find('.scald-menu');
-  var library_wrapper = $this.find('.dnd-library-wrapper');
 
   // Save the current status
   var dndStatus = {
-    search: scald_menu.hasClass('search-on')
-    ,library: library_wrapper.hasClass('library-on')
+    search: $this.find('.scald-menu').hasClass('search-on'),
+    library: $this.find('.dnd-library-wrapper').hasClass('library-on')
   };
 
   $this.html(data.menu + data.anchor + data.library);
+  var scald_menu = $this.find('.scald-menu');
+  var library_wrapper = $this.find('.dnd-library-wrapper');
 
   // Rearrange some element for better logic and easier theming.
   // @todo We'd better do it on server side.
