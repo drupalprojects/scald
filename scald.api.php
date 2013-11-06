@@ -150,7 +150,6 @@ function hook_scald_register_atom($atom, $mode) {
  *
  * @param $mode
  *   Role of the callee function. Can have the following values:
- *   - "type" (not really, as we don't have type provider now)
  *   - "atom"
  *
  * @see hook_scald_register_atom().
@@ -166,7 +165,6 @@ function hook_scald_update_atom($atom, $mode) {
  *
  * @param $mode
  *   Role of the callee function. Can have the following values:
- *   - "type" (not really, as we don't have type provider now)
  *   - "atom"
  *   - "transcoder"
  *
@@ -183,7 +181,6 @@ function hook_scald_unregister_atom($atom, $mode) {
  *
  * @param $mode
  *   Role of the callee function. Can have the following values:
- *   - "type" (not really, as we don't have type provider now)
  *   - "atom"
  *
  * @see hook_scald_register_atom().
@@ -221,7 +218,7 @@ function hook_scald_action($atom, $action, $mode) {
  *   hook_scald_prerender().
  * @param string $mode
  *   a string indicating which mode the prerender function is being called in
- *   ('type', 'atom', 'context', 'player' or 'transcoder').
+ *   ('atom', 'context', 'player' or 'transcoder').
  */
 function hook_scald_prerender($atom, $context, $options, $mode) {
 }

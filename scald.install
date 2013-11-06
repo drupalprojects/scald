@@ -111,6 +111,7 @@ function scald_schema() {
     ),
   );
 
+  // @todo delete it.
   $schema['scald_types'] = array(
     'description' => 'The Scald Unified Type registry.',
     'fields'      => array(
@@ -140,6 +141,61 @@ function scald_schema() {
       ),
     ),
     'primary key' => array('type'),
+  );
+
+  $schema['scald_bundles'] = array(
+    'description' => 'Stores information about all defined {node} bundles.',
+    'fields'      => array(
+      'bundle'         => array(
+        'description' => 'The machine-readable name of this bundle.',
+        'type'        => 'varchar',
+        'length'      => 32,
+        'not null'    => TRUE,
+      ),
+      'type'         => array(
+        'description' => 'The Scald Atom type related to this bundle.',
+        'type'        => 'varchar',
+        'length'      => 32,
+        'not null'    => TRUE,
+      ),
+      'providers'         => array(
+        'description' => 'The comma separated list of modules that provide source for this bundle.',
+        'type'        => 'text',
+        'size'        => 'medium',
+      ),
+      'title'       => array(
+        'description' => 'The human-readable title of this bundle.',
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+      ),
+      'description' => array(
+        'description' => 'A brief description of this bundle.',
+        'type'        => 'text',
+        'size'        => 'medium',
+      ),
+      'disabled' => array(
+        'description' => 'A boolean indicating whether the node type is disabled.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'size' => 'tiny'
+      ),
+    ),
+    'primary key' => array('bundle'),
+    'export' => array(
+      'key' => 'bundle',
+      'key name' => 'Bundle',
+      'primary key' => 'bundle',
+      'identifier' => 'scald_atom_bundle',
+      'export type string' => 'ctools_type',
+      'api' => array(
+        'owner' => 'scald',
+        'api' => 'atom_bundle',
+        'minimum_version' => 1,
+        'current_version' => 1,
+      ),
+    ),
   );
 
   $schema['scald_context_config'] = array(

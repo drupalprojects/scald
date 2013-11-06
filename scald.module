@@ -24,19 +24,6 @@ require_once 'includes/scald.atom.inc';
 /**
  * Get the available Scald Unified Types.
  *
- * This function determines and returns a structured array specifying all the
- *  currently provided Scald Unified Types.  The Scald Unified Types array has
- *  the following format:
- *  array(
- *    'type-slug' => array(
- *      'title'     => 'Plain-text title',
- *      'providers' => array(
- *        'provider',
- *        ...
- *    ),
- *    ...
- *  );
- *
  * @return array
  *   The Scald Unified Types array
  */

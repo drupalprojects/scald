@@ -15,4 +15,5 @@ files[] = includes/scald_views_handler_filter_atom_provider.inc
 files[] = includes/scald_views_handler_filter_atom_type.inc
 files[] = includes/ScaldAtom.inc
 files[] = includes/ScaldAtomController.inc
+files[] = includes/ScaldBundleManager.inc
 files[] = tests/scald.test
