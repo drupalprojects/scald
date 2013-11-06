@@ -15,6 +15,9 @@ Drupal.dnd = {
   Atoms: {
   },
 
+  // Keep track of the last focused textarea.
+  lastFocus: null,
+
   // Setting for the qTip v2 library
   qTipSettings: {
     position: {
@@ -127,6 +130,48 @@ Drupal.dnd = {
         options: matches[4]
       };
     }
+  },
+
+  /**
+   * Insert text at the caret in a textarea.
+   */
+  insertText: function(txtArea, textValue) {
+    //IE
+    if (document.selection) {
+      txtArea.focus();
+      var sel = document.selection.createRange();
+      sel.text = textValue;
+    }
+    //Firefox, chrome, mozilla
+    else if (txtArea.selectionStart || txtArea.selectionStart == '0') {
+      var startPos = txtArea.selectionStart;
+      var endPos = txtArea.selectionEnd;
+      txtArea.value = txtArea.value.substring(0, startPos) + textValue + txtArea.value.substring(endPos, txtArea.value.length);
+      txtArea.focus();
+      txtArea.selectionStart = startPos + textValue.length;
+      txtArea.selectionEnd = startPos + textValue.length;
+    }
+    else {
+      txtArea.value += textArea.value;
+      txtArea.focus();
+    }
+    return true;
+  },
+
+  /**
+   * Insert an atom in the current RTE or textarea.
+   */
+  insertAtom: function(sid) {
+    var cke = Drupal.ckeditorInstance;
+    if (cke) {
+      var markup = Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[sid]);
+      cke.insertElement(CKEDITOR.dom.element.createFromHtml(markup));
+    }
+    else if (Drupal.dnd.lastFocus) {
+      var markup = Drupal.dnd.Atoms[sid].sas;
+      Drupal.dnd.insertText(Drupal.dnd.lastFocus, markup);
+    }
+    return true;
   }
 };
 
@@ -192,6 +237,12 @@ attach: function(context, settings) {
     $.getJSON(wrapper.library_url, function(data) {
       Drupal.behaviors.dndLibrary.renderLibrary.call(wrapper, data, $editor);
     });
+  });
+
+  // Track the last focused textarea or textfield.
+  $('textarea, .form-type-textfield input').focus(function(){
+    Drupal.dnd.lastFocus = this;
+    Drupal.ckeditorInstance = false;
   });
 },
 
@@ -279,8 +330,18 @@ renderLibrary: function(data, editor) {
   $.data($(editor), 'dnd_preload', cached);
 
   // Set up drag & drop data
+  $('.editor-item ._insert a').each(function(i) {
+    $(this)
+      .bind('click', function(e) {
+        e.preventDefault();
+        return Drupal.dnd.insertAtom($(this).data('atom-id'));
+      });
+  });
   $('.editor-item .drop').each(function(i) {
     $(this)
+      .bind('dblclick', function(e) {
+        return Drupal.dnd.insertAtom($(this).data('atom-id'));
+      })
       .bind('dragstart', function(e) {
         var dt = e.originalEvent.dataTransfer, id = e.target.id, $this = $(this);
         var $img;
