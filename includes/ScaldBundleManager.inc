@@ -19,10 +19,12 @@ class ScaldBundleManager {
    *   - disabled
    *
    * @return bool
+   *
+   * @throws Exception
    */
   public static function addBundle($values) {
     if (self::loadBundle($values->bundle)) {
-      throw new Exception('Bundle with that machine name existes.');
+      throw new Exception('Bundle with that machine name exists.');
     }
 
     ctools_include('export');
@@ -32,76 +34,8 @@ class ScaldBundleManager {
       $bundle->$key = $value;
     }
     self::saveBundle($bundle);
-    self::attachFields($bundle);
-  }
 
-  /**
-   * Attach fields into a bundle.
-   *
-   * @param $bundle
-   *
-   * @return bool
-   */
-  public static function attachFields($bundle) {
-    // Start with the Scald thumbnail field.
-    $instance = array(
-      'field_name' => 'scald_thumbnail',
-      'entity_type' => 'scald_atom',
-      'bundle' => $bundle->bundle,
-      'label' => 'Thumbnail',
-      'required' => FALSE,
-      'display' => array(
-        'default' => array(
-          'type' => 'hidden',
-        ),
-      ),
-      'settings' => array(
-        'file_directory' => 'thumbnails/' . $bundle->bundle,
-      ),
-    );
-    if (!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
-      field_create_instance($instance);
-      $instance = field_info_instance($instance['entity_type'], $instance['field_name'], $instance['bundle']);
-      foreach ($instance['display'] as $view_mode => $settings) {
-        $instance['display'][$view_mode]['type'] = 'hidden';
-      }
-      field_update_instance($instance);
-    }
-
-    // Instantiate the Scald Authors field.
-    $instance = array(
-      'field_name' => 'scald_authors',
-      'entity_type' => 'scald_atom',
-      'bundle' => $type,
-      'label' => 'Authors',
-      'required' => FALSE,
-      'widget' => array(
-        'type' => 'taxonomy_autocomplete',
-      ),
-    );
-    if (!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
-      field_create_instance($instance);
-    }
-
-    // Instantiate the Scald Tags field.
-    $instance = array(
-      'field_name' => 'scald_tags',
-      'entity_type' => 'scald_atom',
-      'bundle' => $type,
-      'label' => 'Tags',
-      'required' => FALSE,
-      'widget' => array(
-        'type' => 'taxonomy_autocomplete',
-      ),
-    );
-    if (!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
-      field_create_instance($instance);
-    }
-
-    // Flush our caches.
-    scald_contexts(TRUE);
-
-    return TRUE;
+    field_attach_create_bundle('scald_atom', $bundle->bundle);
   }
 
   /**
@@ -121,7 +55,7 @@ class ScaldBundleManager {
   }
 
   /**
-   * Save bundle.
+   * Delete bundle.
    */
   public static function deleteBundle($bundle) {
     // Check if there are atoms in this bundle.
@@ -131,6 +65,78 @@ class ScaldBundleManager {
     }
 
     ctools_include('export');
-    return ctools_export_crud_delete('scald_atom_bundle', $bundle);
+    ctools_export_crud_delete('scald_atom_bundle', $bundle);
+
+    field_attach_delete_bundle('scald_atom', $bundle->bundle);
+  }
+
+  /**
+   * Attach fields into a bundle.
+   *
+   * @param $machine_name
+   *
+   * @return bool
+   */
+  public static function attachFields($machine_name) {
+    // Start with the Scald thumbnail field.
+    $instance = array(
+      'field_name' => 'scald_thumbnail',
+      'entity_type' => 'scald_atom',
+      'bundle' => $machine_name,
+      'label' => 'Thumbnail',
+      'required' => FALSE,
+      'display' => array(
+        'default' => array(
+          'type' => 'hidden',
+        ),
+      ),
+      'settings' => array(
+        'file_directory' => 'thumbnails/' . $machine_name,
+      ),
+    );
+
+    if (!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
+      field_create_instance($instance);
+      $instance = field_info_instance($instance['entity_type'], $instance['field_name'], $instance['bundle']);
+      foreach ($instance['display'] as $view_mode => $settings) {
+        $instance['display'][$view_mode]['type'] = 'hidden';
+      }
+      field_update_instance($instance);
+    }
+
+    // Instantiate the Scald Authors field.
+    $instance = array(
+      'field_name' => 'scald_authors',
+      'entity_type' => 'scald_atom',
+      'bundle' => $machine_name,
+      'label' => 'Authors',
+      'required' => FALSE,
+      'widget' => array(
+        'type' => 'taxonomy_autocomplete',
+      ),
+    );
+    if (!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
+      field_create_instance($instance);
+    }
+
+    // Instantiate the Scald Tags field.
+    $instance = array(
+      'field_name' => 'scald_tags',
+      'entity_type' => 'scald_atom',
+      'bundle' => $machine_name,
+      'label' => 'Tags',
+      'required' => FALSE,
+      'widget' => array(
+        'type' => 'taxonomy_autocomplete',
+      ),
+    );
+    if (!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
+      field_create_instance($instance);
+    }
+
+    // Flush our caches.
+    scald_contexts(TRUE);
+
+    return TRUE;
   }
 }

@@ -2313,3 +2313,12 @@ function scald_atom_user_build_actions_links($atom, $query = NULL) {
 function scald_atom_thumbnail_path($type) {
   return ScaldAtomController::getThumbnailPath($type);
 }
+
+/**
+ * Implements hook_field_attach_create_bundle().
+ */
+function scald_field_attach_create_bundle($entity_type, $bundle) {
+  if ($entity_type == 'scald_atom') {
+    ScaldBundleManager::attachFields($bundle);
+  }
+}

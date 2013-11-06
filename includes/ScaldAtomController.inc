@@ -59,65 +59,14 @@ class ScaldAtomController extends DrupalDefaultEntityController {
       ->values(array($type, $title, $description, 'scald'))
       ->execute();
 
-    // And add fields on it, starting with the Scald Thumbnail field.
-    $instance = array(
-      'field_name' => 'scald_thumbnail',
-      'entity_type' => 'scald_atom',
+    $values = array(
       'bundle' => $type,
-      'label' => 'Thumbnail',
-      'required' => FALSE,
-      'display' => array(
-        'default' => array(
-          'type' => 'hidden',
-        ),
-      ),
-      'settings' => array(
-        'file_directory' => 'thumbnails/' . $type,
-      ),
+      'type' => $type,
+      'providers' => NULL,
+      'title' => $title,
+      'description' => $description,
     );
-    if (!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
-      field_create_instance($instance);
-      $instance = field_info_instance($instance['entity_type'], $instance['field_name'], $instance['bundle']);
-      foreach ($instance['display'] as $view_mode => $settings) {
-        $instance['display'][$view_mode]['type'] = 'hidden';
-      }
-      field_update_instance($instance);
-    }
-
-    // Instantiate the Scald Authors field.
-    $instance = array(
-      'field_name' => 'scald_authors',
-      'entity_type' => 'scald_atom',
-      'bundle' => $type,
-      'label' => 'Authors',
-      'required' => FALSE,
-      'widget' => array(
-        'type' => 'taxonomy_autocomplete',
-      ),
-    );
-    if (!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
-      field_create_instance($instance);
-    }
-
-    // Instantiate the Scald Tags field.
-    $instance = array(
-      'field_name' => 'scald_tags',
-      'entity_type' => 'scald_atom',
-      'bundle' => $type,
-      'label' => 'Tags',
-      'required' => FALSE,
-      'widget' => array(
-        'type' => 'taxonomy_autocomplete',
-      ),
-    );
-    if (!field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
-      field_create_instance($instance);
-    }
-
-    // Flush our caches.
-    scald_contexts(TRUE);
-
-    return TRUE;
+    return ScaldBundleManager::addBundle($values);
   }
 
   /**
