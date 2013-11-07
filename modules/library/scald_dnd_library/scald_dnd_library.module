@@ -211,6 +211,14 @@ function theme_sdl_library_item($variables) {
   foreach ($links as $action => $link) {
     $links[$action]['attributes']['target'] = '_blank';
   }
+  // The Insert link. Use the "_" prefix to avoid collision with possible
+  // "insert" action.
+  $links['_insert'] = array(
+    'title' => t('Insert'),
+    'attributes' => array('data-atom-id' => $atom->sid),
+    'href' => '#',
+  );
+
   $links_element = array(
     '#theme' => 'links',
     '#links' => $links,
