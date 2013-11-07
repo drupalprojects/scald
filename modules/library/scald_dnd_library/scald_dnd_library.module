@@ -238,7 +238,7 @@ function theme_sdl_library_item($variables) {
   }
 
   $return = "<div class='image'>{$image}</div>
-  <div class='meta type-" . drupal_html_class($informations->type) . " clearfix'>
+  <div class='meta type-" . drupal_html_class($atom->type) . " clearfix'>
     <div class='title'>{$informations->title}</div>
     <div class='author'>{$authors}</div>
     {$rendered_links}
