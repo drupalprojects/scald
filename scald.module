@@ -1533,15 +1533,15 @@ function scald_scald_render($atom, $context, $options = array()) {
       break;
 
     case 'no-access':
-      $output = theme('scald_render_error', array('context' => $context, 'message' => t('You do not have access to view this Atom.')));
+      $output = theme('scald_render_error', array('context' => $context, 'message' => t('You do not have access to view this Atom.'), 'atom' => $atom));
       break;
 
     case 'invalid-id':
-      $output = theme('scald_render_error', array('context' => $context, 'message' => t('Invalid Scald ID.')));
+      $output = theme('scald_render_error', array('context' => $context, 'message' => t('Invalid Scald ID.'), 'atom' => $atom));
       break;
 
     case 'deleted':
-      $output = theme('scald_render_error', array('context' => $context, 'message' => t('Atom deleted!')));
+      $output = theme('scald_render_error', array('context' => $context, 'message' => t('Atom deleted!'), 'atom' => $atom));
       break;
 
     default:
@@ -2183,7 +2183,7 @@ function scald_atom_add_access($type = NULL) {
 function scald_theme($existing, $type, $theme, $path) {
   return array(
     'scald_render_error' => array(
-      'arguments' => array('type' => NULL, 'message' => NULL),
+      'arguments' => array('type' => NULL, 'message' => NULL, 'atom' => NULL),
     ),
   );
 }
