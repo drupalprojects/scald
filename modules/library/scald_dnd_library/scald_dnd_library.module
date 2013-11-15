@@ -99,6 +99,9 @@ function scald_dnd_library_add_item(&$library, $sid) {
   if (empty($atom->omit_legend)) {
     $library['atoms'][$sid]['meta']['legend'] = theme('sdl_editor_legend', array('atom' => $atom));
   }
+
+  // Allow other modules to alter this library item
+  drupal_alter('scald_dnd_library_item', $atom, $library['atoms'][$sid]);
 }
 
 /**
