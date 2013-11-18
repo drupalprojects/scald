@@ -1609,6 +1609,7 @@ function scald_entity_info() {
       'view modes' => array(),
       'view callback' => 'scald_render_multiple',
       'creation callback' => 'entity_metadata_create_object',
+      'deletion callback' => 'scald_atom_delete',
       'save callback' => 'scald_atom_save',
       'translation' => array(
         'entity_translation' => array(
