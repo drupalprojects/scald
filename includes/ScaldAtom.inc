@@ -24,4 +24,8 @@ class ScaldAtom {
       $this->$key = $value;
     }
   }
+
+  public function save() {
+    return ScaldAtomController::save($this);
+  }
 }
