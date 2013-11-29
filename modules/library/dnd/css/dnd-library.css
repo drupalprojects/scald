@@ -284,6 +284,11 @@
   margin: 0;
   padding: 0;
   overflow: hidden;
+  /* Trick to keep the unused space clickabke. */
+  pointer-events: none;
+}
+.scald-menu > div {
+  pointer-events: auto;
 }
 .scald-menu.search-on {
   left: -256px;
