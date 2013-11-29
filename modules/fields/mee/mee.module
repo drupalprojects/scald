@@ -91,10 +91,17 @@ function mee_form_alter(&$form, &$form_state, $form_id) {
     '#description' => t('Enable MEE for this field to get access to an advance resource management interface. MEE will automatically detect the resources embedded in this field, and allow you to define a few metadata properties on them, e.g. choose if the node should be unpublished if at some point in the future the resource became unavailable.'),
     '#default_value' => $settings['mee_enabled'],
   );
+  $form['instance']['settings']['context_default'] = array(
+    '#type' => 'select',
+    '#title' => t('Scald default context'),
+    '#description' => t('You can customize field level default context for drag and drop atoms.'),
+    '#default_value' => isset($settings['context_default']) ? $settings['context_default'] : variable_get('dnd_context_default', 'sdl_editor_representation'),
+    '#options' => $context_options,
+  );
   $form['instance']['settings']['context'] = array(
     '#type' => 'select',
-    '#title' => t('Scald Editor Context'),
-    '#description' => t('Choose a Scald Context to use for displaying Scald Atoms included in the textarea during editing.'),
+    '#title' => t('Scald fallback context'),
+    '#description' => t('The fallback context is only used when the specified context for embedded atom is not available (e.g. deleted).'),
     '#default_value' => $settings['context'],
     '#options' => $context_options,
   );

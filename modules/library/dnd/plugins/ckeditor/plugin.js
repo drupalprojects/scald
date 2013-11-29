@@ -43,6 +43,11 @@ CKEDITOR.plugins.add('dnd', {
         editor.document.appendStyleSheet(path + '../../css/editor.css');
         editor.document.appendStyleSheet(path + '../../css/editor-global.css');
         dnd.protectAtom($(editor.document.$).find('.dnd-atom-wrapper'));
+
+        if (editor && editor.element && editor.element.$ && editor.element.$.attributes['data-dnd-context']) {
+          var context = editor.element.$.attributes['data-dnd-context'].value;
+          Drupal.settings.dnd.contextDefault = context;
+        }
       }
     });
 
@@ -87,16 +92,14 @@ CKEDITOR.plugins.add('dnd', {
 
     editor.on('contentDom', function (evt) {
       editor.document.on('drop', function (evt) {
-        try {
-          evt.data.$.dataTransfer.getData('text/html');
-        }
-        catch(e) {
-          var atom = Drupal.dnd.sas2array(evt.data.$.dataTransfer.getData('Text'));
-          if (atom && Drupal.dnd.Atoms[atom.sid]) {
-            var markup = '<p>&nbsp;</p>' + Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[atom.sid], atom.context, atom.options);
-            editor.insertHtml(markup);
-            evt.data.preventDefault();
-          }
+        var atom = Drupal.dnd.sas2array(evt.data.$.dataTransfer.getData('Text'));
+        if (atom && Drupal.dnd.Atoms[atom.sid]) {
+          var context = editor.element.$.attributes['data-dnd-context'].value;
+          Drupal.dnd.fetchAtom(context, atom.sid, function() {
+            var markup = Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[atom.sid], context, atom.options);
+            editor.insertElement(CKEDITOR.dom.element.createFromHtml(markup));
+          });
+          evt.data.preventDefault();
         }
         dnd.protectAtom($(editor.document.$).find('.dnd-atom-wrapper'));
       });
