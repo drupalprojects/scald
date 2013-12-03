@@ -1614,6 +1614,7 @@ function scald_entity_info() {
       'translation' => array(
         'entity_translation' => array(
           'base path' => 'atom/%scald_atom',
+          'edit path' => 'atom/%scald_atom/edit/%ctools_js',
           'edit form' => 'atom',
         ),
       ),
