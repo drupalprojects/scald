@@ -219,7 +219,11 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
     ';
   }
   elseif ($mode == 'atom') {
-    $attributes = array();
+    // Default attributes, which can be overridden by field settings.
+    $attributes = array(
+      'alt' => $atom->title,
+      'title' => $atom->title,
+    );
     $langcode = field_language('scald_atom', $atom, 'scald_thumbnail');
     foreach (array('alt', 'title', 'width', 'height') as $attribute_name) {
       if (isset($atom->scald_thumbnail[$langcode][0][$attribute_name]) && $atom->scald_thumbnail[$langcode][0][$attribute_name]) {
