@@ -341,11 +341,12 @@ function _scald_create_author_vocabulary() {
   field_associate_fields('taxonomy');
 
   // Create the atom vocabulary if it does not exist.
-  $vocabulary = taxonomy_vocabulary_load(variable_get('scald_author_vocabulary', 0));
+  $name = variable_get('scald_author_vocabulary', 'scald_authors');
+  $vocabulary = taxonomy_vocabulary_machine_name_load($name);
   if (!$vocabulary) {
     $edit = array(
       'name' => t('Authors'),
-      'machine_name' => 'scald_authors',
+      'machine_name' => $name,
       'description' => t('Scald authors vocabulary'),
       'hierachy' => 0,
       'module' => 'scald',
@@ -353,7 +354,7 @@ function _scald_create_author_vocabulary() {
     );
     $vocabulary = (object) $edit;
     taxonomy_vocabulary_save($vocabulary);
-    variable_set('scald_author_vocabulary', $vocabulary->vid);
+    variable_set('scald_author_vocabulary', $name);
 
     // Create a URL field on the taxonomy terms of the Scald Authors
     // bundle.
@@ -368,7 +369,7 @@ function _scald_create_author_vocabulary() {
       'field_name' => 'scald_author_url',
       'label' => t('URL'),
       'entity_type' => 'taxonomy_term',
-      'bundle' => 'scald_authors',
+      'bundle' => $name,
       'required' => FALSE,
       'description' => 'Homepage of the Author',
     );
@@ -403,11 +404,12 @@ function _scald_create_tags_vocabulary() {
   field_associate_fields('taxonomy');
 
   // Create the atom vocabulary if it does not exist.
-  $vocabulary = taxonomy_vocabulary_load(variable_get('scald_tags_vocabulary', 0));
+  $name = variable_get('scald_tags_vocabulary', 'scald_tags');
+  $vocabulary = taxonomy_vocabulary_machine_name_load($name);
   if (!$vocabulary) {
     $edit = array(
       'name' => t('Scald tags'),
-      'machine_name' => 'scald_tags',
+      'machine_name' => $name,
       'description' => t('Scald tags vocabulary'),
       'hierachy' => 0,
       'module' => 'scald',
@@ -415,7 +417,7 @@ function _scald_create_tags_vocabulary() {
     );
     $vocabulary = (object) $edit;
     taxonomy_vocabulary_save($vocabulary);
-    variable_set('scald_tags_vocabulary', $vocabulary->vid);
+    variable_set('scald_tags_vocabulary', $vocabulary->machine_name);
   }
 
   // Create the scald_tags field.
@@ -603,6 +605,19 @@ function scald_update_7010() {
         $instance['settings']['file_directory'] = 'thumbnails/' . $type;
         field_update_instance($instance);
       }
+    }
+  }
+}
+
+/**
+ * Update the vocabulary variables to point toward the machine names.
+ */
+function scald_update_7011() {
+  foreach (array('scald_author_vocabulary', 'scald_tags_vocabulary') as $variable) {
+    $vid = variable_get($variable);
+    $vocabulary = taxonomy_vocabulary_load($vid);
+    if ($vocabulary) {
+      variable_set($variable, $vocabulary->machine_name);
     }
   }
 }

@@ -568,8 +568,8 @@ function scald_settings_form() {
   // Scald tags vocabulary configuration.
   $options = array();
   $vocabularies = taxonomy_get_vocabularies();
-  foreach ($vocabularies as $vid => $vocabulary) {
-    $options[$vid] = $vocabulary->name;
+  foreach ($vocabularies as $vocabulary) {
+    $options[$vocabulary->machine_name] = $vocabulary->name;
   }
   $form['scald_tags_vocabulary'] = array(
     '#type' => 'select',
@@ -590,15 +590,10 @@ function scald_settings_form() {
  * Handles the admin settings form submission.
  */
 function scald_settings_form_submit($form, &$form_state) {
-  // Find the selected vocabulary.
-  $vocabularies = taxonomy_get_vocabularies();
-  $vocabulary = $vocabularies[$form_state['values']['scald_tags_vocabulary']];
-
-  // Fetch info on the scald_tags taxonomy reference field.
+  // Fetch info on the scald_tags taxonomy reference field and changed
+  // the allowed vocabulary.
   $field = field_info_field('scald_tags');
-
-  // Change the vocabulary used for this field.
-  $field['settings']['allowed_values'][0]['vocabulary'] = $vocabulary->machine_name;
+  $field['settings']['allowed_values'][0]['vocabulary'] = $form_state['values']['scald_tags_vocabulary'];
   field_update_field($field);
 }
 

@@ -254,7 +254,7 @@ function scald_dailymotion_direct_import($video) {
   ));
 
   // Create and link author term
-  if ($term = scald_dailymotion_taxonomy_get_create($infos->author, variable_get('scald_author_vocabulary', 0))) {
+  if ($term = scald_dailymotion_taxonomy_get_create($infos->author, variable_get('scald_author_vocabulary'))) {
     $langcode = field_language('scald_atom', $atom, 'scald_authors');
     $atom->scald_authors[$langcode][0] = array(
       'tid' => $term->tid,
@@ -264,7 +264,7 @@ function scald_dailymotion_direct_import($video) {
   // Create and link tags terms
   $langcode = field_language('scald_atom', $atom, 'scald_tags');
   foreach ($infos->tags as $index => $tag) {
-    if ($term = scald_dailymotion_taxonomy_get_create($tag, variable_get('scald_tags_vocabulary', 0))) {
+    if ($term = scald_dailymotion_taxonomy_get_create($tag, variable_get('scald_tags_vocabulary'))) {
       $atom->scald_tags[$langcode][$index] = array(
         'tid' => $term->tid,
       );
@@ -308,23 +308,17 @@ function scald_dailymotion_direct_import($video) {
  *
  * @param $name
  *   The name or the taxonomy term.
- * @param $vid
- *   Vocabulary ID to search and create from/to.
+ * @param $machine_name
+ *   Vocabulary Machine Name to search and create from/to.
  * @return object
  *   The taxonomy term.
  */
-function scald_dailymotion_taxonomy_get_create($name, $vid) {
+function scald_dailymotion_taxonomy_get_create($name, $machine_name) {
   // remove extra white spaces
   $name = trim($name);
 
   // find existing term(s)
-  $terms = taxonomy_term_load_multiple(
-    array(),
-    array(
-      'name' => $name,
-      'vid' =>  $vid,
-    )
-  );
+  $terms = taxonomy_get_term_by_name($name, $machine_name);
 
   if (!count($terms)) {
     // create a new term
