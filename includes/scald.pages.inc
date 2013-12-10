@@ -257,6 +257,15 @@ function scald_atom_add_form_options($form, &$form_state) {
       '#suffix' => '</div>',
       '#parents' => array('atom' . $delta),
     );
+    if (count($atoms) > 1) {
+      $title = 'atom' . $delta .' : '. $atom->title;
+      $form['atom' . $delta] += array(
+        '#title' => $title,
+        '#type' => 'fieldset',
+        '#collapsible' => TRUE,
+        '#collapsed' => FALSE,
+      );
+    }
     $form['atom' . $delta]['title'] = array(
       '#type' => 'textfield',
       '#title' => t('Title'),
