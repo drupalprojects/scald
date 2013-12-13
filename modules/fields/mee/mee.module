@@ -8,16 +8,6 @@
 define('MEE_RENDERED_COPYRIGHT_PATTERN', '/<!--\s*copyright=(\d+)\s*-->(.*)<!--\s*END copyright=\1\s*-->/sU');
 
 /**
- * Implements hook_init().
- */
-function mee_init() {
-  drupal_add_js(array('mee' => array(
-    'sas' => variable_get('mee_store_sas', TRUE),
-    'editors' => array(),
-  )), 'setting');
-}
-
-/**
  * Implements hook_theme().
  */
 function mee_theme($existing, $type, $theme, $path) {
@@ -39,6 +29,15 @@ function mee_library() {
     'version' => '1.x',
     'js' => array(
       $path . '/mee.js' => array(),
+      array(
+        'type' => 'setting',
+        'data' => array(
+          'mee' => array(
+            'sas' => variable_get('mee_store_sas', TRUE),
+            'editors' => array(),
+          ),
+        ),
+      ),
     ),
     'css' => array(
       $path . '/css/mee.css' => array(),
