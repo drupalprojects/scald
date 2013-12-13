@@ -18,3 +18,20 @@
   display: table;
 }
 
+/**
+ * The following rules make legend look nice with responsive images.
+ */
+.dnd-atom-wrapper {
+  display: table;
+}
+.dnd-drop-wrapper {
+  max-width: 100%;
+}
+.dnd-drop-wrapper img {
+  max-width: 100%;
+  height: auto;
+}
+.dnd-legend-wrapper {
+  display: table-caption;
+  caption-side: bottom;
+}
