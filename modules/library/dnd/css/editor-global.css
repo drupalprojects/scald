@@ -24,9 +24,6 @@
 .dnd-atom-wrapper {
   display: table;
 }
-.dnd-drop-wrapper {
-  max-width: 100%;
-}
 .dnd-drop-wrapper img {
   max-width: 100%;
   height: auto;
