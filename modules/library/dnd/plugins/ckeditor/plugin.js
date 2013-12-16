@@ -6,6 +6,7 @@ if (typeof dnd === 'undefined') {
 
 dnd.atomCut = null;
 dnd.atomCurrent = null;
+dnd.ckditorWidgetSupport = typeof(CKEDITOR.plugins.registered.widget) != 'undefined';
 
 /**
  * Prevents atom from being edited inside the editor.
@@ -22,27 +23,58 @@ dnd.getWrapperElement = function(element) {
     element = element.getParent();
   }
   if (element) {
-    this.protectAtom($(element.$));
+    if (!dnd.ckditorWidgetSupport) {
+      this.protectAtom($(element.$));
+    }
     this.atomCurrent = element;
   }
   return element;
 };
 
-CKEDITOR.plugins.add('dnd', {
+var pluginDefinition = {
   lang: 'en',
-  requires: 'dialog,menu,htmlwriter',
-
-  onLoad: function() {
-  },
+  requires: ['dialog', 'menu', 'htmlwriter'],
 
   init: function (editor) {
     var path = this.path;
+
+    if (dnd.ckditorWidgetSupport) {
+      editor.widgets.add('scald_atom', {
+        template: '' +
+          '<div class="dnd-atom-wrapper">' +
+          '<div class="dnd-drop-wrapper"></div>' +
+          '<div class="dnd-legend-wrapper"></div>' +
+          '</div>',
+        editables: {
+          legend: {
+            selector: '.dnd-legend-wrapper',
+            allowedContent: 'div p br b u i em strong a'
+          }
+        },
+        upcast: function(element) {
+          return element.hasClass('dnd-atom-wrapper');
+        },
+        downcast: function(element) {
+          console.log(element);
+        },
+        dialog: 'atomProperties',
+        init: function() {
+          this.on('dialog', function(evt) {
+            console.log(this.element.$);
+            evt.data.widget = this;
+          }, this);
+        }
+      });
+    }
+
     editor.on('mode', function (evt) {
       var editor = evt.editor;
       if (editor.mode == 'wysiwyg') {
         editor.document.appendStyleSheet(path + '../../css/editor.css');
         editor.document.appendStyleSheet(path + '../../css/editor-global.css');
-        dnd.protectAtom($(editor.document.$).find('.dnd-atom-wrapper'));
+        if (!dnd.ckditorWidgetSupport) {
+          dnd.protectAtom($(editor.document.$).find('.dnd-atom-wrapper'));
+        }
 
         if (editor && editor.element && editor.element.$ && editor.element.$.attributes['data-dnd-context']) {
           var context = editor.element.$.attributes['data-dnd-context'].value;
@@ -51,7 +83,7 @@ CKEDITOR.plugins.add('dnd', {
       }
     });
 
-    CKEDITOR.dialog.add('atomProperties', this.path + 'dialogs/dnd.js' );
+    CKEDITOR.dialog.add('atomProperties', this.path + 'dialogs/' + (dnd.ckditorWidgetSupport ? 'dndwidget.js' : 'dnd.js'));
 
     editor.addCommand('atomProperties', new CKEDITOR.dialogCommand('atomProperties', {
       allowedContent: 'div[*](*);iframe[*];img(*)'
@@ -101,12 +133,8 @@ CKEDITOR.plugins.add('dnd', {
           });
           evt.data.preventDefault();
         }
-        dnd.protectAtom($(editor.document.$).find('.dnd-atom-wrapper'));
-      });
-
-      editor.document.on('click', function (evt) {
-        var element = dnd.getWrapperElement(evt.data.getTarget());
-        if (element) {
+        if (!dnd.ckditorWidgetSupport) {
+          dnd.protectAtom($(editor.document.$).find('.dnd-atom-wrapper'));
         }
       });
 
@@ -159,19 +187,16 @@ CKEDITOR.plugins.add('dnd', {
       }
       return menu;
     });
-
-    editor.on('doubleclick', function(evt) {
-      var element = dnd.getWrapperElement(evt.data.element);
-      if (element) {
-        evt.data.dialog = 'atomProperties';
-      }
-    });
-
-    editor.on('paste', function (evt) {
-    });
   },
 
   afterInit: function (editor) {
   }
-});
+}
+
+if (dnd.ckditorWidgetSupport) {
+  pluginDefinition.requires.push('widget');
+}
+
+CKEDITOR.plugins.add('dnd', pluginDefinition);
+
 })(jQuery, Drupal.dnd);
