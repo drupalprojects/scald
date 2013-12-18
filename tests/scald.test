@@ -548,11 +548,17 @@ class ScaldDnDTestCase extends ScaldWebTestCase {
    * Test Scald DnD Library.
    */
   function testScaldDndLibrary() {
+    // I don't know why scald_dnd_library contexts are not avaiable. Try to
+    // clear the cache manually.
+    scald_contexts(TRUE);
+
     $atom = $this->createAtom();
     $content = scald_render($atom, 'sdl_editor_representation');
 
     // Check if the widely used context sdl_editor_representation is correct.
     $langcode = field_language('scald_atom', $atom, 'scald_thumbnail');
+    $atom->scald_thumbnail[$langcode][0]['alt'] = $atom->title;
+    $atom->scald_thumbnail[$langcode][0]['title'] = $atom->title;
     $thumbnail = field_view_value('scald_atom', $atom, 'scald_thumbnail', $atom->scald_thumbnail[$langcode][0]);
     $expected = $this->makeParseable('<div class=\'image\'>' . drupal_render($thumbnail) . '</div>', $atom, 'sdl_editor_representation');
     $this->assertEqual($content, $expected, 'Context: sdl_editor_representation works correctly.');
