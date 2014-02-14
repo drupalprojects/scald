@@ -311,26 +311,34 @@ function scald_dailymotion_direct_import($video) {
  * @param $machine_name
  *   Vocabulary Machine Name to search and create from/to.
  * @return object
- *   The taxonomy term.
+ *   The taxonomy term or NULL if it didn't existed before and creation failed.
  */
 function scald_dailymotion_taxonomy_get_create($name, $machine_name) {
-  // remove extra white spaces
+  // Remove extra white spaces.
   $name = trim($name);
 
-  // find existing term(s)
+  // Find existing term(s).
   $terms = taxonomy_get_term_by_name($name, $machine_name);
 
   if (!count($terms)) {
-    // create a new term
-    $term = new stdClass();
-    $term->name = trim($name);
-    $term->vid = $vid;
-    taxonomy_term_save($term);
+    $vocabulary = taxonomy_vocabulary_machine_name_load($machine_name);
+
+    if ($vocabulary) {
+      // Create a new term.
+      $term = new stdClass();
+      $term->name = trim($name);
+      $term->vid = $vocabulary->vid;
+      taxonomy_term_save($term);
+    }
+    else {
+      return NULL;
+    }
   }
   else {
-    // get the first found term
+    // Get the first found term.
     $term = reset($terms);
   }
+
   return $term;
 }
 
