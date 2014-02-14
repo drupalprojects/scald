@@ -407,7 +407,7 @@ function scald_atom_delete_confirm($form, &$form_state, $atom) {
   return confirm_form($form,
     t('Are you sure you want to delete %title?', array('%title' => $atom->title)),
     'admin/content/atoms',
-    t('<p>Note that unchecking the Fetch checkbox in the "<em>Openly available actions</em>" field of this atom <a href="!url">edit form</a> makes the atom disapears for everyone but scald administrators, and is usally a better idea.</p><p>This action cannot be undone.</p>', array('!url' => url("atom/{$atom->sid}/edit"))),
+    t('<p>Note that unchecking the Fetch checkbox in the "<em>Openly available actions</em>" field of this atom <a href="!url">edit form</a> makes the atom disappear for everyone but Scald administrators, and is usually a better idea.</p><p>This action cannot be undone.</p>', array('!url' => url("atom/{$atom->sid}/edit"))),
     t('Delete'),
     t('Cancel')
   );
