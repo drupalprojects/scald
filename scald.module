@@ -375,13 +375,17 @@ function scald_atom_load($sid) {
 /**
  * Load multiple Scald atoms.
  *
- * @todo This function needs to be optimized;
+ * @param array $sids
+ *   An array of Scald ID's being loaded
+ *
+ * @return mixed
+ *   An array of populated Scald Atom objects keyed by the sid. Value might be
+ *   FALSE if SID is invalid or if $user is not permitted to fetch the Scald
+ *   Atom
  */
 function scald_atom_load_multiple($sids) {
   $atoms = array();
-  foreach ($sids as $sid) {
-    $atoms[$sid] = scald_fetch($sid);
-  }
+  $atoms = scald_fetch_multiple($sids);
   return $atoms;
 }
 
@@ -564,68 +568,88 @@ function scald_is_registered($sid, $rebuild = FALSE) {
  *   Atom
  */
 function scald_fetch($sid, $rebuild = FALSE) {
+  $atoms = scald_fetch_multiple(array($sid), $rebuild);
+  return $atoms[$sid];
+}
+
+/**
+ * Load multiple Scald Atoms.
+ *
+ * @param array $sids
+ *   An array of Scald IDs of the Atoms to load.
+ * @param bool $rebuild
+ *   If set to TRUE, the Atoms will be reloaded from the DB even if it is already
+ *    present in the memory cache.
+ *
+ * @return mixed
+ *   An array of populated Scald Atom objects keyed by the sid. Value might be
+ *   FALSE if SID is invalid or if $user is not permitted to fetch the Scald
+ *   Atom
+ */
+function scald_fetch_multiple(array $sids, $rebuild = FALSE) {
   // Verify the SID is legit and fetch basic info about the Atom.
-  $atoms = entity_load('scald_atom', array($sid), array(), $rebuild);
+  $atoms = entity_load('scald_atom', $sids, array(), $rebuild);
   if (!$atoms) {
     return FALSE;
   }
 
-  $atom = reset($atoms);
-
-  // Verify that the current user is allowed to fetch this Atom.
-  if (!scald_action_permitted($atom, array('fetch', 'view'))) {
-    return FALSE;
-  }
-
-  // Check the memory cache for the Atom.
-  static $scald_atoms;
-  if (empty($scald_atoms)) {
-    $scald_atoms = array();
-  }
-
-  if (!$rebuild && isset($scald_atoms[$sid])) {
-    return $scald_atoms[$sid];
-  }
-
   $types = scald_types();
 
-  // If the type or atom provider is no longer available, ignore the atom. It
-  // cannot be loaded nor deleted.
-  if (!isset($types[$atom->type]) || !module_exists($atom->provider)) {
-    return FALSE;
+  foreach ($atoms as $sid => $atom) {
+    // Verify that the current user is allowed to fetch this Atom.
+    // If the type or atom provider is no longer available, ignore the atom. It
+    // cannot be loaded nor deleted.
+    if (!scald_action_permitted($atom, array('fetch', 'view')) ||!isset($types[$atom->type]) || !module_exists($atom->provider)) {
+      $atoms[$sid] = FALSE;
+    }
+    else {
+      // Check the memory cache for the Atom.
+      static $scald_atoms;
+      if (empty($scald_atoms)) {
+        $scald_atoms = array();
+      }
+
+      if (!$rebuild && isset($scald_atoms[$sid])) {
+        $atoms[$sid] = $scald_atoms[$sid];
+      }
+      else {
+        // Let the Atom Type Provider handle any defaults.
+        module_invoke($types[$atom->type]->provider, 'scald_fetch', $atom, 'type');
+
+        $atom->base_entity = NULL;
+
+        module_invoke($atom->provider, 'scald_fetch', $atom, 'atom');
+
+        // Ensure all required Atom members are populated with at minimum default
+        // values.
+        // NOTE: it is assumed that Atom Providers won't be monkeying with the
+        // "essentials" like the Type, Provider, SID, etc.
+        $defaults = scald_atom_defaults($atom->type);
+        if (empty($atom->file_source) && isset($defaults->file_source)) {
+          $atom->file_source = isset($defaults->file_source) ? $defaults->file_source : '';
+        }
+        if (empty($atom->thumbnail_source)) {
+          $atom->thumbnail_source = isset($defaults->thumbnail_source) ? $defaults->thumbnail_source : '';
+        }
+        if (empty($atom->description)) {
+          $atom->description = isset($defaults->description) ? $defaults->description : '';
+        }
+
+        // If the Providers tried to mess with "protected" Atom object members, fail!
+        if ($sid != $atom->sid) {
+          $atoms[$sid] = FALSE;
+        }
+        else {
+          $atom->fetched = TRUE;
+          $scald_atoms[$sid] = $atom;
+
+          $atoms[$sid] = $atom;
+        }
+      }
+    }
   }
 
-  // Let the Atom Type Provider handle any defaults.
-  module_invoke($types[$atom->type]->provider, 'scald_fetch', $atom, 'type');
-
-  $atom->base_entity = NULL;
-
-  module_invoke($atom->provider, 'scald_fetch', $atom, 'atom');
-
-  // If the Providers tried to mess with "protected" Atom object members, fail!
-  if ($sid != $atom->sid) {
-    return FALSE;
-  }
-
-  // Ensure all required Atom members are populated with at minimum default
-  // values.
-  // NOTE: it is assumed that Atom Providers won't be monkeying with the
-  // "essentials" like the Type, Provider, SID, etc.
-  $defaults = scald_atom_defaults($atom->type);
-  if (empty($atom->file_source) && isset($defaults->file_source)) {
-    $atom->file_source = isset($defaults->file_source) ? $defaults->file_source : '';
-  }
-  if (empty($atom->thumbnail_source)) {
-    $atom->thumbnail_source = isset($defaults->thumbnail_source) ? $defaults->thumbnail_source : '';
-  }
-  if (empty($atom->description)) {
-    $atom->description = isset($defaults->description) ? $defaults->description : '';
-  }
-
-  $atom->fetched = TRUE;
-  $scald_atoms[$sid] = $atom;
-
-  return $atom;
+  return $atoms;
 }
 
 /**
