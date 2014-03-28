@@ -502,17 +502,14 @@ function scald_unregister_atom($sid) {
 }
 
 /**
- * Determine if a Scald Atom is registered with Scald Core or not.
+ * Load a Scald Atom.
  *
  * @param int $sid
- *   The Scald ID being tested.
+ *   The Scald Atom ID.
  *
  * @return mixed
- *   - A Scald Atom Object if the Scald ID is valid.  The Atom Object is *ONLY*
- *   populated with the following members: type, provider, base_id, actions,
- *   and fetched *set to FALSE*.
- *   - FALSE if $sid is not a valid Scald ID (int) or if it does not reference
- *   an Atom.
+ *   - A Scald Atom entity if the Scald ID is valid.
+ *   - FALSE if the atom can not be loaded.
  */
 function scald_is_registered($sid, $rebuild = FALSE) {
   // Argument validation.
@@ -520,36 +517,8 @@ function scald_is_registered($sid, $rebuild = FALSE) {
     return FALSE;
   }
   $sid = (int) $sid;
-
-  static $scald_atoms;
-  if (!isset($scald_atoms)) {
-    $scald_atoms = array();
-  }
-
-  // Reference the memory cache when appropriate.
-  if (!$rebuild && isset($scald_atoms[$sid])) {
-    return $scald_atoms[$sid];
-  }
-
-  // Build the Atom from the database.
-  $registration_results = db_query("SELECT * FROM {scald_atoms} WHERE sid = :sid", array(':sid' => $sid));
-  if (!$registration_results) {
-    // Ensure that no Atoms linger improperly post-deletion.
-    unset($scald_atoms[$sid]);
-    return FALSE;
-  }
-  $atom = $registration_results->fetchObject();
-
-  if (!empty($atom)) {
-    $atom->fetched = FALSE;
-  }
-  else {
-    return FALSE;
-  }
-
-  $scald_atoms[$sid] = $atom;
-
-  return $scald_atoms[$sid];
+  $atoms = entity_load('scald_atom', array($sid), array(), $rebuild);
+  return reset($atoms);
 }
 
 /**
@@ -1227,8 +1196,8 @@ function scald_render($sid, $context, $options = array(), $rebuild = FALSE) {
 
   // SID doesn't correspond to a registered Atom; drop through to render the
   // "Invalid ID" message.
-  if (empty($atom_reg)) {
-    return scald_scald_render($atom_reg, 'invalid-id');
+  if (empty($atom)) {
+    return scald_scald_render($atom, 'invalid-id');
   }
 
   // Drop through to no-access rendering if current user can't view.
