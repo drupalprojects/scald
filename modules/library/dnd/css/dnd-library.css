@@ -127,11 +127,10 @@
   color: #7f7f7f;
 }
 .dnd-library-wrapper .editor-item .links {
+  float: right;
   font-size: 11px;
-  position: absolute;
-  right: 0;
-  bottom: 0;
   line-height: 15px;
+  margin-right: 5px;
 }
 .dnd-library-wrapper .editor-item .links li {
   padding: 0 0 0 10px;
