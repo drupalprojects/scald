@@ -34,15 +34,18 @@ Drupal.behaviors.atom_reference = {
           var ret = Drupal.atom_reference.droppable(dt, this);
           var $this = $(this);
           if (ret.found && ret.keepgoing) {
-            $this
-              .empty()
-              .append(Drupal.dnd.Atoms[dt].editor)
-              .closest('div.form-item')
-              .find('input:text')
-              .val(dt)
-              .end()
-              .find('input:button')
-              .show();
+            var context = $this.closest('div.form-item').find('input:text').data('dnd-context');
+            Drupal.dnd.fetchAtom(context, dt, function() {
+              $this
+                .empty()
+                .append(Drupal.dnd.Atoms[dt].contexts[context])
+                .closest('div.form-item')
+                .find('input:text')
+                .val(dt)
+                .end()
+                .find('input:button')
+                .show();
+            });
           }
           else {
             var placeholder = Drupal.t("You can't drop a resource of type %type in this field", {'%type': ret.type});
@@ -67,7 +70,7 @@ if (!Drupal.atom_reference) {
     var retVal = {'keepgoing': true, 'found': true};
     if (Drupal.dnd.Atoms[ressource_id]) {
       var type = Drupal.dnd.Atoms[ressource_id].meta.type;
-      var accept = $(field).closest('div.form-item').find('input:text').attr('data-types').split(',');
+      var accept = $(field).closest('div.form-item').find('input:text').data('types').split(',');
       if (jQuery.inArray(type, accept) == -1) {
         retVal.keepgoing = false;
       }
