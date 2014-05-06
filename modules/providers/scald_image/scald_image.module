@@ -40,7 +40,7 @@ function scald_image_scald_add_form(&$form, &$form_state) {
       '#autocomplete_path' => 'taxonomy/autocomplete/scald_authors',
       '#required' => FALSE,
       '#title' => t('Authors'),
-      '#description' => t('Preset Authors field for imported image(s)'),
+      '#description' => t('Preset value for %field_name field. If left empty, the default field value will be used.', array('%field_name' => t('Authors'))),
     );
     $form['scald_tags'] = array(
       '#type' => 'textfield',
@@ -49,7 +49,7 @@ function scald_image_scald_add_form(&$form, &$form_state) {
       '#autocomplete_path' => 'taxonomy/autocomplete/scald_tags',
       '#required' => FALSE,
       '#title' => t('Tags'),
-      '#description' => t('Preset Tags field for imported image(s)'),
+      '#description' => t('Preset value for %field_name field. If left empty, the default field value will be used.', array('%field_name' => t('Tags'))),
     );
   }
 }
@@ -81,7 +81,7 @@ function scald_image_scald_add_form_fill(&$atoms, $form, $form_state) {
     $atom->base_id = $file->fid;
     foreach (array('scald_authors', 'scald_tags') as $field_name) {
       $langcode = field_language('scald_atom', $atom, $field_name);
-      if (isset($form_state['values'][$field_name])) {
+      if (!empty($form_state['values'][$field_name])) {
         $atom->{$field_name}[$langcode][0] = array(
           'tid' => 0,
           'taxonomy_term' => (object) (array('name' => $form_state['values'][$field_name])),
