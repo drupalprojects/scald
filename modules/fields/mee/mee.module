@@ -295,7 +295,7 @@ function mee_field_widget_form_alter(&$element, &$form_state, $context) {
   $resource_manager = array();
   // 'input' is used instead of 'values' because we need extra items inserted
   // using JavaScript on the client side.
-  if (isset($form_state['input'][$context['field']['field_name']])) {
+  if (isset($form_state['input'][$context['field']['field_name']][$context['langcode']])) {
     $resource_manager = $form_state['input'][$context['field']['field_name']][$context['langcode']][$context['delta']]['mee']['resource_manager'];
   }
   elseif (isset($element['#entity'])) {
