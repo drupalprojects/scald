@@ -378,7 +378,7 @@ renderLibrary: function(data, editor) {
   });
 
   // Turns Views exposed filters' submit button into an ajaxSubmit trigger
-  library_wrapper.find('.view-filters .views-submit-button input').click(function(e) {
+  library_wrapper.find('.view-filters .views-submit-button').find('input[type=submit], button[type=submit]').click(function(e) {
     var submit = $(this);
     settings = Drupal.settings.dnd;
     library_wrapper.find('.view-filters form').ajaxSubmit({
@@ -396,7 +396,7 @@ renderLibrary: function(data, editor) {
 
   // Makes Views exposed filters' reset button submit the form via ajaxSubmit,
   // without data, to get all the default values back.
-  library_wrapper.find('.view-filters .views-reset-button input').click(function(e) {
+  library_wrapper.find('.view-filters .views-reset-button').find('input[type=submit], button[type=submit]').click(function(e) {
     var reset = $(this);
     library_wrapper.find('.view-filters form').ajaxSubmit({
       'url' : Drupal.settings.dnd.url,
