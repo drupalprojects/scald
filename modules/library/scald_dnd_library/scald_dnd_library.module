@@ -218,8 +218,10 @@ function theme_sdl_library_item($variables) {
   // "insert" action.
   $links['_insert'] = array(
     'title' => t('Insert'),
+    'external' => TRUE,
+    'fragment' => FALSE,
     'attributes' => array('data-atom-id' => $atom->sid),
-    'href' => '#',
+    'href' => '',
   );
 
   $links_element = array(
