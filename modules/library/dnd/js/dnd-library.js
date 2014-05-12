@@ -98,7 +98,7 @@ Drupal.dnd = {
 
   // Refresh the library.
   refreshLibraries: function() {
-    $('.dnd-library-wrapper .view-filters').find('input[type=submit], button[type=submit]').click();
+    $('.dnd-library-wrapper .view-filters .views-submit-button').find('input[type=submit], button[type=submit]').click();
   },
 
   // Convert HTML to SAS. We consider there is no nested elements.
