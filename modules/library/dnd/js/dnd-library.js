@@ -123,7 +123,7 @@ Drupal.dnd = {
   // Convert SAS to an array of atom attributes.
   sas2array: function(sas) {
     var matches = sas.match(/\[scald=(\d+)(:([^\s]+))?(.*)]/);
-    if (matches.length) {
+    if (matches && matches.length) {
       return {
         sid: matches[1],
         context: matches[3],
@@ -233,8 +233,7 @@ attach: function(context, settings) {
   $('body').once('dnd', function() {
     var wrapper = $('<div class="dnd-library-wrapper"></div>').appendTo('body');
     var $editor = $("<a />");
-    wrapper.library_url = Drupal.settings.dnd.url;
-    $.getJSON(wrapper.library_url, function(data) {
+    $.getJSON(Drupal.settings.dnd.url, function(data) {
       Drupal.behaviors.dndLibrary.renderLibrary.call(wrapper, data, $editor);
     });
   });
@@ -370,7 +369,6 @@ renderLibrary: function(data, editor) {
   });
   // Makes pager links refresh the library instead of opening it in the browser window
   library_wrapper.find('.pager a').click(function() {
-    library_wrapper.get(0).library_url = this.href;
     $.getJSON(this.href, function(data) {
       Drupal.behaviors.dndLibrary.renderLibrary.call(library_wrapper.get(0), data, $(editor));
     });
@@ -380,13 +378,12 @@ renderLibrary: function(data, editor) {
   // Turns Views exposed filters' submit button into an ajaxSubmit trigger
   library_wrapper.find('.view-filters .views-submit-button').find('input[type=submit], button[type=submit]').click(function(e) {
     var submit = $(this);
+    var target = submit.parents('div.dnd-library-wrapper').get(0);
     settings = Drupal.settings.dnd;
     library_wrapper.find('.view-filters form').ajaxSubmit({
       'url' : settings.url,
       'dataType' : 'json',
       'success' : function(data) {
-        var target = submit.parents('div.dnd-library-wrapper').get(0);
-        target.library_url = this.url;
         Drupal.behaviors.dndLibrary.renderLibrary.call(target, data, $(editor));
       }
     });
@@ -398,12 +395,11 @@ renderLibrary: function(data, editor) {
   // without data, to get all the default values back.
   library_wrapper.find('.view-filters .views-reset-button').find('input[type=submit], button[type=submit]').click(function(e) {
     var reset = $(this);
+    var target = reset.parents('div.dnd-library-wrapper').get(0);
     library_wrapper.find('.view-filters form').ajaxSubmit({
       'url' : Drupal.settings.dnd.url,
       'dataType' : 'json',
       'success' : function(data) {
-        var target = reset.parents('div.dnd-library-wrapper').get(0);
-        target.library_url = Drupal.settings.dnd.url;
         Drupal.behaviors.dndLibrary.renderLibrary.call(target, data, $(editor));
       },
       'beforeSubmit': function (data, form, options) {
@@ -419,13 +415,12 @@ renderLibrary: function(data, editor) {
   // Deals with Views Saved Searches "Save" button
   library_wrapper.find('#views-savedsearches-save-search-form').find('input[type=submit], button[type=submit]').click(function() {
     var submit = $(this);
-    var url = submit.parents('div.dnd-library-wrapper').get(0).library_url;
+    var url = Drupal.settings.dnd.url;
+    var target = submit.parents('div.dnd-library-wrapper').get(0);
     library_wrapper.find('#views-savedsearches-save-search-form').ajaxSubmit({
       'url' : url,
       'dataType' : 'json',
       'success' : function(data) {
-        var target = submit.parents('div.dnd-library-wrapper').get(0);
-        target.library_url = this.url;
         Drupal.behaviors.dndLibrary.renderLibrary.call(target, data, $(editor));
       }
     });
@@ -435,12 +430,11 @@ renderLibrary: function(data, editor) {
   // Deals with Views Saved Searches "Delete" button
   library_wrapper.find('#views-savedsearches-delete-search-form').find('input[type=submit], button[type=submit]').click(function() {
     var submit = $(this);
+    var target = submit.parents('div.dnd-library-wrapper').get(0);
     library_wrapper.find('#views-savedsearches-delete-search-form').ajaxSubmit({
       'url' : settings.url,
       'dataType' : 'json',
       'success' : function(data) {
-        var target = submit.parents('div.dnd-library-wrapper').get(0);
-        target.library_url = this.url;
         Drupal.behaviors.dndLibrary.renderLibrary.call(target, data, $(editor));
       }
     });
@@ -449,7 +443,6 @@ renderLibrary: function(data, editor) {
 
   // Deals with Views Saved Searches search links
   library_wrapper.find('#views-savedsearches-delete-search-form label a').click(function() {
-    library_wrapper.get(0).library_url = this.href;
     $.getJSON(this.href, function(data) {
       Drupal.behaviors.dndLibrary.renderLibrary.call(library_wrapper.get(0), data, $(editor));
     });
