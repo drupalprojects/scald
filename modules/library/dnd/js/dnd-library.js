@@ -353,6 +353,7 @@ renderLibrary: function(data, editor) {
         var id = $img.data('atom-id');
         dt.dropEffect = 'copy';
         dt.setData("Text", Drupal.dnd.Atoms[id].sas);
+        Drupal.dnd.currentAtom = Drupal.dnd.Atoms[id].sas;
         try {
           // Trick: if not the image might come out and go into the current hovered
           // paragraph.

@@ -30,7 +30,7 @@ Drupal.behaviors.atom_reference = {
         .bind('dragover', function(e) {e.preventDefault();})
         .bind('dragenter', function(e) {e.preventDefault();})
         .bind('drop', function(e) {
-          var dt = e.originalEvent.dataTransfer.getData('Text').replace(/^\[scald=(\d+).*$/, '$1');
+          var dt = Drupal.dnd.currentAtom.replace(/^\[scald=(\d+).*$/, '$1');
           var ret = Drupal.atom_reference.droppable(dt, this);
           var $this = $(this);
           if (ret.found && ret.keepgoing) {
