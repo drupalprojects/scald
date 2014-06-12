@@ -321,7 +321,7 @@ function scald_youtube_video_get_info($id) {
 
     $dom = new DOMDocument();
     $dom->preserveWhiteSpace = FALSE;
-    $dom->loadHTML($data);
+    @$dom->loadHTML($data);
 
     foreach ($dom->getElementsByTagName('meta') as $meta) {
       $content = $meta->getAttribute('content');
