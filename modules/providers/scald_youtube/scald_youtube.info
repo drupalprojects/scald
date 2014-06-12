@@ -3,4 +3,5 @@ description = Provides Video atoms from YouTube.
 package = Scald Providers
 core = 7.x
 dependencies[] = scald
+files[] = scald_youtube.test
 
