@@ -5,10 +5,12 @@
  */
 
 define('YOUTUBE_WEB',         'http://www.youtube.com/watch');
+// @deprecated
 define('YOUTUBE_OEMBED',      'http://www.youtube.com/oembed');
 define('YOUTUBE_ID_REGEXP',   '/^[a-zA-Z0-9\-_]+$/');
 define('YOUTUBE_WEB_REGEXP',  '#https?://www\.youtube\.com/\S+[\?&]v=([a-zA-Z0-9\-_]+)#');
 define('YOUTUBE_RSS',         'http://gdata.youtube.com/feeds/api/videos/');
+// @deprecated
 define('YOUTUBE_MEDIA',       'http://search.yahoo.com/mrss/');
 
 /**
@@ -256,79 +258,104 @@ function scald_youtube_parse_item($item) {
   $title = $item->getElementsByTagName('title')->item(0);
   $info->title = $title->nodeValue;
 
-  // Video dimensions
-  // Unfortunately the YouTube API doesn't provide original video dimensions
-  // see : http://code.google.com/p/gdata-issues/issues/detail?id=1083
-  $info->width = 480;
-  $info->height = 365;
-  // Now we try to get the dimensions from the OEmbed API instead
-  if ($oembed = scald_youtube_video_oembed($info->id)) {
-    $info->width = ($oembed->width ? $oembed->width : $info->width);
-    $info->height = ($oembed->height ? $oembed->height : $info->height);
-  }
-
-  // Thumbnail data
-  $thumbs = $item->getElementsByTagNameNS(YOUTUBE_MEDIA, 'thumbnail');
-  if ($thumbs->length) {
-    $thumb = $thumbs->item(0);
-    $info->thumbnail = array(
-      'src'    => $thumb->getAttribute('url'),
-      'width'  => $thumb->getAttribute('width'),
-      'height' => $thumb->getAttribute('height')
-    );
-  }
-
-  // Video tags
-  $tags = $item->getElementsByTagNameNS(YOUTUBE_MEDIA, 'keywords')->item(0)->nodeValue;
-  $info->tags = explode(', ', $tags);
-
   // Author
   $info->author = $item->getElementsByTagName('name')->item(0)->nodeValue;
 
   // Creation Date
   $info->pubDate = $item->getElementsByTagName('published')->item(0)->nodeValue;
 
-  // License
-  $info->license = 'YT';
+  $info_extra = scald_youtube_video_get_info($info->id);
+  $info->width = $info_extra->video_width;
+  $info->height = $info_extra->video_height;
+  $info->tags = $info_extra->tags;
+  $info->license = $info_extra->license;
+  $info->thumbnail = array(
+    'src' => $info_extra->thumbnail,
+  );
+
   return $info;
 }
 
 
 /**
  * Analyze OEmbed response for a given video ID
- * Note: OEmbed does not include tags but does include video dimensions
+ *
+ * @deprecated
+ * @see scald_youtube_video_get_info().
  */
 function scald_youtube_video_oembed($id) {
-  $info = FALSE;
-  // Build the full OEmbed URL
-  $url = YOUTUBE_OEMBED . '?url=' . YOUTUBE_WEB . '?v=' . $id;
-  $response = drupal_http_request($url);
-  if ($response->code >= 200 && $response->code < 400 && !empty($response->data)) {
-    $data = json_decode($response->data);
-    $info = new stdClass();
-    // ID
-    $info->id = $id;
-    // Title
-    $info->title = $data->title;
-    // Author
-    $info->author = $data->author_name;
-    // Video dimensions
-    $info->width = $data->width;
-    $info->height = $data->height;
-    // Thumbnail
-    if ($data->thumbnail_url) {
-      $info->thumbnail = array(
-        'src'    => $data->thumbnail_url,
-        'width'  => $data->thumbnail_width,
-        'height' => $data->thumbnail_height,
-      );
-    }
-    // License
-    $info->license = 'YT';
-  }
-  return $info;
+  return scald_youtube_video_get_info($id);
 }
 
+/**
+ * Returns meta data on a YouTube video that are not found on the Gdata feed.
+ *
+ * Unfortunately the YouTube API doesn't provide original video dimensions
+ * see: http://code.google.com/p/gdata-issues/issues/detail?id=1083
+ * We need both oembed data and parsing the web page to have author information
+ * and video dimensions.
+ */
+function scald_youtube_video_get_info($id) {
+  static $cache = array();
+
+  if (isset($cache[$id])) {
+    return $cache[$id];
+  }
+
+  // Initialize default values.
+  $info = new stdClass();
+  $info->id = $id;
+  $info->license = 'YT';
+  $info->video_width = 480;
+  $info->video_height = 365;
+
+  $url = YOUTUBE_WEB . '?v=' . $id;
+  $response = drupal_http_request($url);
+  if ($response->code >= 200 && $response->code < 400 && !empty($response->data)) {
+    $data = $response->data;
+    // DOMDocument does not work well with UTF-8, we need to use HTML entities
+    // to be safe.
+    if (function_exists('mb_convert_encoding')) {
+      $data = mb_convert_encoding($data, 'HTML-ENTITIES', 'UTF-8');
+    }
+
+    $dom = new DOMDocument();
+    $dom->preserveWhiteSpace = FALSE;
+    $dom->loadHTML($data);
+
+    foreach ($dom->getElementsByTagName('meta') as $meta) {
+      $content = $meta->getAttribute('content');
+
+      switch ($meta->getAttribute('name')) {
+        case 'keywords':
+          $info->tags = explode(', ', $content);
+          break;
+
+        case 'title':
+          $info->title = $content;
+          break;
+      }
+
+      switch ($meta->getAttribute('property')) {
+        case 'og:image':
+          $info->thumbnail = $content;
+          break;
+
+        case 'og:video:width':
+          $info->video_width = $content;
+          break;
+
+        case 'og:video:height':
+          $info->video_height = $content;
+          break;
+      }
+    }
+  }
+
+  $cache[$id] = $info;
+
+  return $info;
+}
 
 /**
  * Checks if a video has already been imported, based on its video
@@ -391,4 +418,3 @@ function scald_youtube_parse_id($string, $check) {
   }
   return $id;
 }
-
