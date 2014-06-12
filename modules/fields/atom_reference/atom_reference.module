@@ -123,12 +123,44 @@ function atom_reference_field_formatter_info() {
     if (empty($context['hidden'])) {
       $formatters[$name] = array(
         'label' => $context['title'],
-        'field types' => array('atom_reference')
+        'field types' => array('atom_reference'),
+        'settings' => array('link' => 0),
       );
     }
   }
 
   return $formatters;
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function atom_reference_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $element = array();
+
+  $element['link'] = array(
+    '#title' => t('Link to content'),
+    '#type' => 'select',
+    '#default_value' => $settings['link'],
+    '#options' => array('no', 'yes'),
+  );
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function atom_reference_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $link = empty($settings['link']) ? t('No') : t('Yes');
+  $summary = t('Link to content: @choice', array('@choice' => $link));
+
+  return $summary;
 }
 
 /**
@@ -139,10 +171,21 @@ function atom_reference_field_formatter_view($entity_type, $entity, $field, $ins
   $contexts = scald_contexts();
   $element = array();
 
+  $uri = false;
+
+  // Check if the formatter involves a link.
+  if ($display['settings']['link']) {
+    $uri = entity_uri($entity_type, $entity);
+  }
+
   if (!empty($contexts[$render_context])) {
     foreach ($items as $delta => $item) {
       $sid = $item['sid'];
-      $element[$delta] = array('#markup' => scald_render($sid, $render_context));
+      $options = array();
+      if ($uri) {
+        $options['link'] = $uri['path'];
+      }
+      $element[$delta] = array('#markup' => scald_render($sid, $render_context, drupal_json_encode($options)));
     }
   }
 
