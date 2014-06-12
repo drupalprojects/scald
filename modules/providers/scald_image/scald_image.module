@@ -79,15 +79,33 @@ function scald_image_scald_add_form_fill(&$atoms, $form, $form_state) {
     }
     $atom->title = $file->filename;
     $atom->base_id = $file->fid;
-    foreach (array('scald_authors', 'scald_tags') as $field_name) {
+    foreach (array('author', 'tag') as $name) {
+      // hacky, because variable and field name do not really match.
+      $field_name = 'scald_' . $name . 's';
       $langcode = field_language('scald_atom', $atom, $field_name);
-      if (!empty($form_state['values'][$field_name])) {
-        $atom->{$field_name}[$langcode][0] = array(
-          'tid' => 0,
-          'taxonomy_term' => (object) (array('name' => $form_state['values'][$field_name])),
-        );
+      if (empty($form_state['values'][$field_name])) {
+        continue;
+      }
+
+      // Borrowed from taxonomy_autocomplete_validate().
+      $typed_terms = drupal_explode_tags($form_state['values'][$field_name]);
+      $vocabulary = taxonomy_vocabulary_machine_name_load(variable_get('scald_' . $name . '_vocabulary', $field_name));
+      foreach ($typed_terms as $typed_term) {
+        if ($possibilities = taxonomy_term_load_multiple(array(), array('name' => trim($typed_term), 'vid' => $vocabulary->vid))) {
+          $term = array_pop($possibilities);
+        }
+        else {
+          $term = (object) array(
+            'vid' => $vocabulary->vid,
+            'name' => $typed_term,
+            'vocabulary_machine_name' => $vocabulary->machine_name,
+          );
+          taxonomy_term_save($term);
+        }
+        $atom->{$field_name}[$langcode][] = array('tid' => $term->tid);
       }
     }
+
     $langcode = field_language('scald_atom', $atom, 'scald_thumbnail');
     $atom->scald_thumbnail[$langcode][0] = (array) $file;
   }
