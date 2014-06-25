@@ -74,7 +74,7 @@ function dnd_element_info_alter(&$types) {
 function dnd_process_textarea($element, $form_state) {
   if (!empty($element['#dnd-enabled'])) {
     $element['#attached']['library'][] = array('dnd', 'library');
-    $settings = $form_state['field'][$element['#field_name']][$element['#language']]['instance']['settings'];
+    $settings = (array) @$form_state['field'][$element['#field_name']][$element['#language']]['instance']['settings'];
     $context_default = isset($settings['context_default']) ? $settings['context_default'] : variable_get('dnd_context_default', 'sdl_editor_representation');
     $element['#attributes']['data-dnd-context'][] = $context_default;
   }
