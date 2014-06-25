@@ -37,14 +37,21 @@ require_once 'includes/scald.atom.inc';
  *    ...
  *  );
  *
+ * @param bool $reset
+ *   Whether or not to reset the static cache. Defaults to FALSE.
+ *
  * @return array
  *   The Scald Unified Types array
  */
-function scald_types() {
-  $types = db_select('scald_types', 's')
-    ->fields('s', array('type', 'title', 'provider'))
-    ->execute()
-    ->fetchAllAssoc('type');
+function scald_types($reset = FALSE) {
+  $types = &drupal_static(__FUNCTION__);
+
+  if ($reset || empty($types)) {
+    $types = db_select('scald_types', 's')
+      ->fields('s', array('type', 'title', 'provider'))
+      ->execute()
+      ->fetchAllAssoc('type');
+  }
 
   return $types;
 }

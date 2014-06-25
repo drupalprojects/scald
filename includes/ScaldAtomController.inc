@@ -116,6 +116,7 @@ class ScaldAtomController extends DrupalDefaultEntityController {
 
     // Flush our caches.
     scald_contexts(TRUE);
+    scald_types(TRUE);
 
     return TRUE;
   }
@@ -138,6 +139,7 @@ class ScaldAtomController extends DrupalDefaultEntityController {
       db_delete('scald_types')
         ->condition('type', $type)
         ->execute();
+      scald_types(TRUE);
       return TRUE;
     }
 
