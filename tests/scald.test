@@ -572,6 +572,18 @@ class ScaldLocalizeTestCase extends ScaldWebTestCase {
   /**
    * {@inheritdoc}
    */
+  protected $profile = 'testing';
+
+  /**
+   * The language code used while testing.
+   *
+   * @var string
+   */
+  protected $langcode;
+
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Scald Localize',
@@ -584,31 +596,34 @@ class ScaldLocalizeTestCase extends ScaldWebTestCase {
    * {@inheritdoc}
    */
   protected function setUp() {
-    parent::setUp(array('scald_image', 'locale'));
+    parent::setUp(array('scald_image', 'locale', 'i18n', 'i18n_string'));
     $this->web_user = $this->drupalCreateUser(array(
       'administer scald',
       'create atom of image type',
       'view any atom',
       'fetch any atom',
+      'delete any atom',
       'edit own atom',
       'administer languages',
       'access administration pages',
       'translate interface',
+      'translate user-defined strings',
     ));
     $this->drupalLogin($this->web_user);
+
+    // Add predefined language.
+    $this->langcode = 'fr';
+    $this->drupalPost('admin/config/regional/language/add', array('langcode' => $this->langcode), t('Add language'));
+
+    // Enable URL language detection and selection.
+    $edit = array('language[enabled][locale-url]' => '1');
+    $this->drupalPost('admin/config/regional/language/configure', $edit, t('Save settings'));
   }
 
   /**
    * Adds a language and tests string translation.
    */
   public function testStringTranslation() {
-    $langcode = 'fr';
-
-    // Add predefined language.
-    $this->drupalPost('admin/config/regional/language/add', array('langcode' => $langcode), t('Add language'));
-    // Enable URL language detection and selection.
-    $edit = array('language[enabled][locale-url]' => '1');
-    $this->drupalPost('admin/config/regional/language/configure', $edit, t('Save settings'));
     // Go to Scald page in another language to add action name into translation
     // database.
     $this->drupalGet('fr/admin/structure/scald/image');
@@ -620,7 +635,7 @@ class ScaldLocalizeTestCase extends ScaldWebTestCase {
     // The first result is an exact match, because we don't surf much.
     $this->clickLink(t('edit'));
     $edit = array(
-      "translations[$langcode]" => 'Modifier',
+      "translations[$this->langcode]" => 'Modifier',
     );
     $this->drupalPost(NULL, $edit, t('Save translations'));
 
@@ -630,5 +645,90 @@ class ScaldLocalizeTestCase extends ScaldWebTestCase {
     $this->drupalGet('admin/structure/scald/image');
     $this->assertFieldByXPath('//label[@for="edit-type-image-actin-edit"]', 'Edit ', 'Action name is correctly cached per language.');
   }
-}
 
+  /**
+   * Tests if it is possible to translate atom types.
+   */
+  public function testAtomTypeTranslation() {
+    // Check that the "translate" action is shown for types in the overview.
+    $this->drupalGet('admin/structure/scald');
+    $elements = $this->xpath('(//table//td)[6]/a[text() = :text]', array(':text' => t('translate')));
+    $this->assertTrue($elements, 'The "translate" action is shown in the types table.');
+
+    $this->drupalGet('admin/structure/scald/image/translate');
+
+    // Translate the 'Image' type on the translate tab form. Unfortunately this
+    // word is spelled identically in French, so we opt for "L'image".
+    $edit = array(
+      'strings[scald:type:image:title]' => 'L\'image',
+      'strings[scald:type:image:description]' => 'Une représentation visuelle',
+    );
+    $this->drupalPost('admin/structure/scald/image/translate/fr', $edit, t('Save translation'));
+
+    // Check that the type is translated on the overview.
+    $this->drupalGet('fr/admin/structure/scald');
+    $this->assertText(check_plain('L\'image'), 'The type is translated on the overview.');
+
+    // Check that the type is translated on the Add Atom page.
+    $this->drupalGet('fr/atom/add');
+    $this->assertText(check_plain('L\'image'), 'The type is translated on the Add Atom page.');
+
+    // Check that the type is translated on the Add Image page.
+    $this->drupalGet('fr/atom/add/image');
+    $this->assertText(check_plain('L\'image'), 'The type is translated on the Add Image page.');
+
+    // Check that the type is translated in the message that appears when
+    // creating an atom.
+    $atom = $this->createAtom('image', $this->langcode);
+    $message = t('Atom %title, of type %type has been @op.', array('%title' => $atom->title, '%type' => 'L\'image', '@op' => t('created')));
+    $this->assertRaw($message, 'The type is translated in the notification that appears when creating an atom.');
+
+    // Check that the type is translated in the message that appears when
+    // deleting an atom.
+    $this->addAtomAction($atom, 'delete');
+    $this->drupalPost('fr/atom/' . $atom->sid . '/delete', array(), t('Delete'));
+    $message = t('@type %title has been deleted.', array('@type' => 'L\'image', '%title' => $atom->title));
+    $this->assertRaw($message, 'The type is translated in the notification that appears when deleting an atom.');
+  }
+
+  /**
+   * Overrides ScaldWebTestCase::createAtom().
+   *
+   * Adds a parameter to choose the language of the add form.
+   *
+   * @param string $type
+   *   The atom type. Defaults to 'image'.
+   * @param string $langcode
+   *   Optional language of the add form.
+   */
+  protected function createAtom($type = 'image', $langcode = '') {
+    module_enable(array('scald_image'));
+
+    $image = $this->getTestFile('image');
+    $edit = array(
+      'files[file]' => drupal_realpath($image->uri),
+    );
+
+    $prefix = !empty($langcode) ? $langcode . '/' : '';
+    $this->drupalPost($prefix . 'atom/add/image', $edit, t('Continue'));
+    $this->assertFieldByName('atom0[title]', $image->filename);
+
+    // Change atom title.
+    $title = 'Image ' . $this->randomName(20);
+    $edit = array(
+      'atom0[title]' => $title,
+      'atom0[scald_authors][und]' => $this->randomName(10),
+    );
+    $this->drupalPost(NULL, $edit, t('Finish'));
+
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'scald_atom');
+    $query->propertyCondition('title', $title);
+    $result = $query->execute();
+    $this->assertEqual(count($result['scald_atom']), 1, 'Image atom has been created.');
+
+    $atom = reset($result['scald_atom']);
+    return scald_fetch($atom->sid, TRUE);
+  }
+
+}

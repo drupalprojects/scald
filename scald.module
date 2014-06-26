@@ -48,7 +48,7 @@ function scald_types($reset = FALSE) {
 
   if ($reset || empty($types)) {
     $types = db_select('scald_types', 's')
-      ->fields('s', array('type', 'title', 'provider'))
+      ->fields('s', array('type', 'title', 'description', 'provider'))
       ->execute()
       ->fetchAllAssoc('type');
   }
@@ -2032,6 +2032,113 @@ function scald_menu() {
 }
 
 /**
+ * Implements hook_locale().
+ */
+function scald_locale($op = 'groups') {
+  switch ($op) {
+    case 'groups':
+      return array('scald' => t('Scald'));
+  }
+}
+
+/**
+ * Implements hook_i18n_string_info().
+ */
+function scald_18n_string_info() {
+  $groups['scald_type'] = array(
+    'title' => t('Scald atom type'),
+    'description' => t('The title and description of the different atom types supported by Scald.'),
+    'format' => FALSE,
+    'list' => TRUE,
+  );
+
+  return $groups;
+}
+
+/**
+ * Implements hook_i18n_object_info().
+ */
+function scald_i18n_object_info() {
+  $info['scald_type'] = array(
+    'title' => t('Scald atom type'),
+    'key' => 'type',
+    'placeholders' => array(
+      '%scald_type' => 'type',
+    ),
+    'edit path' => 'admin/structure/scald/%scald_type',
+    'translate tab' => 'admin/structure/scald/%scald_type/translate',
+    'list callback' => 'scald_types',
+    'string translation' => array(
+      'textgroup' => 'scald',
+      'type' => 'type',
+      'properties' => array(
+        'title' => t('Title'),
+        'description' => t('Description'),
+      ),
+    ),
+  );
+
+  return $info;
+}
+
+/**
+ * Returns a translated property of a Scald atom type.
+ *
+ * @param object $type
+ *   The Scald atom type for which to return a translated property.
+ * @param string $property
+ *   Either 'title' or 'description'. Defaults to 'title'.
+ * @param string $langcode
+ *   Optional language code for the translation. Defaults to the current
+ *   language.
+ *
+ * @return string
+ *   The translated property.
+ */
+function scald_type_property_translate($type, $property = 'title', $langcode = NULL) {
+  $name = array('scald', 'type', $type->type, $property);
+  $string = $type->$property;
+  $options = $langcode ? array('langcode' => $langcode) : array();
+
+  return scald_string_translate($name, $string, $options);
+}
+
+/**
+ * Translates a dynamic string.
+ *
+ * This uses dynamic string translation from Internationalization module if
+ * available. Falls back to basic translation support if it is not.
+ *
+ * @param array|string $name
+ *   Array or string concatenated with ':' that contains textgroup and string
+ *   context.
+ * @param string $string
+ *   The string to translate.
+ * @param array $options
+ *   An associative array of options as used by i18n_string_translate().
+ *
+ * @return string
+ *   The translated string, or if i18n_string is not enabled, the input string.
+ *
+ * @see i18n_string_translate()
+ */
+function scald_string_translate($name, $string, $options = array()) {
+  if (module_exists('i18n_string')) {
+    // Do not sanitize, to have parity with the untranslated string which should
+    // also be sanitized by the calling function.
+    $options['sanitize'] = FALSE;
+    $string = i18n_string_translate($name, $string, $options);
+  }
+  else {
+    // If i18n_string is not enabled, fall back to t() to translate the string.
+    // @see https://www.drupal.org/node/2291875
+    $options = array_intersect_key($options, array_flip(array('langcode')));
+    $string = t($string, array(), $options);
+  }
+  return $string;
+}
+
+/**
  * Scald Atom entity uri callback.
  */
 function scald_atom_uri($atom) {
@@ -2055,7 +2162,7 @@ function scald_type_load($type) {
  * Title callback for the atom type administration page.
  */
 function scald_type_name($type) {
-  return $type->title;
+  return scald_type_property_translate($type);
 }
 
 /**

@@ -24,7 +24,7 @@ function scald_atom_add() {
       continue;
     }
     $content[] = array(
-      'title' => $type->title,
+      'title' => scald_type_property_translate($type),
       'href'  => 'atom/add/' . $name,
       'localized_options' => array(),
       'description' => '',
@@ -337,17 +337,18 @@ function scald_atom_add_form_options_submit(&$form, &$form_state) {
   }
 
   // Add a message confirming the creation.
+  $type = scald_type_property_translate(scald_type_load($atoms[0]->type));
   if (count($atoms) == 1) {
     drupal_set_message(t('Atom %title, of type %type has been @op.', array(
       '%title' => $atoms[0]->title,
-      '%type' => $atoms[0]->type,
+      '%type' => $type,
       '@op' => $op,
     )));
   }
   else {
     drupal_set_message(t('%count atoms of type %type have been @op.', array(
       '%count' => count($atoms),
-      '%type' => $atoms[0]->type,
+      '%type' => $type,
       '@op' => $op,
     )));
   }
@@ -421,8 +422,9 @@ function scald_atom_delete_confirm_submit($form, &$form_state) {
     $atom = scald_atom_load($form_state['values']['sid']);
     scald_atom_delete($atom->sid);
     watchdog('scald_atom', '@type: deleted %title.', array('@type' => $atom->type, '%title' => $atom->title));
-    $types = scald_type_get_names();
-    drupal_set_message(t('@type %title has been deleted.', array('@type' => $types[$atom->type], '%title' => $atom->title)));
+    $types = scald_types();
+    $type = scald_type_property_translate($types[$atom->type]);
+    drupal_set_message(t('@type %title has been deleted.', array('@type' => $type, '%title' => $atom->title)));
   }
 
   $form_state['redirect'] = 'admin/content/atoms';

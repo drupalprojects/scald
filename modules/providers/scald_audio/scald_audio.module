@@ -23,9 +23,10 @@ function scald_audio_scald_atom_providers() {
  */
 function scald_audio_scald_add_form(&$form, &$form_state) {
   $defaults = scald_atom_defaults('audio');
+  $type = scald_type_load('audio');
   $form['file'] = array(
     '#type' => $defaults->upload_type,
-    '#title' => 'Audio',
+    '#title' => check_plain(scald_type_property_translate($type)),
     '#upload_location' => 'public://atoms/audio/',
     '#upload_validators' => array('file_validate_extensions' => array('wav ogg mp3')),
   );

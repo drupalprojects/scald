@@ -32,20 +32,25 @@ function scald_admin_dashboard() {
       t('Name'),
       array(
         'data' => t('Actions'),
-        'colspan' => 4,
+        'colspan' => module_exists('i18n_string') ? 5 : 4,
       ),
     ),
     'rows' => array(),
   );
 
   foreach ($types as $type) {
-    $table['rows'][] = array(
-      check_plain($type->title),
+    $rows = array(
+      check_plain(scald_type_property_translate($type)),
       l(t('edit'), 'admin/structure/scald/' . $type->type),
       l(t('manage fields'), 'admin/structure/scald/' . $type->type . '/fields'),
       l(t('manage display'), 'admin/structure/scald/' . $type->type . '/display'),
       l(t('contexts'), 'admin/structure/scald/' . $type->type . '/contexts'),
     );
+    // Add a 'translate' action if Internationalization is enabled.
+    if (module_exists('i18n_string')) {
+      $rows[] = l(t('translate'), 'admin/structure/scald/' . $type->type . '/translate');
+    }
+    $table['rows'][] = $rows;
   }
 
   $content .= theme('table', $table);
