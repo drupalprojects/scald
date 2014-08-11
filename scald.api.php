@@ -40,6 +40,42 @@
  */
 
 /**
+ * Define information about display contexts provided by a module.
+ *
+ * A Scald display context provider has full control and is also responsible for
+ * the display of fields in the atom. If you don't want very optimized context,
+ * then you can create custom context using Scald UI (in this case Scald core is
+ * the context provider of those custom contexts).
+ *
+ * Custom contexts are stored in the 'scald_custom_contexts' variable.
+ *
+ * @return array
+ *   An array of display contexts. This array is keyed by the machine-readable
+ *   context name. Each context is defined as an associative array
+ *   containing the following item:
+ *   - "title": the human-readable name of the context.
+ *   - "description": the longer description of the context.
+ *   - "render_language": atom source language. Required for SAS conversion.
+ *   - "parseable": whether the atom can be wrapped in HTML comments
+ *     to be identified inside markup.
+ *   - "hidden": whether the atom is invisible. Defaults to FALSE.
+ *   - "formats": array of supported formats for each atom type. Currently
+ *     unused.
+ */
+function hook_scald_contexts() {
+  return array(
+    'custom_context' => array(
+      'title'           => t('Custom context'),
+      'description'     => t('A context to provide customized rendering.'),
+      'render_language' => 'XHTML',
+      'parseable'       => TRUE,
+      'hidden'          => FALSE,
+      'formats'         => array(),
+    ),
+  );
+}
+
+/**
  * Define information about atom providers provided by a module.
  *
  * @return
