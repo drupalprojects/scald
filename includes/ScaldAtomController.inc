@@ -181,12 +181,23 @@ class ScaldAtomController extends DrupalDefaultEntityController {
     if (!isset($atom->data)) {
       $atom->data = array();
     }
+    if (!isset($atom->created)) {
+      $atom->created = REQUEST_TIME;
+    }
+    if (!isset($atom->changed)) {
+      $atom->changed = REQUEST_TIME;
+    }
 
     $op = empty($atom->sid) ? 'insert' : 'update';
 
     if ($op == 'update') {
       $hook = 'scald_update_atom';
       $atom->original = entity_load_unchanged('scald_atom', $atom->sid);
+
+      // Nobody updated the changed date, so we do it.
+      if($atom->original->changed === $atom->changed) {
+        $atom->changed = REQUEST_TIME;
+      }
     }
     else {
       $hook = 'scald_register_atom';

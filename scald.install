@@ -91,6 +91,18 @@ function scald_schema() {
         'not null'    => TRUE,
         'serialize'   => TRUE,
       ),
+      'created' => array(
+        'description' => 'The Unix timestamp when the atom was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'changed' => array(
+        'description' => 'The Unix timestamp when the atom was most recently saved.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
     ),
     'primary key' => array('sid'),
     'indexes'     => array(
@@ -108,6 +120,8 @@ function scald_schema() {
         array('type', 64),
         array('base_id', 64),
       ),
+      'atom_changed'        => array('changed'),
+      'atom_created'        => array('created'),
     ),
   );
 
@@ -620,4 +634,28 @@ function scald_update_7011() {
       variable_set($variable, $vocabulary->machine_name);
     }
   }
+}
+
+/**
+ * Add the {scald_atoms}.created and {scald_atoms}.changed column.
+ */
+function scald_update_6012() {
+  $new_field = array(
+    'description' => 'The Unix timestamp when the atom was created.',
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  );
+  db_add_field('scald_atoms', 'created', $new_field);
+
+  $new_field = array(
+    'description' => 'The Unix timestamp when the atom was most recently saved.',
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  );
+  db_add_field('scald_atoms', 'changed', $new_field);
+
+  db_add_index('scald_atoms', 'atom_changed', array('changed'));
+  db_add_index('scald_atoms', 'atom_created', array('created'));
 }

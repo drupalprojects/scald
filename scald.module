@@ -1716,6 +1716,20 @@ function scald_entity_property_info() {
     'required' => TRUE,
     'schema field' => 'publisher',
   );
+  $properties['created'] = array(
+    'label' => t('Created'),
+    'description' => t("The Unix timestamp when the atom was created."),
+    'setter callback' => 'entity_property_verbatim_set',
+    'required' => TRUE,
+    'schema field' => 'created',
+  );
+  $properties['changed'] = array(
+    'label' => t('Changed'),
+    'description' => t("The Unix timestamp when the atom was most recently saved."),
+    'setter callback' => 'entity_property_verbatim_set',
+    'required' => TRUE,
+    'schema field' => 'changed',
+  );
   return $info;
 }
 
