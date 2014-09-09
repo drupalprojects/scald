@@ -331,11 +331,9 @@ function scald_atom_defaults($type) {
     $default = $all[$type];
   }
   else {
-    $types = scald_types();
     $actions = scald_actions();
     $default = new stdClass();
     $default->actions = $actions['view']['bitmask'] + $actions['fetch']['bitmask'];
-    $default->upload_type = 'managed_file';
     $default->description = '';
 
     $thumbnail = in_array($type, array('image', 'audio', 'video')) ? $type . '.png' : 'thumbnail_default.png';
@@ -348,6 +346,12 @@ function scald_atom_defaults($type) {
       file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
       file_unmanaged_copy(drupal_get_path('module', 'scald') . '/assets/' . $thumbnail, $default->thumbnail_source);
     }
+  }
+
+  // In old versions, this option did not exist and results in a PHP notice
+  // when the default is not update. Fix it.
+  if (!isset($default->upload_type)) {
+    $default->upload_type = 'managed_file';
   }
 
   // If plupload upload type is in use but the module is no longer enabled, do
