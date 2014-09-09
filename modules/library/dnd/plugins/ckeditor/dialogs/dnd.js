@@ -63,6 +63,7 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
       Drupal.dnd.fetchAtom(context, atom.sid, function() {
         var html = Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[atom.sid], context, atom.options);
         CKEDITOR.dom.element.createFromHtml(html).replace(Drupal.dnd.atomCurrent);
+        Drupal.dnd.protectAtom($(editor.document.$).find('.dnd-atom-wrapper'));
       });
     },
     contents: [
