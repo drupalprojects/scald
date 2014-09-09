@@ -26,17 +26,22 @@ function scald_atom_view($atom, $context = 'full', $langcode = NULL) {
     $langcode = $GLOBALS['language_content']->language;
   }
 
+  // Populate $atom->content with a render() array.
   scald_atom_build_content($atom, $context, $langcode);
 
   $build = $atom->content;
   // We don't need duplicate rendering info in atom->content.
   unset($atom->content);
 
+  // Allow modules to modify the structured atom.
+  $type = 'scald_atom';
+  drupal_alter(array('scald_atom_view', 'entity_view'), $build, $type);
+
   return $build;
 }
 
 /**
- * Builds atom content.
+ * Builds a structured array representing the atom's content.
  *
  * @param ScaldAtom $atom
  *   Atom to build content.
@@ -79,6 +84,10 @@ function scald_atom_build_content($atom, $view_mode = 'full', $langcode = NULL) 
       '#options' => array('html' => TRUE),
     );
   }
+
+  // Allow modules to make their own additions to the atom.
+  module_invoke_all('scald_atom_view', $atom, $view_mode, $langcode);
+  module_invoke_all('entity_view', $atom, 'scald_atom', $view_mode, $langcode);
 
   $atom->content += array('#view_mode' => $view_mode);
 }
