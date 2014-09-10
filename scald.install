@@ -639,7 +639,7 @@ function scald_update_7011() {
 /**
  * Add the {scald_atoms}.created and {scald_atoms}.changed column.
  */
-function scald_update_6012() {
+function scald_update_7012() {
   $new_field = array(
     'description' => 'The Unix timestamp when the atom was created.',
     'type' => 'int',
@@ -659,3 +659,4 @@ function scald_update_6012() {
   db_add_index('scald_atoms', 'atom_changed', array('changed'));
   db_add_index('scald_atoms', 'atom_created', array('created'));
 }
+
