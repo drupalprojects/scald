@@ -520,9 +520,14 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
   drupal_set_message(t('Context transcoders settings saved'));
   $typename = $form_state['build_info']['args'][0]->type;
   $players = scald_players();
+  $contexts = scald_contexts();
+
   foreach ($form_state['values'] as $key => $value) {
     $context = _scald_parse_machine_name($key);
     $setting = substr($key, strlen($context) + 1);
+    if (!isset($contexts[$context])) {
+      continue;
+    }
     switch ($setting) {
       // Handle transcoders submission.
       case 'trans':
