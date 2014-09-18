@@ -492,6 +492,25 @@ function scald_admin_contexts_form($form, $form_state, $type) {
       '#prefix' => '<div id="' . $name . '-player-settings">',
       '#suffix' => '</div>',
     );
+
+    $context_config = scald_context_config_load($name);
+    $form[$name][$name . '_dimensions'] = array(
+      '#type'         => 'fieldset',
+      '#title'        => t('Dimensions'),
+      '#description'  => t('Context width and height are used to hint the Scald rendering process to fit into the specified dimensions. While transcoder is about what to be displayed, the dimensions are about how large an atom is displayed. The unit could be omitted: "200px", "80%" or simply "150" etc.'),
+    );
+    $form[$name][$name . '_dimensions'][$name . '_width'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Width'),
+      '#size' => 20,
+      '#default_value' => isset($context_config->data['width']) ? $context_config->data['width'] : '',
+    );
+    $form[$name][$name . '_dimensions'][$name . '_height'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Height'),
+      '#size' => 20,
+      '#default_value' => isset($context_config->data['height']) ? $context_config->data['height'] : '',
+    );
   }
 
   $form['submit'] = array(
@@ -545,6 +564,13 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
         if (!isset($context_config->player[$typename]['settings']) && isset($players[$value]['settings'])) {
           $context_config->player[$typename]['settings'] = $players[$value]['settings'];
         }
+        scald_context_config_save($context_config);
+        break;
+
+      case 'width':
+        $context_config = scald_context_config_load($context);
+        $context_config->data['width'] = $form_state['values'][$context . '_width'];
+        $context_config->data['height'] = $form_state['values'][$context . '_height'];
         scald_context_config_save($context_config);
         break;
     }

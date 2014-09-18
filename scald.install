@@ -181,6 +181,14 @@ function scald_schema() {
         'serialize' => TRUE,
         'object default' => array(),
       ),
+      'data' => array(
+        'description' => 'Arbitrary data.',
+        'type' => 'blob',
+        'size' => 'big',
+        'not null' => TRUE,
+        'serialize' => TRUE,
+        'object default' => array(),
+      ),
     ),
     'primary key' => array('context'),
     'export' => array(
@@ -660,3 +668,17 @@ function scald_update_7012() {
   db_add_index('scald_atoms', 'atom_created', array('created'));
 }
 
+/**
+ * Add a new field 'data' to scald_context_config table.
+ */
+function scald_update_7013() {
+  db_add_field('scald_context_config', 'data', array(
+    'description' => 'Arbitrary data.',
+    'type' => 'blob',
+    'size' => 'big',
+    'not null' => TRUE,
+    'serialize' => TRUE,
+    'object default' => array(),
+    'initial' => serialize(array()),
+  ));
+}
