@@ -196,27 +196,28 @@ function scald_admin_type_form_submit($form, &$form_state) {
 
   foreach ($form_state['values'] as $key => $value) {
     if (drupal_substr($key, 0, 5) == 'type_') {
-      switch (drupal_substr($key, -6)) {
-        case '_title':
+      $setting = substr($key, strlen(_scald_parse_machine_name($key)) + 1);
+      switch ($setting) {
+        case 'title':
           db_update('scald_types')
             ->fields(array('title' => $value))
             ->condition('type', $type)
             ->execute();
           break;
 
-        case '_thumb':
+        case 'thumb':
           $scald_atom_defaults[$type]->thumbnail_source = $value;
           break;
 
-        case '_descr':
+        case 'descr':
           $scald_atom_defaults[$type]->description = $value;
           break;
 
-        case '_utype':
+        case 'utype':
           $scald_atom_defaults[$type]->upload_type = $value;
           break;
 
-        case '_actin':
+        case 'actin':
           $actions = scald_actions();
           $bitmask = 0;
           foreach ($actions as $name => $action) {
@@ -505,7 +506,7 @@ function scald_admin_contexts_form($form, $form_state, $type) {
  * Re-generates the player settings form.
  */
 function scald_admin_contexts_player_ajax($form, $form_state) {
-  $context_name = substr($form_state['triggering_element']['#name'], 0, -6);
+  $context_name = _scald_parse_machine_name($form_state['triggering_element']['#name']);
   return $form[$context_name][$context_name . '_player_settings'];
 }
 
@@ -520,10 +521,11 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
   $typename = $form_state['build_info']['args'][0]->type;
   $players = scald_players();
   foreach ($form_state['values'] as $key => $value) {
-    switch (drupal_substr($key, -6)) {
+    $context = _scald_parse_machine_name($key);
+    $setting = substr($key, strlen($context) + 1);
+    switch ($setting) {
       // Handle transcoders submission.
-      case '_trans':
-        $context = drupal_substr($key, 0, -6);
+      case 'trans':
         $transcoder = $value;
         $context_config = scald_context_config_load($context);
         $context_config->transcoder[$typename]['*'] = $transcoder;
@@ -531,8 +533,7 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
         break;
 
       // Handler players submission.
-      case '_playe':
-        $context = drupal_substr($key, 0, -6);
+      case 'playe':
         $context_config = scald_context_config_load($context);
         $context_config->player[$typename]['*'] = $value;
         // Load and save default settings for the player.
@@ -590,6 +591,17 @@ function scald_settings_form() {
   return system_settings_form($form);
 }
 
+/**
+ * Returns the machine name from element name.
+ *
+ * Element name is built on {machine name}_{setting name} where 'machine name'
+ * is either type, context machine name or anything else. Historically, the
+ * 'setting name' is limited to exactly 5 characters for easy parsing.
+ */
+function _scald_parse_machine_name($element_name) {
+  $position = strrpos($element_name, '_');
+  return substr($element_name, 0, $position);
+}
 
 /**
  * Handles the admin settings form submission.
