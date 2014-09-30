@@ -288,7 +288,7 @@ function atom_reference_field_widget_form_process(&$element) {
     $prefix = '<div class="atom_reference_drop_zone">' . scald_render($default, $element['#preview_context']) .'</div>';
   }
   else {
-    $placeholder = t('Drop a resource here');
+    $placeholder = t('Drop a resource from Scald media library here.');
     $prefix = '<div class="atom_reference_drop_zone"><em>' . $placeholder . '</em></div>';
   }
   $element['#field_prefix'] = $prefix;
