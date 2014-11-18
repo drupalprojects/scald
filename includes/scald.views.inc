@@ -152,6 +152,36 @@ function scald_views_data() {
     ),
   );
 
+  $data['scald_atoms']['created'] = array(
+    'title' => t('Created date'),
+    'help' => t('The date the Atom was created.'),
+    'field' => array(
+      'handler' => 'views_handler_field_date',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
+    ),
+  );
+
+  $data['scald_atoms']['changed'] = array(
+    'title' => t('Updated date'),
+    'help' => t('The date the Atom was last updated.'),
+    'field' => array(
+      'handler' => 'views_handler_field_date',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
+    ),
+  );
+
   return $data;
 }
 
