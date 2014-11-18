@@ -14,7 +14,8 @@ dnd.protectAtom = function(element) {
   element
     .attr('contentEditable', false)
     // Allows atom legend to be edited inside the editor.
-    .find('.dnd-legend-wrapper').attr('contentEditable', true);
+    .find('.dnd-legend-wrapper').attr('contentEditable', true)
+    .trigger('onAtomProtect');
 }
 
 dnd.getWrapperElement = function(element) {
