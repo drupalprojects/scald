@@ -561,7 +561,7 @@ function scald_admin_contexts_form_submit($form, &$form_state) {
         $context_config = scald_context_config_load($context);
         $context_config->player[$typename]['*'] = $value;
         // Load and save default settings for the player.
-        if (!isset($context_config->player[$typename]['settings']) && isset($players[$value]['settings'])) {
+        if (empty($context_config->player[$typename]['settings']) && isset($players[$value]['settings'])) {
           $context_config->player[$typename]['settings'] = $players[$value]['settings'];
         }
         scald_context_config_save($context_config);
