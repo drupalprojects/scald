@@ -146,6 +146,8 @@ function scald_audio_scald_fetch($atom, $type) {
       $atom->thumbnail_source = $file_item['uri'];
     }
   }
+  $file = file_load($atom->base_id);
+  $atom->base_entity = $file;
   $atom->file_source = $atom->data['audio_file'];
 }
 
