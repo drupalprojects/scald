@@ -220,7 +220,10 @@ function theme_sdl_library_item($variables) {
     'title' => t('Insert'),
     'external' => TRUE,
     'fragment' => FALSE,
-    'attributes' => array('data-atom-id' => $atom->sid),
+    'attributes' => array(
+      'data-atom-id' => $atom->sid,
+      'style' => 'display:none',
+    ),
     'href' => '',
   );
 

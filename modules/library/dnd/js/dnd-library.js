@@ -329,7 +329,7 @@ renderLibrary: function(data, editor) {
   $.data($(editor), 'dnd_preload', cached);
 
   // Set up drag & drop data
-  $('.editor-item ._insert a').each(function(i) {
+  $('.editor-item ._insert a').show().each(function(i) {
     $(this)
       .bind('click', function(e) {
         e.preventDefault();
