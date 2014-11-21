@@ -396,6 +396,15 @@ function mee_node_revision_delete($revision) {
 }
 
 /**
+ * Implements hook_ckeditor_filter_xss_allowed_tags().
+ */
+function mee_ckeditor_filter_xss_allowed_tags() {
+  // The comment "tag" is used to mark parseable atom. It is currently required
+  // for the dnd plugin to work. Add it to the CKEditor XSS allowed tags.
+  return array('!--');
+}
+
+/**
  * Returns HTML for the MEE resource list.
  *
  * @param $variables
