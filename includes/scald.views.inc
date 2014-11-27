@@ -24,7 +24,7 @@ function scald_views_data() {
     'title' => t('Scald ID'),
     'help' => t("The atom's unique identifier"),
     'field' => array(
-      'handler' => 'views_handler_field_numeric',
+      'handler' => 'views_handler_field',
       'click sortable' => TRUE,
     ),
     'sort' => array(
