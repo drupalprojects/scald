@@ -2233,6 +2233,9 @@ function scald_context_config_load($name) {
     if (!isset($context_config->player[$type->type]['*'])) {
       $context_config->player[$type->type]['*'] = 'default';
     }
+    if(!isset($context_config->data)) {
+      $context_config->data = array();
+    }
   }
 
   return $context_config;
