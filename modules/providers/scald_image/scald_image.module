@@ -257,10 +257,17 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
       foreach ($mappings->mapping as $breakpoint_name => $multipliers) {
         if (!empty($multipliers)) {
           foreach ($multipliers as $multiplier => $image_style) {
-            if (!empty($image_style)) {
-              $fallback_image_style = $image_style;
-              break 2;
+            if (!$image_style) {
+              continue;
             }
+            // $image_style is machine name in Picture 1.x and an array in
+            // Picture 2.x.
+            if (is_array($image_style) && $image_style['mapping_type'] === '_none') {
+              continue;
+            }
+
+            $fallback_image_style = is_array($image_style) ? $image_style['image_style'] : $image_style;
+            break 2;
           }
         }
       }
