@@ -10,16 +10,17 @@ Drupal.behaviors.atom_reference = {
       var $reset = $("<input type='button' />")
         .val(Drupal.t('Delete'))
         .click(function() {
-          $(this)
-            .hide()
-            .closest('div.form-item')
-            .find('input:text')
-            .val('')
-            .end()
-            .find('div.atom_reference_drop_zone')
-            .empty()
-            .append(Drupal.t('Drop a resource here'))
+          // Hide the "remove" button.
+          $(this).hide();
+          // Empty the hidden input.
+          var $formItem = $(this).closest('div.form-item');
+          $formItem.find('input:text').val('');
+          // Empty the dropzone.
+          var $dropZone = $formItem.find('div.atom_reference_drop_zone');
+          Drupal.detachBehaviors($dropZone.children());
+          $dropZone.empty().append(Drupal.t('Drop a resource here'));
         });
+
       // If the element doesn't have a value yet, hide the Delete button
       // by default
       if (!$this.closest('div.form-item').find('input:text').val()) {
@@ -30,6 +31,10 @@ Drupal.behaviors.atom_reference = {
         .bind('dragover', function(e) {e.preventDefault();})
         .bind('dragenter', function(e) {e.preventDefault();})
         .bind('drop', function(e) {
+          if (!Drupal.dnd.currentAtom) {
+            // Not an atom drop.
+            return;
+          }
           var dt = Drupal.dnd.currentAtom.replace(/^\[scald=(\d+).*$/, '$1');
           var ret = Drupal.atom_reference.droppable(dt, this);
           var $this = $(this);
@@ -45,6 +50,7 @@ Drupal.behaviors.atom_reference = {
                 .end()
                 .find('input:button')
                 .show();
+              Drupal.attachBehaviors($this);
             });
           }
           else {

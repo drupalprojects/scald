@@ -37,6 +37,13 @@ CKEDITOR.plugins.add('dnd', {
   },
 
   init: function (editor) {
+
+    // Assign the "insert atom into editor" method to be used for this editor.
+    editor.dndInsertAtom = function(sid) {
+      var markup = Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[sid]);
+      editor.insertElement(CKEDITOR.dom.element.createFromHtml(markup));
+    };
+
     var path = this.path;
     editor.on('mode', function (evt) {
       var editor = evt.editor;

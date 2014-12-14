@@ -162,10 +162,10 @@ Drupal.dnd = {
    * Insert an atom in the current RTE or textarea.
    */
   insertAtom: function(sid) {
-    var cke = Drupal.ckeditorInstance;
-    if (cke) {
-      var markup = Drupal.theme('scaldEmbed', Drupal.dnd.Atoms[sid]);
-      cke.insertElement(CKEDITOR.dom.element.createFromHtml(markup));
+    var editor = Drupal.ckeditorInstance;
+    if (editor && editor.dndInsertAtom) {
+      // Defer to the correct method given the plugin used by this editor.
+      editor.dndInsertAtom(sid);
     }
     else if (Drupal.dnd.lastFocus) {
       var markup = Drupal.dnd.Atoms[sid].sas;
@@ -365,6 +365,7 @@ renderLibrary: function(data, editor) {
         return true;
       })
       .bind('dragend', function(e) {
+        delete Drupal.dnd.currentAtom;
         return true;
       });
   });

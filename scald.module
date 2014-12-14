@@ -1996,7 +1996,7 @@ function scald_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
-  // AJAX callback allowing to fetch atoms, which provides is usefull
+  // JSON callback allowing to fetch atoms, which provides is usefull
   // for library implementations and RTE integrations.
   $items['atom/fetch/%'] = array(
     'title' => 'Fetch atoms',
