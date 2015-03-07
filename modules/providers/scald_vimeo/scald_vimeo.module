@@ -5,7 +5,7 @@
  */
 
 define('VIMEO_ID_REGEXP',   '/^[a-zA-Z0-9]+$/');
-define('VIMEO_WEB_REGEXP',  '#^http://vimeo.com/([a-zA-Z0-9]+)(_.*)?$#');
+define('VIMEO_WEB_REGEXP',  '#^https?://vimeo.com/([a-zA-Z0-9]+)(_.*)?$#');
 define('VIMEO_API_VIDEO',   'http://vimeo.com/api/v2/video/');
 define('VIMEO_API',         'http://vimeo.com/api/v2/');
 
