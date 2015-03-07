@@ -110,10 +110,11 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
               if (Drupal.dnd.Atoms[atom.sid].meta.type === 'image') {
                 this.setValue(atom.options.link);
                 this.enable();
+                this.getElement().show();
               }
               else {
-                this.setValue(editor.lang.dnd.link_image_only);
                 this.disable();
+                this.getElement().hide();
               }
             }
           }

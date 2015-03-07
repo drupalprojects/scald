@@ -67,12 +67,13 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
             // "Link" edits the 'link' property in the options JSON string.
             setup: function(widget) {
               if (Drupal.dnd.Atoms[widget.data.sid].meta.type === 'image') {
+                this.getElement().show();
                 var options = JSON.parse(widget.data.options);
                 this.setValue(options.link);
               }
               else {
-                this.setValue(lang.link_image_only);
                 this.disable();
+                this.getElement().hide();
               }
             },
             commit: function(widget) {
