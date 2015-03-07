@@ -1325,13 +1325,13 @@ function scald_render($sid, $context, $options = array(), $rebuild = FALSE) {
  *   the atoms in the choosen context.
  */
 function scald_render_multiple($atoms, $context) {
-  $output = array();
+  $view = array();
   foreach ($atoms as $atom) {
-    $output[] = array(
+    $view['scald_atom'][$atom->sid] = array(
       '#markup' => scald_render($atom, $context),
     );
   }
-  return $output;
+  return $view;
 }
 
 /**
