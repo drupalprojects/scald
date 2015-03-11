@@ -2062,8 +2062,8 @@ function scald_locale($op = 'groups') {
 /**
  * Implements hook_i18n_string_info().
  */
-function scald_18n_string_info() {
-  $groups['scald_type'] = array(
+function scald_i18n_string_info() {
+  $groups['scald'] = array(
     'title' => t('Scald atom type'),
     'description' => t('The title and description of the different atom types supported by Scald.'),
     'format' => FALSE,
