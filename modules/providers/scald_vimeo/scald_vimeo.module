@@ -107,7 +107,8 @@ function scald_vimeo_scald_prerender($atom, $context, $options, $mode) {
           'video_id'      => $atom->base_id,
           'video_width'   => ($atom->data['video_width'] ? $atom->data['video_width'] : 480),
           'video_height'  => ($atom->data['video_height'] ? $atom->data['video_height'] : 365),
-          'thumbnail'     => $atom->thumbnail_source
+          'thumbnail'     => $atom->thumbnail_source,
+          'title'         => check_plain($atom->title),
         ),
         'atom' => $atom,
       )
