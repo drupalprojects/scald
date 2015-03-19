@@ -96,14 +96,22 @@ CKEDITOR.plugins.add('dndck4', {
       var caption = Drupal.dnd.Atoms[sid].meta.legend || '';
       Drupal.dndck4.insertNewWidget(editor, range, data, caption);
     };
-    // Listen to atom drags from the Library.
-    editor.on('contentDom', function (evt) {
-      $(document).bind('dragstart', function (evt) {
+
+    editor.on('instanceReady', function (evt) {
+      // Listen to atom drags from the Library. Namespace the event so that we
+      // can unbind it when the editor is disabled.
+      $(document).bind('dragstart.dndck4_' + editor.name, function (evt) {
         if (Drupal.dnd.currentAtom) {
           var dragInfo = Drupal.dnd.sas2array(Drupal.dnd.currentAtom);
           Drupal.dndck4.onLibraryAtomDrag(editor, Drupal.dnd.Atoms[dragInfo.sid]);
         }
       });
+    });
+
+    editor.on('destroy', function (evt) {
+      // Remove the drag listener so that it can be safely re-added if the
+      // editor is re-created.
+      $(document).unbind('dragstart.dndck4_' + editor.name);
     });
 
     // Setup the "atom properties" dialog.
@@ -292,7 +300,9 @@ Drupal.dndck4 = {
       // The default context for newly embedded atoms is a setting of the text
       // field, and is placed in the 'data-dnd-context' attribute on the
       // textarea.
-      context : editor.element.$.attributes['data-dnd-context'].value,
+      context : (editor.element.$.attributes['data-dnd-context']) ?
+        editor.element.$.attributes['data-dnd-context'].value :
+        Drupal.settings.dnd.contextDefault,
       // Modules can use hook_scald_dnd_library_item_alter() to add default
       // options in the sas code for the atom.
       options : sasData.options || '{}',
@@ -376,31 +386,44 @@ Drupal.dndck4 = {
       eventBuffer.input();
     }));
 
-    // On drop, insert the atom and stop the liner.
-    listeners.push(editable.once('drop', function (evt) {
+    // Listen to the 'drop' event:
+    // - on the editable div if the CKEditor is in "divarea" mode,
+    // - on the iframe document if the CKEditor is in "iframe" mode.
+    var dropElement = editable.isInline() ? editable : editor.document;
+    // On Chrome, the 'drop' event on the iframe document does not catches drops
+    // made outside the body content, which might be smaller than the iframe.
+    // Temporarily extend its height so that the whole editor is a drop area.
+    if (!editable.isInline()) {
+      var previousMinHeight = editable.getStyle('min-height');
+      var documentHeight = $(editor.document.$).height() + 'px';
+      var bodyMargin = '(' + $(editable.$).css('marginTop') + ' + ' + $(editable.$).css('marginBottom') + ')';
+      var height = 'calc( ' + documentHeight + ' - ' + bodyMargin + ' )';
+      editable.setStyle('min-height', height);
+    }
+    // On drop, insert the atom and cleanup the events.
+    listeners.push(dropElement.on('drop', function (evt) {
       evt.data.preventDefault();
-      // Insert the new widget if the liner has a valid target position.
-      if (!CKEDITOR.tools.isEmpty(liner.visible)) {
-        var range;
-        if (editableHasContent) {
-          range = finder.getRange(sorted[0]);
-        }
-        else {
-          // If no content yet, insert as the new content of the editable.
-          range = editor.createRange();
-          range.selectNodeContents(editable);
-        }
-        var data = Drupal.dndck4.getDefaultInsertData(editor, atomInfo);
-        var caption = atomInfo.meta.legend || '';
-        Drupal.dndck4.insertNewWidget(editor, range, data, caption);
+      var range;
+      if (editableHasContent && !CKEDITOR.tools.isEmpty(liner.visible)) {
+        range = finder.getRange(sorted[0]);
       }
-      stopLiner();
+      else {
+        // If no liner position was determined, insert at the end of the
+        // editable.
+        range = editor.createRange();
+        range.moveToElementEditablePosition(editable, true);
+      }
+      var data = Drupal.dndck4.getDefaultInsertData(editor, atomInfo);
+      var caption = atomInfo.meta.legend || '';
+      Drupal.dndck4.insertNewWidget(editor, range, data, caption);
+      cleanupDrag();
     }));
 
-    // On dragend (without drop), stop the liner.
-    listeners.push(editor.document.on('dragend', function (evt) {
-      stopLiner();
+    // On dragend (without drop), cleanup the events.
+    listeners.push(CKEDITOR.document.on('dragend', function (evt) {
+      cleanupDrag();
     }));
+
     // On dragleave, hide the liner.
     // @todo doesn't work, dragleave doesn't have a reliable implementation
     // across browsers...
@@ -409,17 +432,21 @@ Drupal.dndck4 = {
 //        console.log('dragleave');
 //      }));
 
-    function stopLiner() {
+    function cleanupDrag() {
       // Stop observing events.
       eventBuffer.reset();
       var l;
       while (l = listeners.pop()) {
         l.removeListener();
       }
-      // Clean-up custom cursor for editable.
-      editable.removeClass('cke_widget_dragging');
       // Clean-up all remaining lines.
       liner.hideVisible();
+      // Clean-up custom cursor for editable.
+      editable.removeClass('cke_widget_dragging');
+      // Reset the min-height.
+      if (!editable.isInline()) {
+        editable.setStyle('min-height', previousMinHeight);
+      }
     }
   },
 
