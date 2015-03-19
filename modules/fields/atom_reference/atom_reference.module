@@ -16,9 +16,12 @@ function atom_reference_library() {
     'version' => '1.x',
     'js' => array(
       $path . '/atom_reference.js' => array(),
+      drupal_get_path('module', 'ctools') . '/js/dropbutton.js' => array(),
     ),
     'css' => array(
       $path . '/atom_reference.css' => array(),
+      drupal_get_path('module', 'ctools') . '/css/dropbutton.css' => array(),
+      drupal_get_path('module', 'ctools') . '/css/button.css' => array(),
     ),
   );
 
@@ -58,8 +61,26 @@ function atom_reference_field_instance_settings_form($field, $instance) {
     '#title' => t('Atom types that can be referenced'),
     '#multiple' => TRUE,
     '#options' => $options,
-    '#default_value' => $instance['settings']['referencable_types']
+    '#default_value' => $instance['settings']['referencable_types'],
   );
+
+  $rendering_context = isset($instance['settings']['rendering_context']) ? $instance['settings']['rendering_context'] : variable_get('dnd_context_default', 'sdl_editor_representation');
+  $form['rendering_context'] = array(
+    '#type' => 'select',
+    '#title' => t('Rendering context'),
+    '#options' => array(),
+    '#default_value' => $rendering_context,
+    '#description' => t('Scald rendering context to be displayed in the edit form.'),
+  );
+
+  $contexts = scald_contexts();
+  foreach ($contexts as $name => $context) {
+    if (empty($context['hidden']) && $name !== 'sdl_library_item') {
+      $form['rendering_context']['#options'][$name] = $context['title'];
+    }
+  }
+
+
 
   return $form;
 }
@@ -282,18 +303,24 @@ function atom_reference_field_referenceable_types($instance) {
  * on the fly, depending on the field being filled.
  */
 function atom_reference_field_widget_form_process(&$element) {
-  // Get the default value, and format the placeholder accordingly.
+  // Get the default value, rendering context and format the placeholder accordingly.
+  $info = field_info_instances($element['#entity_type'], $element['#bundle']);
+  $rendering_context = variable_get('dnd_context_default', 'sdl_editor_representation');
+  if (isset($info[$element['#field_name']]['settings']['rendering_context'])) {
+    $rendering_context = $info[$element['#field_name']]['settings']['rendering_context'];
+  }
+
   $default = $element['#value'];
   if ($default) {
-    $prefix = '<div class="atom_reference_drop_zone">' . scald_render($default, $element['#preview_context']) .'</div>';
+    $prefix = '<div class="atom_reference_drop_zone" data-rendering-context="' . $rendering_context . '">' . scald_render($default, $rendering_context) . '</div>';
   }
   else {
     $placeholder = t('Drop a resource from Scald media library here.');
-    $prefix = '<div class="atom_reference_drop_zone"><em>' . $placeholder . '</em></div>';
+    $prefix = '<div class="atom_reference_drop_zone" data-rendering-context="' . $rendering_context . '"><em>' . $placeholder . '</em></div>';
   }
   $element['#field_prefix'] = $prefix;
-  return $element;
 
+  return $element;
 }
 
 /**
