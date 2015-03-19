@@ -296,14 +296,17 @@ function mee_field_widget_form_alter(&$element, &$form_state, $context) {
 
   // Activate DnD Library for this element if enabled.
   if (!empty($enables['dnd'])) {
-    // Force an #id so that we can reference to it later
-    $element['#id'] = drupal_html_id('edit-' . $context['field']['field_name']);
-    $element += array(
-      '#dnd-enabled' => TRUE,
-      '#dnd-settings' => array(
-        'drop_selector' => '#' . $element['#id'] . ' .drop',
-      ),
-    );
+    $fieldname = $element['#field_name'];
+    $language = $element['#language'];
+    $settings = $form_state['field'][$fieldname][$language]['instance']['settings'];
+    $context_default = isset($settings['context_default']) ?
+       $settings['context_default'] :
+       variable_get('dnd_context_default', 'sdl_editor_representation');
+    $element['#attributes']['data-dnd-context'][] = $context_default;
+    $element['#attached']['library'][] = array('dnd', 'library');
+    if (isset($element['summary'])) {
+      $element['summary']['#attributes']['data-dnd-context'][] = $context_default;
+    }
   }
 
   // Add our custom form element into MEE enabled textarea only.
@@ -613,6 +616,12 @@ function _mee_process_item_value(&$item, $entity_type, $entity, $field, $delta) 
     foreach (_mee_extract_widget_embed_info(filter_dom_load($item['value'])) as $info) {
       $sids[] = $info['sid'];
       $copyrights[$info['sid']] = $info['caption'];
+    }
+    if (!empty($item['summary'])) {
+      foreach (_mee_extract_widget_embed_info(filter_dom_load($item['summary'])) as $info) {
+        $sids[] = $info['sid'];
+        $copyrights[$info['sid']] = $info['caption'];
+      }
     }
     $sids = array_unique($sids);
   }

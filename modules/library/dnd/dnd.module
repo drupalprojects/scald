@@ -42,47 +42,6 @@ function dnd_theme() {
 }
 
 /**
- * Implementation of hook_element_info_alter().
- *
- * Add a process to all textareas.
- */
-function dnd_element_info_alter(&$types) {
-  if (isset($types['textarea'])) {
-    $types['textarea']['#process'][] = 'dnd_process_textarea';
-  }
-}
-
-/**
- * Settings array:
- * What should it take, if anything?  Probably a source * maybe editor specific configuration shit?
- *
- * - source for library json/ajax shit
- * - target selector
- * - item selector
- *
- * perhaps like so:
- *
- * global =>
- *   droppable targets
- *   library source for textarea
- *
- * tinymce/othereditor =>
- *   target selector logic
- *   configuration options
- *   callback should be smart about attachment and detachment
- */
-function dnd_process_textarea($element, $form_state) {
-  if (!empty($element['#dnd-enabled'])) {
-    $element['#attached']['library'][] = array('dnd', 'library');
-    $settings = (array) @$form_state['field'][$element['#field_name']][$element['#language']]['instance']['settings'];
-    $context_default = isset($settings['context_default']) ? $settings['context_default'] : variable_get('dnd_context_default', 'sdl_editor_representation');
-    $element['#attributes']['data-dnd-context'][] = $context_default;
-  }
-
-  return $element;
-}
-
-/**
  * Implements hook_library().
  */
 function dnd_library() {
