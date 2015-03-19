@@ -22,6 +22,13 @@ function scald_image_scald_atom_providers() {
 }
 
 /**
+ * Implements hook_scald_wysiwyg_context_list_alter().
+ */
+function scald_image_scald_wysiwyg_context_list_alter(&$contexts) {
+  drupal_add_js(drupal_get_path('module', 'scald_image') . '/scald_image.js');
+}
+
+/**
  * Implements hook_scald_add_form().
  */
 function scald_image_scald_add_form(&$form, &$form_state) {

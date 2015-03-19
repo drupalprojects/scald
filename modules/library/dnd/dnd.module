@@ -48,6 +48,8 @@ function dnd_library() {
   $path = drupal_get_path('module', 'dnd');
   $types = scald_types();
   $contexts = array();
+  $config = array();
+
   foreach (scald_contexts() as $name => $definition) {
     if (!empty($definition['hidden']) || empty($definition['parseable'])) {
       continue;
@@ -60,6 +62,8 @@ function dnd_library() {
     foreach ($definition['formats'] as $type => $data) {
       $contexts[$type][$name] = $definition['title'];
     }
+
+    $config[$name] = scald_context_config_load($name);
   }
   drupal_alter('scald_wysiwyg_context_list', $contexts);
   $libraries['library'] = array(
@@ -86,6 +90,7 @@ function dnd_library() {
             'url' => url(dnd_get_library()),
             'contexts' => $contexts,
             'contextDefault' => variable_get('dnd_context_default', 'sdl_editor_representation'),
+            'contexts_config' => $config,
           ),
         ),
       ),
