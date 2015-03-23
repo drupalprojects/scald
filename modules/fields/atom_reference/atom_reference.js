@@ -57,6 +57,7 @@ Drupal.behaviors.atom_reference = {
             .closest('div.form-item')
             .find('input:text')
             .val('')
+            .change()
             .end()
             .find('div.atom_reference_drop_zone')
             .empty()
@@ -123,6 +124,7 @@ Drupal.behaviors.atom_reference = {
                 .closest('div.form-item')
                 .find('input:text')
                 .val(ressource_id)
+                .change()
                 .end()
                 .find('.atom_reference_operations')
                 .show();
