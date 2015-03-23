@@ -451,6 +451,7 @@ function scald_atom_fetch_atoms($sids) {
       'meta' => array(
         'title' => $atom->title,
         'type' => $atom->type,
+        'data' => !empty($atom->data) ? $atom->data : array(),
       ),
       'actions' => array_keys(scald_atom_actions_available($atom)),
     );

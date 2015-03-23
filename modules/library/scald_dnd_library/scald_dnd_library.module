@@ -87,6 +87,7 @@ function scald_dnd_library_add_item(&$library, $sid) {
     'meta' => array(
       'title' => $atom->title,
       'type' => $atom->type,
+      'data' => !empty($atom->data) ? $atom->data : array(),
       'legend' => '',
     ),
     'sas' =>  '[scald=' . $atom->sid . ':' . $context .']',

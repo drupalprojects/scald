@@ -544,6 +544,7 @@ function mee_ajax_widget_expand($atom) {
       'meta' => array(
         'title' => $atom->title,
         'type' => $atom->type,
+        'data' => !empty($atom->data) ? $atom->data : array(),
         'provider' => $atom->provider,
       ),
       'actions' => array_keys(scald_atom_actions_available($atom)),
