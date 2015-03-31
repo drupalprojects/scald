@@ -259,6 +259,32 @@ CKEDITOR.plugins.add('dndck4', {
  */
 Drupal.dndck4 = {
 
+  registeredCallbacks: [],
+
+  registerCallback: function (hook, callback) {
+    Drupal.dndck4.registeredCallbacks.push({hook: hook, callback: callback});
+  },
+
+  unRegisterCallback: function (hook) {
+    Drupal.dndck4.registeredCallbacks = $.map(Drupal.dndck4.registeredCallbacks, function(item, index) {
+      if (item.hook == hook || item.hook.lastIndexOf(hook + '.', 0) === 0) {
+        return null;
+      }
+      return item;
+    });
+  },
+
+  invokeCallbacks: function(hook, param) {
+    $.each(Drupal.dndck4.registeredCallbacks, function(i) {
+      var name = this.hook.split('.')[0];
+      if (name == hook) {
+        if (typeof this.callback === 'function') {
+          this.callback(param);
+        }
+      }
+    });
+  },
+
   dataFromAttributes: function (attributes) {
     return {
       sid : attributes['data-scald-sid'],
@@ -513,6 +539,9 @@ Drupal.dndck4 = {
     widgetElement.setAttribute('class', 'cke_widget_element ' + newElement.getAttribute('class'));
     // Replace the inner HTML.
     widgetElement.setHtml(newElement.getHtml());
+
+    // Notify external scripts of new atom rendering
+    Drupal.dndck4.invokeCallbacks('AjaxExpandWidget', widget);
 
     // Initialize the new caption editable, and fill it with the previous
     // caption.
