@@ -7,7 +7,7 @@
 /**
  * Handles the view of an atom within a context.
  *
- * Contrary to scald_rendered(), which displays basically a "player", this
+ * Contrary to scald_render(), which displays basically a "player", this
  * function displays the player and all atom fields. Fields are reorderable and
  * customisable in the Field UI as usual.
  *
