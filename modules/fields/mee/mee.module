@@ -785,7 +785,7 @@ function _mee_extract_widget_embed_info($dom) {
   $embed_info = array();
 
   // Collect the DOM nodes and the corresponding emebed data.
-  $xpath = new \DOMXPath($dom);
+  $xpath = new DOMXPath($dom);
   $nodes = $xpath->query("//div[@class='dnd-atom-wrapper']");
   foreach ($nodes as $node) {
     $info = array(
