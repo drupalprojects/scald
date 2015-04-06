@@ -254,7 +254,8 @@ function scald_scald_player() {
 /**
  * Get the list of module that have registered themselves as atom providers.
  *
- * This function returns an associative array with the following formats:
+ * This function returns an associative array with the following format.
+ *
  * array(
  *   'type-slug1' => array(
  *     'module-name1' => 'label1',
@@ -266,14 +267,60 @@ function scald_scald_player() {
  *   The Scald Atom Providers array.
  */
 function scald_atom_providers($reset = FALSE) {
-  $types = array();
-  $hook = 'scald_atom_providers';
-  foreach (module_implements($hook) as $module) {
-    foreach (module_invoke($module, $hook) as $type => $label) {
-      $types[$type][$module] = $label;
+  $types = &drupal_static(__FUNCTION__, NULL, $reset);
+  if (!isset($types)) {
+    $types = array();
+    $hook = 'scald_atom_providers';
+    foreach (module_implements($hook) as $module) {
+      foreach (module_invoke($module, $hook) as $type => $label) {
+        $types[$type][$module] = $label;
+      }
     }
+    drupal_alter($hook, $types);
   }
-  drupal_alter($hook, $types);
+  return $types;
+}
+
+/**
+ * Get the list of module options registered for atom providers.
+ *
+ * This function returns an associative array with the following format.
+ *
+ * array(
+ *   'type-slug1' => array(
+ *     'module-name1' => array(
+ *       'data-param1' => 'data_value1',
+ *       'data-param2' => 'data_value2',
+ *     ),
+ *     'module-name2' => array(
+ *       'label' => 'label2',
+ *     ),
+ *   )
+ * );
+ *
+ * @return array
+ *   The Scald Atom Provider Options array.
+ */
+function scald_atom_providers_opt($reset = FALSE) {
+  $types = &drupal_static(__FUNCTION__, NULL, $reset);
+  if (!isset($types)) {
+    $types = array();
+    $providers = scald_atom_providers();
+    // Collect provider options for registered providers only.
+    $hook = 'scald_atom_providers_opt';
+    foreach ($providers as $type => $module_items) {
+      foreach ($module_items as $module => $label) {
+        if (module_hook($module, $hook)) {
+          foreach (module_invoke($module, $hook) as $type => $item) {
+            $types[$type][$module] = $item;
+          }
+        }
+        $types[$type][$module]['label'] = $label;
+      }
+    }
+    // Invoke options alters. Do not alter the label here.
+    drupal_alter($hook, $types);
+  }
   return $types;
 }
 

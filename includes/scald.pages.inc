@@ -57,15 +57,21 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
 
   // Start by getting the list of all the modules that said they can provide
   // this atom type.
-  $providers = scald_atom_providers();
+  $providers = scald_atom_providers_opt();
   $sources = $providers[$type->type];
   $source = key($sources);
+  $provider = current($sources);
 
   // If there's more than one, provide a choice between them. Otherwise, skip
   // a step and select the only provider upfront.
   if (empty($step)) {
     if (count($sources) < 2) {
-      $step = 'add';
+      if (!empty($provider['starting_step'])) {
+        $step = $provider['starting_step'];
+      }
+      else {
+        $step = 'add';
+      }
     }
     else {
       $step = 'source';
@@ -88,7 +94,13 @@ function scald_atom_add_page($js, $type, $step = NULL, $atom_id = NULL) {
     $form_state['scald'] = array(
       'type' => $type,
       'source' => isset($source) ? $source : NULL,
+      'provider' => $provider,
     );
+
+    if ($step === 'options') {
+      $form = array();
+      scald_atom_add_form_add_submit($form, $form_state);
+    }
   }
 
   $form_state['scald']['step'] = $step;
@@ -185,7 +197,15 @@ function scald_atom_add_form_source($form, &$form_state) {
  * Handles the source step form submission.
  */
 function scald_atom_add_form_source_submit(&$form, &$form_state) {
-  $form_state['scald']['source'] = $form_state['values']['source'];
+  $source = $form_state['scald']['source'] = $form_state['values']['source'];
+  $type = $form_state['scald']['type']->type;
+  $providers = scald_atom_providers_opt();
+  $provider = $providers[$type][$source];
+  $form_state['scald']['provider'] = $provider;
+  if (isset($form_state['scald']['provider']['starting_step']) && $form_state['scald']['provider']['starting_step'] == 'options') {
+    scald_atom_add_form_add_submit($form, $form_state);
+    $form_state['clicked_button']['#next'] = 'options';
+  }
 }
 
 /**

@@ -94,6 +94,39 @@ function hook_scald_atom_providers() {
 }
 
 /**
+ * Define additional information about atom providers provided by a module.
+ *
+ * @return
+ *   An array of options per provider. This array is keyed by the unified atom type.
+ *   Each provider can define any number of additional options to be used elsewhere.
+ */
+function hook_scald_atom_providers_opt() {
+  // The starting_step can be used to skip the add step
+  // when the provider does not need it.
+  return array(
+    'gallery' => array(
+      'starting_step' => 'options',
+    ),
+  );
+}
+
+/**
+ * Alters the list of providers and their labels.
+ */
+function hook_scald_atom_providers_alter(&$types) {
+  $types['image']['scald_image'] = 'Renamed Image Provider';
+}
+
+/**
+ * Alters the additional options of the providers.
+ * Do not alter the label in this hook. It is only there for simplicity.
+ */
+function hook_scald_atom_providers_opt_alter(&$types) {
+  // In case the provider changed the starting step, It can be changed back.
+  $types['gallery']['scald_gallery']['starting_step'] = 'add';
+}
+
+/**
  * Define information about atom transcoders provided by a module.
  *
  * @return array $transcoder
