@@ -80,7 +80,12 @@ function atom_reference_field_instance_settings_form($field, $instance) {
     }
   }
 
-
+  $allow_override = isset($instance['settings']['allow_override']) ? $instance['settings']['allow_override'] : FALSE;
+  $form['allow_override'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow context override'),
+    '#default_value' => $allow_override,
+  );
 
   return $form;
 }
@@ -127,6 +132,35 @@ function atom_reference_field_validate($entity_type, $entity, $field, $instance,
 }
 
 /**
+ * Implements hook_field_presave().
+ */
+function atom_reference_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  foreach ($items as $delta => $item) {
+    if (empty($item['sid'])) {
+      continue;
+    }
+
+    $options = array();
+    if (!empty($item['options'])) {
+      $options = unserialize($item['options']);
+    }
+
+    foreach($item as $name => $option) {
+      if ($name == 'sid') {
+        continue;
+      }
+      if (!empty($item[$name])) {
+        $options[$name] = $option;
+      }
+      else {
+        unset($options[$name]);
+      }
+    }
+    $items[$delta]['options'] = serialize($options);
+  }
+}
+
+/**
  * Implements hook_field_is_empty().
  */
 function atom_reference_field_is_empty($item, $field) {
@@ -145,7 +179,7 @@ function atom_reference_field_formatter_info() {
       $formatters[$name] = array(
         'label' => $context['title'],
         'field types' => array('atom_reference'),
-        'settings' => array('link' => 0),
+        'settings' => array('link' => 0, 'override' => 0),
       );
     }
   }
@@ -167,6 +201,14 @@ function atom_reference_field_formatter_settings_form($field, $instance, $view_m
     '#default_value' => $settings['link'],
     '#options' => array('no', 'yes'),
   );
+
+  if (isset($instance['settings']['allow_override']) && $instance['settings']['allow_override']) {
+    $element['override'] = array(
+      '#title' => t('Allow context override'),
+      '#type' => 'checkbox',
+      '#default_value' => $settings['override'],
+     );
+  }
 
   return $element;
 }
@@ -201,12 +243,20 @@ function atom_reference_field_formatter_view($entity_type, $entity, $field, $ins
 
   if (!empty($contexts[$render_context])) {
     foreach ($items as $delta => $item) {
-      $sid = $item['sid'];
       $options = array();
+      if (!empty($item['options'])) {
+        $options += unserialize($item['options']);
+      }
+      $context = $render_context;
+      if (isset($display['settings']['override']) && $display['settings']['override']
+        && !empty($options['context']) && $options['context'] !== 'use_the_default') {
+        $context = $options['context'];
+      }
+      $sid = $item['sid'];
       if ($uri) {
         $options['link'] = $uri['path'];
       }
-      $element[$delta] = array('#markup' => scald_render($sid, $render_context, drupal_json_encode($options)));
+      $element[$delta] = array('#markup' => scald_render($sid, $context, drupal_json_encode($options)));
     }
   }
 
@@ -278,7 +328,39 @@ function atom_reference_field_widget_form(&$form, &$form_state, $field, $instanc
   $element['#process'][] = 'atom_reference_field_widget_form_process';
   $element['#attached'] = array('library' => array(array('atom_reference', 'library')));
 
-  return array('sid' => $element);
+  $options = array();
+  if (!empty($items[$delta]['options'])) {
+    $options = unserialize($items[$delta]['options']);
+  }
+
+  $return = array('sid' => $element);
+
+  if (isset($instance['settings']['allow_override']) && $instance['settings']['allow_override']) {
+    $rendering_context = 'use_the_default';
+    if (!empty($options['context'])) {
+      $rendering_context = $options['context'];
+    }
+    $context_element = array(
+      '#type' => 'select',
+      '#title' => t('Representation context'),
+      '#attributes' => array('class' => array('context-select')),
+      '#options' => array(),
+      '#default_value' => $rendering_context,
+      '#description' => t('Scald rendering context used in field display.'),
+    );
+    $context_element['#weight'] = 20;
+
+    $contexts = scald_contexts();
+    $context_element['#options']['use_the_default'] = t('Use the default');
+    foreach ($contexts as $name => $context) {
+      if (empty($context['hidden']) && $name !== 'sdl_library_item') {
+        $context_element['#options'][$name] = $context['title'];
+      }
+    }
+    $return['context'] = $context_element;
+  }
+
+  return $return;
 }
 
 /**

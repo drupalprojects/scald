@@ -40,6 +40,7 @@ Drupal.behaviors.atom_reference = {
 
     $("div.atom_reference_drop_zone:not(.atom_reference_processed)", context).each(function() {
       var $this = $(this);
+      var $context = $this.closest('div.form-item').parent().find('.context-select').closest('div.form-item');
 
       // Build operations (remove reference, edit and view) structure.
       var $operation_wrapper = $('<div class="atom_reference_operations">');
@@ -61,10 +62,11 @@ Drupal.behaviors.atom_reference = {
             .end()
             .find('div.atom_reference_drop_zone')
             .empty()
-            .append(Drupal.t('Drop a resource here'))
+            .append(Drupal.t('Drop a resource from Scald media library here.'))
             .end()
             .find('div.atom_reference_operations')
             .hide();
+          atomReferenceSetContext($context, 0);
         })
         .appendTo($operation_buttons.find('li.remove'));
 
@@ -96,7 +98,11 @@ Drupal.behaviors.atom_reference = {
           }
 
           Drupal.attachBehaviors($operation_buttons);
+          atomReferenceSetContext($context, atom_id);
         });
+      }
+      else {
+        atomReferenceSetContext($context, 0);
       }
 
       // If the element doesn't have a value yet, hide the operations wrapper
@@ -128,6 +134,7 @@ Drupal.behaviors.atom_reference = {
                 .end()
                 .find('.atom_reference_operations')
                 .show();
+              atomReferenceSetContext($context, ressource_id);
             });
 
             // Process atom's operation links (edit and view) rendering
@@ -182,6 +189,35 @@ Drupal.behaviors.atom_reference = {
         .end()
         .append($operation_wrapper);
     });
+  }
+};
+
+function atomReferenceSetContext($context, sid) {
+  if ($context.length == 0) {
+    return false;
+  }
+  if ( typeof Drupal.dnd.Atoms[sid] !== "undefined" && Drupal.dnd.Atoms[sid]) {
+    $context.show();
+
+    var atom_type = Drupal.dnd.Atoms[sid].meta.type;
+
+    if (typeof Drupal.settings.dnd.contexts[atom_type] !== "undefined" && Drupal.settings.dnd.contexts[atom_type]) {
+      var scald_context = $context.find('select.context-select').val();
+
+      $context.find('select.context-select').find('option[value!="use_the_default"]').remove();
+
+      $.each( Drupal.settings.dnd.contexts[atom_type], function( key, value ) {
+        $context.find('select.context-select').append(
+          new Option(value, key)
+        );
+      });
+
+      // Triggering chosen:updated in case chosen is used on this list.
+      $context.find('select.context-select').val(scald_context).change().trigger('chosen:updated');
+    }
+  }
+  else {
+    $context.hide();
   }
 }
 
