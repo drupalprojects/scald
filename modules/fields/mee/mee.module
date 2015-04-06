@@ -86,7 +86,7 @@ function mee_field_info_alter(&$info) {
  *   - 'embed_div' when using the CKEditor 4 widget plugin.
  */
 function mee_store_format() {
-  return variable_get('mee_store_format', 'sas');
+  return variable_get('mee_store_format', 'embed_div');
 }
 
 /**
@@ -274,6 +274,13 @@ function mee_field_attach_view_alter(&$output, $context) {
     foreach ($fields as $name => $field) {
       if (!empty($field['settings']['dnd_enabled']) && isset($output[$name])) {
         foreach (element_children($output[$name]) as $key) {
+          if ($store_format == 'embed_div') {
+            $input_format = $output[$name]['#items'][$key]['format'];
+            $list = filter_list_format($input_format);
+            if (empty($list['mee_scald_widgets']) || $list['mee_scald_widgets']->status != 1) {
+              $output[$name][$key]['#markup'] = mee_filter_process($output[$name][$key]['#markup']);
+            }
+          }
           $output[$name][$key]['#markup'] = scald_sas_to_rendered($output[$name][$key]['#markup'], $field['settings']['context']);
         }
       }
@@ -592,7 +599,7 @@ function _mee_field_instance_enabled($instance, $key = NULL) {
 }
 
 /**
- * Extract entity id, santizing revision_id if necessary.
+ * Extract entity id, sanitizing revision_id if necessary.
  */
 function _mee_extract_id($entity_type, $entity) {
   list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
@@ -628,12 +635,12 @@ function _mee_process_item_value(&$item, $entity_type, $entity, $field, $delta) 
     $sids = array_unique($sids);
   }
   else {
-    // $sids contients the list of atom sid actually used in the item.
+    // $sids contains the list of atom sid actually used in the item.
     $sas = scald_rendered_to_sas($item['value']);
     $scald_included = scald_included($sas);
     $sids = array_unique($scald_included);
 
-    // Parse copyright informations
+    // Parse copyright informations.
     $copyrights = mee_extract_copyrights($item['value']);
   }
 
@@ -726,7 +733,7 @@ function mee_filter_process($text) {
   // Work on the string as a DOM structure.
   $dom = filter_dom_load($text);
 
-  // Collect the DOM nodes and the corresponding emebed data.
+  // Collect the DOM nodes and the corresponding embed data.
   if ($embed_info = _mee_extract_widget_embed_info($dom)) {
     // Collect the corresponding atom ids and load them upfront to benefit from
     // multiple-loading.
@@ -784,7 +791,7 @@ function mee_filter_process($text) {
 function _mee_extract_widget_embed_info($dom) {
   $embed_info = array();
 
-  // Collect the DOM nodes and the corresponding emebed data.
+  // Collect the DOM nodes and the corresponding embed data.
   $xpath = new DOMXPath($dom);
   $nodes = $xpath->query("//div[@class='dnd-atom-wrapper']");
   foreach ($nodes as $node) {

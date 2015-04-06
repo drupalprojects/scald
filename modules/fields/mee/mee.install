@@ -72,6 +72,14 @@ function mee_schema() {
 }
 
 /**
+ * Implements hook_install().
+ */
+function mee_install() {
+  // default mee storage format to 'embed_div' - see mee_update_7002
+  variable_set('mee_store_format', 'embed_div');
+}
+
+/**
  * Upgrade MEE module to 7.x.
  */
 function mee_update_7000() {
@@ -157,4 +165,13 @@ function mee_update_7001(&$sandbox) {
   }
 
   $sandbox['#finished'] = $finished;
+}
+
+/**
+ * Explicitly default mee storage format to 'sas' for existing sites.
+ */
+function mee_update_7002() {
+  if (variable_get('mee_store_format', 'undefined') == 'undefined') {
+    variable_set('mee_store_format', 'sas');
+  }
 }

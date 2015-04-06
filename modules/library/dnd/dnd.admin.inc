@@ -32,16 +32,19 @@ function dnd_admin_form() {
     '#default_value' => variable_get('dnd_modal_height', 300),
     '#description' => t('The height of the modal window opened from the library in pixels or percentage. Example: 100 for 100 pixels, 0.5 for 50%.'),
   );
-  $form['mee_store_format'] = array(
-    '#type' => 'select',
-    '#options' => array(
-      'sas' => t('Scald Atom Shorthand'),
-      'embed_div' => t('Div attributes'),
-    ),
-    '#title' => t('Wysiwyg store format'),
-    '#default_value' => variable_get('mee_store_format', 'sas'),
-    '#description' => t('The store method used in Wysiwyg editors to embed atoms. The default value is "Scald Atom Shorthand", however to use the CKEditor widget plugin, the "Div attributes" value should be used.')
-  );
+  $mee_store_format = (module_exists('mee')) ? mee_store_format() : '';
+  if (!empty($mee_store_format)) {
+    $form['mee_store_format'] = array(
+      '#type' => 'select',
+      '#options' => array(
+        'sas' => t('Scald Atom Shorthand'),
+        'embed_div' => t('Div attributes'),
+      ),
+      '#title' => t('Wysiwyg store format'),
+      '#default_value' => $mee_store_format,
+      '#description' => t('The store method used in Wysiwyg editors to embed atoms. The default value is "Scald Atom Shorthand", however to use the CKEditor widget plugin, the "Div attributes" value should be used.')
+    );
+  }
   return system_settings_form($form);
 }
 
