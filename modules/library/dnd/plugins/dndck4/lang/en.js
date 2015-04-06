@@ -4,10 +4,13 @@
 if (typeof CKEDITOR !== 'undefined' && typeof CKEDITOR.plugins !== 'undefined') {
   CKEDITOR.plugins.setLang('dndck4', 'en', {
     atom_properties: Drupal.t('Edit atom properties'),
-    atom_copy: Drupal.t('Copy atom'),
-    atom_cut: Drupal.t('Cut atom'),
-    atom_paste: Drupal.t('Paste atom'),
-    atom_delete: Drupal.t('Delete atom from textarea'),
+    atom_view: Drupal.t('View'),
+    atom_edit: Drupal.t('Edit'),
+    atom_refresh: Drupal.t('Refresh'),
+    atom_copy: Drupal.t('Copy'),
+    atom_cut: Drupal.t('Cut'),
+    atom_paste: Drupal.t('Paste'),
+    atom_delete: Drupal.t('Delete'),
     atom_none: Drupal.t('Please select an atom first'),
     properties_has_caption: Drupal.t('Add a caption'),
     properties_context: Drupal.t('Context'),

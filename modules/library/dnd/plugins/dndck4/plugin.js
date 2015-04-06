@@ -140,15 +140,60 @@ CKEDITOR.plugins.add('dndck4', {
       }
     });
 
+    editor.addCommand('atomView', {
+      exec: function (editor) {
+        var widget = editor.widgets.focused;
+        window.open(Drupal.settings.basePath + 'atom/' + widget.data.sid);
+      }
+    });
+
+    editor.addCommand('atomEdit', {
+      exec: function (editor) {
+        var widget = editor.widgets.focused;
+        var $wrapper = $("<div></div>", {
+          'class' : 'wysiwyg-atom-edit-wrapper'
+        });
+        var $link = $("<a></a>", {
+          'target' : '_blank',
+          'href' : Drupal.settings.basePath + 'atom/' + widget.data.sid + '/edit/nojs',
+          'class' : 'ctools-use-modal ctools-modal-custom-style'
+        }).appendTo($wrapper);
+        Drupal.behaviors.ZZCToolsModal.attach($wrapper);
+        $link.click();
+        $(document).one("CToolsDetachBehaviors", function() {
+          widget.refreshAtom();
+        });
+      }
+    });
+
+    editor.addCommand('atomRefresh', {
+      exec: function (editor) {
+        var widget = editor.widgets.focused;
+        widget.refreshAtom();
+      }
+    });
+
     // Setup right-click menu items.
-    // Add our group with a low weight so that it appears befor the
-    // "cut/copy/paste" items added by 'clipboard', that do not work here.
-    // (doesn't look like we can remove them...)
     editor.addMenuGroup('dnd', -100);
     editor.addMenuItems({
       atomproperties: {
         label: lang.atom_properties,
         command: 'atomProperties',
+        group: 'dnd'
+      },
+      atomview : {
+        label: lang.atom_view,
+        command: 'atomView',
+        group: 'dnd'
+      },
+      atomedit : {
+        label: lang.atom_edit,
+        command: 'atomEdit',
+        group: 'dnd'
+      },
+      atomrefresh : {
+        label: lang.atom_refresh,
+        command: 'atomRefresh',
         group: 'dnd'
       },
       atomdelete: {
@@ -159,16 +204,19 @@ CKEDITOR.plugins.add('dndck4', {
       atomcopy: {
         label: lang.atom_copy,
         command: 'atomCopy',
+        icon: 'copy',
         group: 'dnd'
       },
       atomcut: {
         label: lang.atom_cut,
         command: 'atomCut',
+        icon: 'cut',
         group: 'dnd'
       },
       atompaste: {
         label: lang.atom_paste,
         command: 'atomPaste',
+        icon: 'paste',
         group: 'dnd'
       }
     });
@@ -177,12 +225,21 @@ CKEDITOR.plugins.add('dndck4', {
       var widget = editor.widgets.getByElement(element);
       if (widget && widget.name == 'dndck4') {
         menu.atomproperties = CKEDITOR.TRISTATE_OFF;
+        menu.atomview = CKEDITOR.TRISTATE_OFF;
+        menu.atomedit = CKEDITOR.TRISTATE_OFF;
+        menu.atomrefresh = CKEDITOR.TRISTATE_OFF;
         menu.atomcopy = CKEDITOR.TRISTATE_OFF;
         menu.atomcut = CKEDITOR.TRISTATE_OFF;
         menu.atomdelete = CKEDITOR.TRISTATE_OFF;
+        editor.contextMenu.items = [];
       }
       else if (Drupal.dndck4.atomPaste) {
         menu.atompaste = CKEDITOR.TRISTATE_OFF;
+        for (var index in editor.contextMenu.items) {
+          if (editor.contextMenu.items[index].name == 'paste') {
+            editor.contextMenu.items.splice(index, 1);
+          }
+        }
       }
       return menu;
     });
