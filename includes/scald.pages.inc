@@ -28,6 +28,7 @@ function scald_atom_add() {
       'href'  => 'atom/add/' . $name,
       'localized_options' => array(),
       'description' => '',
+      'page_arguments' => serialize(array($name)),
     );
   }
   return theme('node_add_list', array('content' => $content));
