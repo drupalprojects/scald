@@ -64,7 +64,11 @@ CKEDITOR.plugins.add('dndck4', {
        * Turns the rendered widget back into the marker tag.
        */
       downcast: function(el) {
-        var html = Drupal.dndck4.downcastedHtml(this.data, this.editables.caption.getHtml());
+        var caption = '';
+        if (this.data.usesCaption) {
+          caption = this.editables.caption.getHtml();
+        }
+        var html = Drupal.dndck4.downcastedHtml(this.data, caption);
         return CKEDITOR.htmlParser.fragment.fromHtml(html);
       },
 
