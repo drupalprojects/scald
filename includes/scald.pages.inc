@@ -299,7 +299,7 @@ function scald_atom_add_form_options($form, &$form_state) {
       '#type' => 'value',
       '#value' => $atom->language,
     );
-    field_attach_form('scald_atom', $atom, $form['atom' . $delta], $form_state);
+    field_attach_form('scald_atom', $atom, $form['atom' . $delta], $form_state, entity_language('scald_atom', $atom));
     $instances = field_info_instances('scald_atom', $atom->type);
     foreach ($instances as $instance) {
       $field_name = $instance['field_name'];
