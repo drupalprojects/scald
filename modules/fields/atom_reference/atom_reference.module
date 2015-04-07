@@ -146,7 +146,7 @@ function atom_reference_field_presave($entity_type, $entity, $field, $instance, 
     }
 
     foreach($item as $name => $option) {
-      if ($name == 'sid') {
+      if ($name == 'sid' || $name == 'options') {
         continue;
       }
       if (!empty($item[$name])) {
