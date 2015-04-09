@@ -66,6 +66,15 @@ function dnd_library() {
     $config[$name] = scald_context_config_load($name);
   }
   drupal_alter('scald_wysiwyg_context_list', $contexts);
+
+  $qtip_settings = '';
+  if (function_exists('qtip_fetch_instances_field')) {
+    $instance = variable_get('dnd_qtip_instance', '');
+    if (!empty($instance)) {
+      $qtip_settings = qtip_clean_settings(qtip_load($instance));
+    }
+  }
+
   $libraries['library'] = array(
     'title' => 'DnD Library',
     'website' => 'http://drupal.org/project/scald',
@@ -91,6 +100,7 @@ function dnd_library() {
             'contexts' => $contexts,
             'contextDefault' => variable_get('dnd_context_default', 'sdl_editor_representation'),
             'contexts_config' => $config,
+            'qTipSettings' => $qtip_settings,
           ),
         ),
       ),
@@ -105,7 +115,7 @@ function dnd_library() {
   );
 
   // Add the qTip library as a dependency if it exists
-  if (module_exists('qtip')) {
+  if (function_exists('qtip_library')) {
     $libraries['library']['dependencies'][] = array('qtip', 'qtip');
   }
 

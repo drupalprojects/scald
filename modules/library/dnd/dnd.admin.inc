@@ -32,6 +32,9 @@ function dnd_admin_form() {
     '#default_value' => variable_get('dnd_modal_height', 300),
     '#description' => t('The height of the modal window opened from the library in pixels or percentage. Example: 100 for 100 pixels, 0.5 for 50%.'),
   );
+  if (function_exists('qtip_fetch_instances_field')) {
+    $form['dnd_qtip_instance'] = qtip_fetch_instances_field(variable_get('dnd_qtip_instance', ''));
+  }
   $mee_store_format = (module_exists('mee')) ? mee_store_format() : '';
   if (!empty($mee_store_format)) {
     $form['mee_store_format'] = array(
