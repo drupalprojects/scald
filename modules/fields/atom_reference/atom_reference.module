@@ -64,22 +64,6 @@ function atom_reference_field_instance_settings_form($field, $instance) {
     '#default_value' => $instance['settings']['referencable_types'],
   );
 
-  $rendering_context = isset($instance['settings']['rendering_context']) ? $instance['settings']['rendering_context'] : variable_get('dnd_context_default', 'sdl_editor_representation');
-  $form['rendering_context'] = array(
-    '#type' => 'select',
-    '#title' => t('Rendering context'),
-    '#options' => array(),
-    '#default_value' => $rendering_context,
-    '#description' => t('Scald rendering context to be displayed in the edit form.'),
-  );
-
-  $contexts = scald_contexts();
-  foreach ($contexts as $name => $context) {
-    if (empty($context['hidden']) && $name !== 'sdl_library_item') {
-      $form['rendering_context']['#options'][$name] = $context['title'];
-    }
-  }
-
   $allow_override = isset($instance['settings']['allow_override']) ? $instance['settings']['allow_override'] : FALSE;
   $form['allow_override'] = array(
     '#type' => 'checkbox',
@@ -282,18 +266,22 @@ function atom_reference_field_widget_info() {
  * Implements hook_field_widget_settings_form.
  */
 function atom_reference_field_widget_settings_form($field, $instance) {
-  $context_options = array();
-  foreach (scald_contexts() as $name => $context) {
-    $context_options[$name] = $context['title'];
-  }
-
+  $preview_context = isset($instance['widget']['settings']['context'])
+    ? $instance['widget']['settings']['context'] : variable_get('dnd_context_default', 'sdl_editor_representation');
   $form['context'] = array(
     '#type' => 'select',
-    '#title' => t('Scald context'),
-    '#description' => t('Context used in the field widget. It is not the context used in field display, which is configured separately.'),
-    '#default_value' => $instance['widget']['settings']['context'],
-    '#options' => $context_options,
+    '#title' => t('Preview context'),
+    '#options' => array(),
+    '#default_value' => $preview_context,
+    '#description' => t('Scald preview context to be displayed in the edit form.'),
   );
+
+  $contexts = scald_contexts();
+  foreach ($contexts as $name => $context) {
+    if (empty($context['hidden']) && !empty($context['parseable'])) {
+      $form['context']['#options'][$name] = $context['title'];
+    }
+  }
 
   return $form;
 }
@@ -386,21 +374,18 @@ function atom_reference_field_referenceable_types($instance) {
  */
 function atom_reference_field_widget_form_process(&$element) {
   // Get the default value, rendering context and format the placeholder accordingly.
-  $rendering_context = variable_get('dnd_context_default', 'sdl_editor_representation');
-  if (isset($element['#entity_type'])) {
-    $info = field_info_instances($element['#entity_type'], $element['#bundle']);
-    if (isset($info[$element['#field_name']]['settings']['rendering_context'])) {
-      $rendering_context = $info[$element['#field_name']]['settings']['rendering_context'];
-    }
+  $preview_context = variable_get('dnd_context_default', 'sdl_editor_representation');
+  if (isset($element['#preview_context'])) {
+    $preview_context = $element['#preview_context'];
   }
 
   $default = $element['#value'];
   if ($default) {
-    $prefix = '<div class="atom_reference_drop_zone" data-rendering-context="' . $rendering_context . '">' . scald_render($default, $rendering_context) . '</div>';
+    $prefix = '<div class="atom_reference_drop_zone" data-rendering-context="' . $preview_context . '">' . scald_render($default, $preview_context) . '</div>';
   }
   else {
     $placeholder = t('Drop a resource from Scald media library here.');
-    $prefix = '<div class="atom_reference_drop_zone" data-rendering-context="' . $rendering_context . '"><em>' . $placeholder . '</em></div>';
+    $prefix = '<div class="atom_reference_drop_zone" data-rendering-context="' . $preview_context . '"><em>' . $placeholder . '</em></div>';
   }
   $element['#field_prefix'] = $prefix;
 
