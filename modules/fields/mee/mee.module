@@ -303,9 +303,7 @@ function mee_field_widget_form_alter(&$element, &$form_state, $context) {
 
   // Activate DnD Library for this element if enabled.
   if (!empty($enables['dnd'])) {
-    $fieldname = $element['#field_name'];
-    $language = $element['#language'];
-    $settings = $form_state['field'][$fieldname][$language]['instance']['settings'];
+    $settings = $context['instance']['settings'];
     $context_default = isset($settings['context_default']) ?
        $settings['context_default'] :
        variable_get('dnd_context_default', 'sdl_editor_representation');
