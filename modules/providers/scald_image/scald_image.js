@@ -13,9 +13,6 @@
                   id: 'txtLink',
                   type: 'text',
                   label: 'Link',
-                  onLoad: function() {
-                    Drupal.dndck4.registeredOptions.push({id: this.id, type: 'image', mode: 'atom', name: 'scald_image'});
-                  },
                   // "Link" edits the 'link' property in the options JSON string.
                   setup: function(widget) {
                     var options = JSON.parse(widget.data.options);
@@ -34,6 +31,7 @@
                     widget.setData('options', JSON.stringify(options));
                   }
                 });
+                Drupal.dndck4.registerOptions('txtLink', 'image', 'atom', 'scald_image');
               }
             }
           });

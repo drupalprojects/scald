@@ -3,8 +3,6 @@
 CKEDITOR.dialog.add('atomProperties', function(editor) {
   var lang = editor.lang.dndck4;
 
-  Drupal.dndck4.registeredOptions = [];
-
   function showHideOptions(ctx) {
     var dialog = ctx.getDialog(),
       context = ctx.getValue(),
@@ -12,34 +10,12 @@ CKEDITOR.dialog.add('atomProperties', function(editor) {
       widget = editor.widgets.focused,
       atom = Drupal.dnd.Atoms[widget.data.sid],
       type = atom.meta.type,
-      provider = atom.meta.provider,
-      states=[];
+      provider = atom.meta.provider;
 
-    var registeredOptions = Drupal.dndck4.registeredOptions;
-
-    $.each(registeredOptions, function(){
-      states[this.id] = false;
-    });
-    $.each(registeredOptions, function(){
-      // Check provider
-      if (this.mode == 'atom' && this.name == provider) {
-        states[this.id] = true;
-        //console.log(this.id+' handled by '+provider+' '+type+' provider');
-      }
-      // check player
-      else if (this.mode == 'player' && this.type == type && this.name == config.player[type]['*']) {
-        states[this.id] = true;
-        //console.log(this.id+' handled by '+config.player[type]['*']+' '+this.type+' player');
-      }
-      // check context
-      else if (this.mode == 'context' && this.type == type && this.name == context) {
-        states[this.id] = true;
-        //console.log(this.id+' handled by context '+context);
-      }
-      //else console.log(this.id+' not handled');
-    });
-    $.each(registeredOptions, function(){
-      if (states[this.id]) {
+    $.each(Drupal.dndck4.registeredOptions, function(){
+      if ((this.mode == 'atom' && this.name == provider) ||
+          (this.mode == 'player' && this.type == type && this.name == config.player[type]['*']) ||
+          (this.mode == 'context' && this.type == type && this.name == context)) {
         dialog.getContentElement('info', this.id).getElement().show();
       }
       else {

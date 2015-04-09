@@ -346,6 +346,21 @@ Drupal.dndck4 = {
     });
   },
 
+  registeredOptions: [],
+
+  registerOptions: function(id, type, mode, name) {
+    var found = false;
+    $.each(Drupal.dndck4.registeredOptions, function() {
+      if (found = (this.id == id && this.type == type && this.mode == mode && this.name == name)) {
+        return false;
+      }
+    });
+    if (!found) {
+      var item = {id: id, type: type, mode: mode, name: name};
+      Drupal.dndck4.registeredOptions.push(item);
+    }
+  },
+
   dataFromAttributes: function (attributes) {
     return {
       sid : attributes['data-scald-sid'],
