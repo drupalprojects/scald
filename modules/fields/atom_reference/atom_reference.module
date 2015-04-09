@@ -386,10 +386,12 @@ function atom_reference_field_referenceable_types($instance) {
  */
 function atom_reference_field_widget_form_process(&$element) {
   // Get the default value, rendering context and format the placeholder accordingly.
-  $info = field_info_instances($element['#entity_type'], $element['#bundle']);
   $rendering_context = variable_get('dnd_context_default', 'sdl_editor_representation');
-  if (isset($info[$element['#field_name']]['settings']['rendering_context'])) {
-    $rendering_context = $info[$element['#field_name']]['settings']['rendering_context'];
+  if (isset($element['#entity_type'])) {
+    $info = field_info_instances($element['#entity_type'], $element['#bundle']);
+    if (isset($info[$element['#field_name']]['settings']['rendering_context'])) {
+      $rendering_context = $info[$element['#field_name']]['settings']['rendering_context'];
+    }
   }
 
   $default = $element['#value'];
