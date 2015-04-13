@@ -93,6 +93,7 @@ function scald_dnd_library_add_item(&$library, $sid) {
     'sas' =>  '[scald=' . $atom->sid . ':' . $context .']',
     'editor' => scald_render($atom, $context),
     'preview' => scald_render($atom, 'sdl_preview'),
+    'actions' => array_keys(scald_atom_actions_available($atom)),
   );
 
   // theme_sdl_editor_legend() requires a rendered atom. We call it only here to

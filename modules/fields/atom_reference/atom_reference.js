@@ -22,6 +22,7 @@ Drupal.behaviors.atom_reference = {
 
     // Update drop zone (especially when returning from the edit modal frame).
     if (typeof(this.update_atom_reference_drop_zone) !== 'undefined') {
+      this.update_atom_reference_drop_zone = undefined;
       $('div.atom_reference_drop_zone.atom_reference_processed').each(function() {
         var $this = $(this);
         var rendering_context = $this.attr('data-rendering-context');
@@ -30,9 +31,11 @@ Drupal.behaviors.atom_reference = {
           var atom_id = match_atom_id[1];
           delete Drupal.dnd.Atoms[atom_id].contexts[rendering_context]; // to force reload
           Drupal.dnd.fetchAtom(rendering_context, atom_id, function() {
+            Drupal.detachBehaviors($this);
             $this
               .empty()
               .append(Drupal.dnd.Atoms[atom_id].contexts[rendering_context]);
+            Drupal.attachBehaviors($this);
           });
         }
       });
@@ -54,17 +57,17 @@ Drupal.behaviors.atom_reference = {
         .html(Drupal.t('Remove'))
         .click(function(e) {
           e.preventDefault();
-          $operation_buttons
-            .closest('div.form-item')
+          var $formItem = $operation_buttons.closest('div.form-item');
+          $formItem
             .find('input:text')
             .val('')
-            .change()
-            .end()
-            .find('div.atom_reference_drop_zone')
+            .change();
+          var $dropZone = $formItem.find('div.atom_reference_drop_zone');
+          Drupal.detachBehaviors($dropZone.children());
+          $dropZone
             .empty()
-            .append(Drupal.t('Drop a resource from Scald media library here.'))
-            .end()
-            .find('div.atom_reference_operations')
+            .append(Drupal.t('Drop a resource from Scald media library here.'));
+          $formItem.find('div.atom_reference_operations')
             .hide();
           atomReferenceSetContext($context, 0);
         })
@@ -115,44 +118,45 @@ Drupal.behaviors.atom_reference = {
         .bind('dragover', function(e) {e.preventDefault();})
         .bind('dragenter', function(e) {e.preventDefault();})
         .bind('drop', function(e) {
-          var ressource_id = e.originalEvent.dataTransfer.getData('Text').replace(/^\[scald=(\d+).*$/, '$1');
-          var ret = Drupal.atom_reference.droppable(ressource_id, this);
+          if (!Drupal.dnd.currentAtom) {
+            // Not an atom drop.
+            return;
+          }
+          var resource_id = Drupal.dnd.sas2array(Drupal.dnd.currentAtom).sid;
+          var ret = Drupal.atom_reference.droppable(resource_id, this);
           var $this = $(this);
 
           if (ret.found && ret.keepgoing) {
             var rendering_context = $this.attr('data-rendering-context');
 
             // Display and set id of dropped atom
-            Drupal.dnd.fetchAtom(rendering_context, ressource_id, function() {
+            Drupal.dnd.fetchAtom(rendering_context, resource_id, function() {
               $this
                 .empty()
-                .append(Drupal.dnd.Atoms[ressource_id].contexts[rendering_context])
+                .append(Drupal.dnd.Atoms[resource_id].contexts[rendering_context])
                 .closest('div.form-item')
                 .find('input:text')
-                .val(ressource_id)
+                .val(resource_id)
                 .change()
                 .end()
                 .find('.atom_reference_operations')
                 .show();
-              atomReferenceSetContext($context, ressource_id);
-            });
 
-            // Process atom's operation links (edit and view) rendering
-            var $operation_buttons = $this.closest('.form-item')
-              .find('.atom_reference_operations').show()
-              .find('.buttons');
-            $operation_buttons
-              .removeClass('ctools-dropbutton')
-              .removeClass('ctools-dropbutton-processed')
-              .removeClass('ctools-button-processed')
-              .find('li.edit, li.view').empty();
+              // Process atom's operation links (edit and view) rendering
+              var $operation_buttons = $this.closest('.form-item')
+                .find('.atom_reference_operations').show()
+                .find('.buttons');
+              $operation_buttons
+                .removeClass('ctools-dropbutton')
+                .removeClass('ctools-dropbutton-processed')
+                .removeClass('ctools-button-processed')
+                .find('li.edit, li.view').empty();
 
-            Drupal.dnd.fetchAtom('', ressource_id, function() {
               // Process Edit link
-              if ($.grep(Drupal.dnd.Atoms[ressource_id].actions, function(e){ return e == 'edit'; }).length > 0) {
+              if ($.grep(Drupal.dnd.Atoms[resource_id].actions, function(e){ return e == 'edit'; }).length > 0) {
                 // Permission granted for edit
 
-                var atom_edit_link = Drupal.settings.basePath + 'atom/' + ressource_id + '/edit/nojs';
+                var atom_edit_link = Drupal.settings.basePath + 'atom/' + resource_id + '/edit/nojs';
                 $edit_link_model.clone()
                   .attr('href', atom_edit_link)
                   .appendTo($operation_buttons.find('li.edit'));
@@ -161,17 +165,17 @@ Drupal.behaviors.atom_reference = {
               }
 
               // Process View link
-              if ($.grep(Drupal.dnd.Atoms[ressource_id].actions, function(e){ return e == 'view'; }).length > 0) {
+              if ($.grep(Drupal.dnd.Atoms[resource_id].actions, function(e){ return e == 'view'; }).length > 0) {
                 // Permission granted for view
 
-                var atom_view_link = Drupal.settings.basePath + 'atom/' + ressource_id;
+                var atom_view_link = Drupal.settings.basePath + 'atom/' + resource_id;
                 $view_link_model.clone()
                   .attr('href', atom_view_link)
                   .appendTo($operation_buttons.find('li.view'));
                 $operation_buttons.addClass('ctools-dropbutton')
               }
-
-              Drupal.attachBehaviors($operation_buttons);
+              atomReferenceSetContext($context, resource_id);
+              Drupal.attachBehaviors($this);
             });
           }
           else {
@@ -223,10 +227,10 @@ function atomReferenceSetContext($context, sid) {
 
 if (!Drupal.atom_reference) {
   Drupal.atom_reference = {};
-  Drupal.atom_reference.droppable = function(ressource_id, field) {
+  Drupal.atom_reference.droppable = function(resource_id, field) {
     var retVal = {'keepgoing': true, 'found': true};
-    if (Drupal.dnd.Atoms[ressource_id]) {
-      var type = Drupal.dnd.Atoms[ressource_id].meta.type;
+    if (Drupal.dnd.Atoms[resource_id]) {
+      var type = Drupal.dnd.Atoms[resource_id].meta.type;
       var accept = $(field).closest('div.form-item').find('input:text').data('types').split(',');
       if (jQuery.inArray(type, accept) == -1) {
         retVal.keepgoing = false;
