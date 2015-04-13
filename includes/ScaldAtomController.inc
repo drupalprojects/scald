@@ -37,6 +37,37 @@ class ScaldAtomController extends DrupalDefaultEntityController {
   }
 
   /**
+   * Returns the default description for a file or image field for an atom type.
+   */
+  public static function getFieldDescription($type, $field_name = 'scald_thumbnail') {
+    $description = '';
+    $field = field_info_field($field_name);
+    $instance = field_info_instance('scald_atom', $field_name, $type);
+    if ($field && $instance) {
+      $description = $instance['description'];
+    }
+    return $description;
+  }
+
+  /**
+   * Returns the default upload validators for a file or image field for an atom type.
+   */
+  public static function getFieldUploadValidators($type, $field_name = 'scald_thumbnail') {
+    $upload_validators = array();
+    $field = field_info_field($field_name);
+    $instance = field_info_instance('scald_atom', $field_name, $type);
+    if ($field && $instance) {
+      // Add upload file validation.
+      $upload_validators = file_field_widget_upload_validators($field, $instance);
+      if ($type === 'image' && (!empty($instance['settings']['max_resolution']) || !empty($instance['settings']['min_resolution']))) {
+        // Add upload image validation.
+        $upload_validators['file_validate_image_resolution'] = array($instance['settings']['max_resolution'], $instance['settings']['min_resolution']);
+      }
+    }
+    return $upload_validators;
+  }
+
+  /**
    * Add a Scald unified type.
    *
    * This function create a new type if it does not already exist. It can be

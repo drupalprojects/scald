@@ -33,13 +33,18 @@ function scald_image_scald_wysiwyg_context_list_alter(&$contexts) {
  */
 function scald_image_scald_add_form(&$form, &$form_state) {
   $defaults = scald_atom_defaults('image');
+  $defaults->description = ScaldAtomController::getFieldDescription('image');
+  $defaults->upload_validators = ScaldAtomController::getFieldUploadValidators('image');
   $type = scald_type_load('image');
   $form['file'] = array(
     '#type' => $defaults->upload_type,
     '#title' => check_plain(scald_type_property_translate($type)),
     '#upload_location' => ScaldAtomController::getThumbnailPath('image'),
-    '#upload_validators' => array('file_validate_extensions' => array('jpg jpeg png gif')),
+    '#upload_validators' => $defaults->upload_validators,
   );
+  if ($defaults->upload_type === 'managed_file') {
+    $form['file']['#description'] = theme('file_upload_help', array('description' => $defaults->description, 'upload_validators' => $defaults->upload_validators));
+  }
   if ($defaults->upload_type == 'plupload') {
     $form['scald_authors'] = array(
       '#type' => 'textfield',
