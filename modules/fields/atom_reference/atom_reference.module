@@ -389,6 +389,12 @@ function atom_reference_field_widget_form_process(&$element) {
   }
   $element['#field_prefix'] = $prefix;
 
+  if (isset($element['#entity_type']) && module_exists('i18n_field')) {
+    $instance = field_info_instance($element['#entity_type'], $element['#field_name'], $element['#bundle']);
+    $translated_label = i18n_field_translate_property($instance, 'label');
+    $element['#title'] = $translated_label;
+  }
+
   return $element;
 }
 
