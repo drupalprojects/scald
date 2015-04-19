@@ -16,14 +16,16 @@
                   // "Link" edits the 'link' property in the options JSON string.
                   setup: function(widget) {
                     var options = JSON.parse(widget.data.options);
-                    this.setValue(options.link);
+                    if (options.link) {
+                      this.setValue(decodeURIComponent(options.link));
+                    }
                   },
                   commit: function(widget) {
                     // Copy the current options into a new object,
                     var options = JSON.parse(widget.data.options);
                     var value = this.getValue();
                     if (value != '') {
-                      options.link = value;
+                      options.link = encodeURIComponent(value);
                     }
                     else {
                       delete options.link;

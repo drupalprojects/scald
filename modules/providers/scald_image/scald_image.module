@@ -295,7 +295,7 @@ function scald_image_scald_prerender($atom, $context, $options, $mode) {
     }
 
     if (!empty($options['link'])) {
-      $atom->rendered->player = l($atom->rendered->player, $options['link'], array('html' => TRUE));
+      $atom->rendered->player = l($atom->rendered->player, urldecode($options['link']), array('html' => TRUE));
     }
   }
 }
