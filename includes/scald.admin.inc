@@ -360,6 +360,8 @@ function scald_admin_context_form_submit($form, &$form_state) {
 
   scald_context_save($context);
   cache_clear_all('*', 'cache_scald', TRUE);
+  cache_clear_all('field_info_types', 'cache_field', TRUE);
+  field_info_cache_clear();
 
   $form_state['redirect'] = 'admin/structure/scald';
 }
