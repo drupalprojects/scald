@@ -68,6 +68,13 @@ function mee_library() {
 }
 
 /**
+ * Implements hook_views_api().
+ */
+function mee_views_api($module = NULL, $api = NULL) {
+  return array("api" => "3.0");
+}
+
+/**
  * Implements hook_field_info_alter().
  */
 function mee_field_info_alter(&$info) {
