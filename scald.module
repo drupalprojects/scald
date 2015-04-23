@@ -2393,10 +2393,10 @@ function theme_scald_render_error($vars) {
  */
 function template_preprocess_scald_atom(&$variables) {
   $variables['view_mode'] = $variables['elements']['#view_mode'];
-  $variables['atom'] = $variables['elements']['#atom'];
+  $variables['atom'] = $variables['elements']['#entity'];
   // In DS Token support, it requires entity to be accessed by entity name.
   // Maybe we should get rid of one of these?
-  $variables['scald_atom'] = $variables['elements']['#atom'];
+  $variables['scald_atom'] = $variables['elements']['#entity'];
   $atom = $variables['atom'];
 
   // Flatten the scald_atom object's member fields.
@@ -2541,4 +2541,36 @@ function scald_atom_user_build_actions_links($atom, $query = NULL) {
  */
 function scald_atom_thumbnail_path($type) {
   return ScaldAtomController::getThumbnailPath($type);
+}
+
+/**
+ * entity_view_mode_prepare() (introduced in Drupal version 7.33) fallback.
+ */
+if(!function_exists('entity_view_mode_prepare')) {
+  function entity_view_mode_prepare($entity_type, $entities, $view_mode, $langcode = NULL) {
+    if (!isset($langcode)) {
+      $langcode = $GLOBALS['language_content']->language;
+    }
+
+    // To ensure hooks are never run after field_attach_prepare_view() only
+    // process items without the entity_view_prepared flag.
+    $entities_by_view_mode = array();
+    foreach ($entities as $id => $entity) {
+      $entity_view_mode = $view_mode;
+      if (empty($entity->entity_view_prepared)) {
+
+        // Allow modules to change the view mode.
+        $context = array(
+          'entity_type' => $entity_type,
+          'entity' => $entity,
+          'langcode' => $langcode,
+        );
+        drupal_alter('entity_view_mode', $entity_view_mode, $context);
+      }
+
+      $entities_by_view_mode[$entity_view_mode][$id] = $entity;
+    }
+
+    return $entities_by_view_mode;
+  }
 }
