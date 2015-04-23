@@ -1425,7 +1425,7 @@ function _scald_context_fallback($type, $context) {
 function _scald_system_contexts() {
   return array(
     'debug' => array(
-      'title'           => t('Debuging Display'),
+      'title'           => t('Debugging Display'),
       'description'     => t('A useful debugging display of a Scald Atom.'),
       'render_language' => 'XHTML',
       'parseable'       => FALSE,
