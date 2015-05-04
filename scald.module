@@ -426,8 +426,29 @@ function scald_atom_defaults($type) {
  *   FALSE upon failure
  */
 function scald_atom_load($sid) {
+  if (!is_numeric($sid)) {
+    return FALSE;
+  }
   $atom = scald_atom_load_multiple(array($sid));
   return $atom ? $atom[$sid] : FALSE;
+}
+
+/**
+ * Load a Scald Atom and provide a fallback if that fails.
+ */
+function scald_atom_fallback_load($sid) {
+  if (!is_numeric($sid)) {
+    return FALSE;
+  }
+  $atom = scald_atom_load_multiple(array($sid));
+  if (empty($atom)) {
+    return new ScaldAtom('scald_atom_fallback', 'scald', array(
+      'sid' => $sid,
+    ));
+  }
+  else {
+    return $atom[$sid];
+  }
 }
 
 /**

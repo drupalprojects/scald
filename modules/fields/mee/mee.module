@@ -13,7 +13,7 @@ define('MEE_RENDERED_COPYRIGHT_PATTERN', '/<!--\s*copyright=(\d+)\s*-->(.*)<!--\
 function mee_menu() {
   // AJAX callback used to render atoms in the widget-based plugin for
   // CKEditor4.
-  $items['atom/ajax-widget-expand/%scald_atom'] = array(
+  $items['atom/ajax-widget-expand/%scald_atom_fallback'] = array(
     'page callback' => 'mee_ajax_widget_expand',
     'page arguments' => array(2),
     'access callback' => TRUE,
@@ -593,6 +593,9 @@ function mee_ajax_widget_expand($atom) {
   );
 
   $context = (isset($_GET['context']) && in_array($_GET['context'], array_keys(scald_contexts()))) ? $_GET['context'] : NULL;
+  if ($atom->type == 'scald_atom_fallback') {
+    $context = 'invalid-id';
+  }
   $options = isset($_GET['options']) ? urldecode($_GET['options']) : '';
   $align = (isset($_GET['align']) && in_array($_GET['align'], array('left', 'right', 'center'))) ? $_GET['align'] : 'none';
 
@@ -604,7 +607,7 @@ function mee_ajax_widget_expand($atom) {
         'context' => $context,
         'options' => $options,
         'align' => $align,
-        'content' => scald_render($atom, $context, $options),
+        'content' => scald_render($atom->sid, $context, $options),
         'wysiwyg' => TRUE,
       )),
     );
