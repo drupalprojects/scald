@@ -421,7 +421,7 @@ function scald_atom_edit_page($js, $atom) {
 }
 
 /**
- * Handles the delete of an existing atom.
+ * Handles the deletion of an existing atom.
  */
 function scald_atom_delete_confirm($form, &$form_state, $atom) {
   // Always provide entity id in the same form key as in the entity edit form.
@@ -436,6 +436,25 @@ function scald_atom_delete_confirm($form, &$form_state, $atom) {
 }
 
 /**
+ * Handles the deletion of an existing atom in ctools modal.
+ */
+function scald_atom_delete_confirm_ajax($js, $atom) {
+  $form = drupal_get_form('scald_atom_delete_confirm', $atom);
+  if ($js) {
+    ctools_include('modal');
+    ctools_include('ajax');
+    $form_state = array();
+    $form['actions']['cancel']['#attributes']['class'][] = 'ctools-close-modal';
+    $commands = ctools_modal_form_render($form_state, $form);
+    print ajax_render($commands);
+    exit;
+  }
+  else {
+    return $form;
+  }
+}
+
+/**
  * Execute atom deletion.
  */
 function scald_atom_delete_confirm_submit($form, &$form_state) {
@@ -447,8 +466,18 @@ function scald_atom_delete_confirm_submit($form, &$form_state) {
     $type = scald_type_property_translate($types[$atom->type]);
     drupal_set_message(t('@type %title has been deleted.', array('@type' => $type, '%title' => $atom->title)));
   }
-
-  $form_state['redirect'] = 'admin/content/atoms';
+  if (!empty($form_state['input']['js'])) {
+    ctools_include('modal');
+    ctools_include('ajax');
+    $commands = array();
+    $commands[] = array('command' => 'dnd_refresh');
+    $commands[] = ctools_modal_command_dismiss();
+    print ajax_render($commands);
+    exit();
+  }
+  else {
+    $form_state['redirect'] = 'admin/content/atoms';
+  }
 }
 /**
  * Fetch atoms and return in JSON format.

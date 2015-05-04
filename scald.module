@@ -2043,6 +2043,16 @@ function scald_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
+  $items['atom/%scald_atom/delete/%ctools_js'] = array(
+    'title' => 'Delete Atom',
+    'page callback' => 'scald_atom_delete_confirm_ajax',
+    'page arguments' => array(3, 1),
+    'access callback' => 'scald_action_permitted',
+    'access arguments' => array(1, 'delete'),
+    'theme callback' => 'ajax_base_page_theme',
+    'file' => 'includes/scald.pages.inc',
+  );
+
   // JSON callback allowing to fetch atoms, which provides is usefull
   // for library implementations and RTE integrations.
   $items['atom/fetch/%'] = array(
@@ -2517,7 +2527,7 @@ function scald_atom_user_build_actions_links($atom, $query = NULL) {
       );
 
       // The 'edit' action supports CTools Modal.
-      if ($action == 'edit') {
+      if ($action == 'edit' || $action == 'delete') {
         $links[$action]['attributes'] = array(
           'class' => array('ctools-use-modal', 'ctools-modal-custom-style'),
         );
