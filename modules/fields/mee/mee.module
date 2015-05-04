@@ -296,6 +296,35 @@ function mee_field_attach_view_alter(&$output, $context) {
 }
 
 /**
+ * Implements hook_panels_pane_content_alter().
+ *
+ * Converts the SAS representation to the rendered representation
+ * in custom content panes.
+ */
+function mee_panels_pane_content_alter($content, $pane, $args, $context) {
+  if ($pane->type === 'custom' && $pane->subtype === 'custom'
+    && $content->type === 'custom' && is_string($content->content)) {
+    $store_format = mee_store_format();
+    if ($store_format == 'embed_div') {
+      $input_format = $pane->configuration['format'];
+      $list = filter_list_format($input_format);
+      if (empty($list['mee_scald_widgets']) || $list['mee_scald_widgets']->status != 1) {
+        $content->content = mee_filter_process($content->content);
+      }
+    }
+    $content->content = scald_sas_to_rendered($content->content);
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ * Add dnd for ALL panels 'custom content' ctools forms.
+ */
+function mee_form_ctools_custom_content_type_edit_form_alter(&$form, &$form_state) {
+  $form['body']['#attached']['library'] = array(array('dnd', 'library'));
+}
+
+/**
  * Implements hook_field_widget_form_alter().
  */
 function mee_field_widget_form_alter(&$element, &$form_state, $context) {
