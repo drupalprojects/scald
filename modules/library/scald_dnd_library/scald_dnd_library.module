@@ -52,7 +52,7 @@ function scald_dnd_library_dnd_libraries_info() {
   else {
     $views = views_get_all_views();
     foreach ($views as $view) {
-      // disabled views get nothing.
+      // Disabled views get nothing.
       if (!empty($view->disabled)) {
         continue;
       }
@@ -102,7 +102,7 @@ function scald_dnd_library_add_item(&$library, $sid) {
     $library['atoms'][$sid]['meta']['legend'] = theme('sdl_editor_legend', array('atom' => $atom));
   }
 
-  // Allow other modules to alter this library item
+  // Allow other modules to alter this library item.
   drupal_alter('scald_dnd_library_item', $atom, $library['atoms'][$sid]);
 }
 
@@ -236,7 +236,7 @@ function theme_sdl_library_item($variables) {
   );
   $rendered_links = drupal_render($links_element);
 
-  // Authors
+  // Authors.
   if (!empty($informations->authors)) {
     foreach ($informations->authors as $author) {
       $author_names[] = check_plain($author->name);

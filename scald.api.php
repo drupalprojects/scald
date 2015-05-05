@@ -237,7 +237,7 @@ function hook_scald_register_atom($atom, $mode) {
 /**
  * Respond to atom update.
  *
- /* Similar to hook_scald_register_atom(), but this hook is invoked for existing
+ * Similar to hook_scald_register_atom(), but this hook is invoked for existing
  * atoms.
  *
  * @param $atom

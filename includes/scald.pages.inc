@@ -237,7 +237,7 @@ function scald_atom_add_form_add_submit(&$form, &$form_state) {
   $count = 1;
   $atom_count_implemented = FALSE;
   // Allow the source provider to define how many atoms to create
-  // and handle differences between upload modules
+  // and handle differences between upload modules.
   $function = $scald['source'] . '_scald_add_atom_count';
   if (function_exists($function)) {
     $count = $function($form, $form_state);
@@ -258,7 +258,7 @@ function scald_atom_add_form_add_submit(&$form, &$form_state) {
       $function($atoms[0], $form, $form_state);
     }
   }
-  // And put it in the form_state
+  // And put it in the form_state.
   $form_state['scald']['atoms'] = $atoms;
 }
 

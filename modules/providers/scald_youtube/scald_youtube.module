@@ -43,23 +43,23 @@ function scald_youtube_scald_add_form(&$form, &$form_state) {
  */
 function scald_youtube_scald_add_form_fill(&$atom, $form, $form_state) {
 
-  // Get the identifier
+  // Get the identifier.
   $identifier = scald_youtube_parse_id($form_state['values']['identifier'], TRUE);
 
-  // Get video info
+  // Get video info.
   $infos = scald_youtube_video($identifier);
 
   $atom->base_id = $identifier;
   $atom->title = $infos->title;
 
-  // Prefill the author
+  // Prefill the author.
   $langcode = field_language('scald_atom', $atom, 'scald_authors');
   $atom->scald_authors[$langcode][0] = array(
     'tid' => 0,
     'taxonomy_term' => (object)(array('name' => $infos->author))
   );
 
-  // Prefill tags
+  // Prefill tags.
   $langcode = field_language('scald_atom', $atom, 'scald_tags');
   foreach ($infos->tags as $index => $tag) {
     $atom->scald_tags[$langcode][$index] = array(
@@ -68,7 +68,7 @@ function scald_youtube_scald_add_form_fill(&$atom, $form, $form_state) {
     );
   }
 
-  // Save video width and height
+  // Save video width and height.
   if (!isset($atom->data)) {
     $atom->data = array();
   }
@@ -83,7 +83,7 @@ function scald_youtube_scald_add_form_fill(&$atom, $form, $form_state) {
     $file = file_save_data($thumb->data, $dest);
 
     if ($file) {
-      // Set the file status to temporary
+      // Set the file status to temporary.
       $query = db_update('file_managed')
         ->condition('fid', $file->fid)
         ->fields(array('status' => 0))
@@ -158,7 +158,7 @@ function scald_youtube_theme() {
  *   Unique identifier of the new atom
  */
 function scald_youtube_register($video) {
-  // Fetch the needed informations from YouTube
+  // Fetch the needed informations from YouTube.
   if (is_object($video)) {
     $infos = $video;
   }
@@ -181,20 +181,20 @@ function scald_youtube_register($video) {
     $file = file_save_data($thumb->data, $dest);
   }
 
-  // Create an atom
+  // Create an atom.
   $atom = new ScaldAtom('video', 'scald_youtube', array(
     'base_id' => $infos->id,
     'title' => $infos->title,
   ));
 
-  // Save video width and height
+  // Save video width and height.
   if (!isset($atom->data)) {
     $atom->data = array();
   }
   $atom->data['video_width'] = $infos->width;
   $atom->data['video_height'] = $infos->height;
 
-  // Set file
+  // Set file.
   if ($file) {
     $query = db_update('file_managed')
       ->condition('fid', $file->fid)
@@ -204,9 +204,9 @@ function scald_youtube_register($video) {
     $atom->scald_thumbnail[$langcode][0] = (array) $file;
   }
 
-  // And save it
+  // And save it.
   $atom_sid = scald_atom_save($atom);
-  // Finally, return this id
+  // Finally, return this id.
   return $atom_sid;
 }
 
@@ -261,19 +261,19 @@ function scald_youtube_video($id) {
 function scald_youtube_parse_item($item) {
   $info = new stdClass();
 
-  // Fetch the video ID
+  // Fetch the video ID.
   $api_url_full = $item->getElementsByTagName('id')->item(0)->nodeValue;
   $api_url_parts = explode('/', $api_url_full);
   $info->id = array_pop($api_url_parts);
 
-  // Video Title
+  // Video Title.
   $title = $item->getElementsByTagName('title')->item(0);
   $info->title = $title->nodeValue;
 
-  // Author
+  // Author.
   $info->author = $item->getElementsByTagName('name')->item(0)->nodeValue;
 
-  // Creation Date
+  // Creation Date.
   $info->pubDate = $item->getElementsByTagName('published')->item(0)->nodeValue;
 
   $info_extra = scald_youtube_video_get_info($info->id);
@@ -405,9 +405,9 @@ function scald_youtube_parse_id($string, $check) {
   $id = NULL;
   $string = trim($string);
   if (!preg_match(YOUTUBE_ID_REGEXP, $string)) {
-    // The string ID is not easy to parse, let's try to analyze it
+    // The string ID is not easy to parse, let's try to analyze it.
     if (preg_match(YOUTUBE_WEB_REGEXP, $string, $m)) {
-      // This string is a full YouTube URL
+      // This string is a full YouTube URL.
       $id = $m[1];
     }
     elseif (preg_match("/^http/", $string)) {
@@ -423,7 +423,7 @@ function scald_youtube_parse_id($string, $check) {
   }
 
   if ($id && $check) {
-    // Last check to confirm this video really exists on YouTube
+    // Last check to confirm this video really exists on YouTube.
     if (!scald_youtube_video($id)) {
       $id = FALSE;
     }

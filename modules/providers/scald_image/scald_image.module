@@ -93,7 +93,7 @@ function scald_image_scald_add_form_fill(&$atoms, $form, $form_state) {
     $atom->title = $file->filename;
     $atom->base_id = $file->fid;
     foreach (array('author', 'tag') as $name) {
-      // hacky, because variable and field name do not really match.
+      // Hacky, because variable and field name do not really match.
       $field_name = 'scald_' . $name . 's';
       $langcode = field_language('scald_atom', $atom, $field_name);
       if (empty($form_state['values'][$field_name])) {

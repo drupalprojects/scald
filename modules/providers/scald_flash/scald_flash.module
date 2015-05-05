@@ -64,7 +64,7 @@ function scald_flash_scald_add_form_fill(&$atoms, $form, $form_state) {
 * Implements hook_scald_fetch.
 */
 function scald_flash_scald_fetch($atom, $type) {
-  // Get the flash thumbnail
+  // Get the flash thumbnail.
   $file = file_load($atom->base_id);
   $atom->base_entity = $file;
   $atom->file_source = $file->uri;

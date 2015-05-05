@@ -57,32 +57,32 @@ function scald_dailymotion_scald_add_form(&$form, &$form_state) {
  * Implements hook_scald_add_form_fill().
  */
 function scald_dailymotion_scald_add_form_fill(&$atom, $form, $form_state) {
-  // Get the DM identifier
+  // Get the DM identifier.
   $identifier = scald_dailymotion_parse_id($form_state['values']['identifier'], TRUE);
 
-  // Get video info
+  // Get video info.
   $infos = scald_dailymotion_video($identifier);
 
   $atom->base_id = $identifier;
   $atom->title = $infos->title;
 
-  // Prefill the author
+  // Prefill the author.
   $langcode = field_language('scald_atom', $atom, 'scald_authors');
   $atom->scald_authors[$langcode][0] = array(
     'tid' => 0,
     'taxonomy_term' => (object)(array('name' => $infos->author))
   );
 
-  // Prefill tags
+  // Prefill tags.
   $langcode = field_language('scald_atom', $atom, 'scald_tags');
   foreach ($infos->tags as $index => $tag) {
     $atom->scald_tags[$langcode][$index] = array(
-      'tid' => $index,  // Beware, this is not a real tid, it's just an index
+      'tid' => $index,  // Beware, this is not a real tid, it's just an index.
       'taxonomy_term' => (object)(array('name' => $tag))
     );
   }
 
-  // Save video width and height
+  // Save video width and height.
   if (!isset($atom->data)) {
     $atom->data = array();
   }
@@ -96,7 +96,7 @@ function scald_dailymotion_scald_add_form_fill(&$atom, $form, $form_state) {
     $dest = $directory . '/dailymotion-' . $infos->id . '.jpg';
     $file = file_save_data($thumb->data, $dest);
 
-    // Set the file status to temporary
+    // Set the file status to temporary.
     $query = db_update('file_managed')
       ->condition('fid', $file->fid)
       ->fields(array('status' => 0))
@@ -234,7 +234,7 @@ function scald_dailymotion_menu() {
  *   Unique identifier of the new atom
  */
 function scald_dailymotion_direct_import($video) {
-  // Fetch the needed informations from Dailymotion
+  // Fetch the needed informations from Dailymotion.
   if (is_object($video)) {
     $infos = $video;
   }
@@ -242,19 +242,19 @@ function scald_dailymotion_direct_import($video) {
     $infos = scald_dailymotion_video($video);
   }
 
-  // Check if the video has already been imported to prevent duplicate
+  // Check if the video has already been imported to prevent duplicate.
   $old = scald_dailymotion_already_imported($infos->id);
   if ($old) {
     return FALSE;
   }
 
-  // Create an atom
+  // Create an atom.
   $atom = new ScaldAtom('video', 'scald_dailymotion', array(
     'base_id' => $infos->id,
     'title' => $infos->title,
   ));
 
-  // Create and link author term
+  // Create and link author term.
   if ($term = scald_dailymotion_taxonomy_get_create($infos->author, variable_get('scald_author_vocabulary'))) {
     $langcode = field_language('scald_atom', $atom, 'scald_authors');
     $atom->scald_authors[$langcode][0] = array(
@@ -262,7 +262,7 @@ function scald_dailymotion_direct_import($video) {
     );
   }
 
-  // Create and link tags terms
+  // Create and link tags terms.
   $langcode = field_language('scald_atom', $atom, 'scald_tags');
   foreach ($infos->tags as $index => $tag) {
     if ($term = scald_dailymotion_taxonomy_get_create($tag, variable_get('scald_tags_vocabulary'))) {
@@ -272,7 +272,7 @@ function scald_dailymotion_direct_import($video) {
     }
   }
 
-  // Save video width and height
+  // Save video width and height.
   $atom->data['video_width'] = $infos->width;
   $atom->data['video_height'] = $infos->height;
 
@@ -285,7 +285,7 @@ function scald_dailymotion_direct_import($video) {
     $file = file_save_data($thumb->data, $dest);
 
     if ($file) {
-      // Set the file status to temporary
+      // Set the file status to temporary.
       $query = db_update('file_managed')
         ->condition('fid', $file->fid)
         ->fields(array('status' => 0))
@@ -295,10 +295,10 @@ function scald_dailymotion_direct_import($video) {
     }
   }
 
-  // And save it
+  // And save it.
   $atom_sid = scald_atom_save($atom);
 
-  // Finally, return this id
+  // Finally, return this id.
   return $atom_sid;
 }
 
@@ -402,31 +402,31 @@ function scald_dailymotion_video($id) {
  */
 function scald_dailymotion_parse_item($item) {
   $info = new stdClass();
-  // Fetch from the feed
-  // ... the video id
+  // Fetch from the feed.
+  // ... the video id.
   $info->id = $item->getElementsByTagNameNS(NS_DM, 'id')->item(0)->nodeValue;
-  // ... its title
+  // ... its title.
   $title = $item->getElementsByTagName('title')->item(0);
   $info->title = $title->nodeValue;
-  // Video size
+  // Video size.
   $player = $item->getElementsByTagNameNS(NS_MEDIA, 'player')->item(0);
   $info->width = $player->getAttribute('width');
   $info->height = $player->getAttribute('height');
-  // ... and usefull informations about its thumbnails
+  // ... and usefull informations about its thumbnails.
   $thumb = $item->getElementsByTagNameNS(NS_MEDIA, 'thumbnail')->item(0);
   $info->thumbnail = array(
     'src'    => $thumb->getAttribute('url'),
     'width'  => $thumb->getAttribute('width'),
     'height' => $thumb->getAttribute('height')
   );
-  // Tags
+  // Tags.
   $info->tags = array();
   foreach ($item->getElementsByTagNameNS(NS_MEDIA, 'category') as $tag) {
     $info->tags[] = $tag->nodeValue;
   }
-  // ... also get the author
+  // ... also get the author.
   $info->author = $item->getElementsByTagNameNS(NS_DM, 'author')->item(0)->nodeValue;
-  // ... and the publication date
+  // ... and the publication date.
   $info->pubDate = date('c', strtotime($item->getElementsByTagName('pubDate')->item(0)->nodeValue));
   $info->license = 'DM';
   return $info;
@@ -519,7 +519,7 @@ function scald_dailymotion_parse_id($string, $check) {
   }
 
   if ($id && $check) {
-    // Last check to confirm this video really exists on Dailymotion
+    // Last check to confirm this video really exists on Dailymotion.
     if (!scald_dailymotion_video($id)) {
       $id = FALSE;
     }
