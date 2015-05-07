@@ -57,7 +57,9 @@ function atom_reference_update_7001() {
       _field_sql_storage_revision_tablename($field),
     );
     foreach ($tables as $table) {
-      db_add_field($table, $field['field_name'] . '_options', $new_field);
+      if (!db_field_exists($table, $field['field_name'] . '_options')) {
+        db_add_field($table, $field['field_name'] . '_options', $new_field);
+      }
     }
   }
 }
