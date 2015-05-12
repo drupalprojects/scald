@@ -4,4 +4,4 @@ core=7.x
 
 dependencies[] = scald
 dependencies[] = scald_image
-dependencis[]  = scald_dnd_library
+dependencies[] = scald_dnd_library
