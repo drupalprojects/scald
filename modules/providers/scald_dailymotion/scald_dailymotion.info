@@ -1,6 +1,0 @@
-name = Scald Dailymotion
-description = Provides Video atoms from Dailymotion.
-package = Scald Providers
-core = 7.x
-dependencies[] = scald
-
