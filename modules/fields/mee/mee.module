@@ -318,6 +318,7 @@ function mee_panels_pane_content_alter($content, $pane, $args, $context) {
 
 /**
  * Implements hook_form_FORM_ID_alter().
+ *
  * Add dnd for ALL panels 'custom content' ctools forms.
  */
 function mee_form_ctools_custom_content_type_edit_form_alter(&$form, &$form_state) {
@@ -406,7 +407,7 @@ function mee_field_widget_form_alter(&$element, &$form_state, $context) {
     );
   }
 
-  // And now we add the separator
+  // And now we add the separator.
   $element['mee']['resource_manager'][0] = array(
     'title' => array(
       '#markup' => t('< Primary / Secondary >'),
