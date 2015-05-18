@@ -2605,3 +2605,21 @@ if(!function_exists('entity_view_mode_prepare')) {
     return $entities_by_view_mode;
   }
 }
+
+/**
+ * Implements hook_features_api().
+ *
+ * If the user did choose to switch to Features exportable.
+ */
+if (variable_get('scald_switch_feature_export', FALSE)) {
+  function scald_features_api() {
+    return array(
+      'scald_context_type' => array(
+        'name' => 'Scald Context Configurations by type',
+        'file' => drupal_get_path('module', 'scald') . '/scald.features.inc',
+        'default_hook' => 'scald_default_context_types',
+        'feature_source' => TRUE,
+      ),
+    );
+  }
+}
