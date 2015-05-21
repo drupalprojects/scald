@@ -678,7 +678,20 @@ Drupal.dndck4 = {
       && el.children[0] && el.children[0].type == CKEDITOR.NODE_ELEMENT && el.children[0].hasClass('dnd-drop-wrapper')) {
       var sas = el.children[0].getHtml();
       var data = Drupal.dnd.sas2array(sas);
-      if (data) {
+      if (typeof data === 'undefined') {
+        // Check for any markup that can be converted to sas first.
+        sas = Drupal.dnd.htmlcomment2sas(sas);
+        if (typeof sas !== 'undefined') {
+          data = Drupal.dnd.sas2array(sas);
+        }
+      }
+      if (typeof data === 'undefined') {
+        // Remove the Atom Wrapper so we don't process it again.
+        el.removeClass('dnd-atom-wrapper');
+        // Remove the Drop wrapper so it doesn't process.
+        el.children[0].removeClass('dnd-drop-wrapper');
+      }
+      else {
         // Grab the atom type and alignment.
         data.align = 'none';
         $.each(el.attributes['class'].split(/\s+/), function (index, item) {
