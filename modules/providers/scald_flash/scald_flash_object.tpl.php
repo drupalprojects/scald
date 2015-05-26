@@ -10,7 +10,7 @@
   <param name="quality" value="high" />
   <param name="scale" value="exactfit" />
   <!--[if !IE]>-->
-  <object data="<?php print $vars['flash_uri'] ?>" type="application/x-shockwave-flash" width="<?php print $vars['flash_width'] ?>" height="<?php print $vars['flash_height'] ?>" allowfullscreen="true" allowscriptaccess="always" wmode="transparent">
+  <object data="<?php print $vars['flash_uri'] ?>" type="application/x-shockwave-flash" width="<?php print $vars['flash_width'] ?>" height="<?php print $vars['flash_height'] ?>" allowfullscreen="true" allowscriptaccess="always" wmode="transparent" quality="high" scale="exactfit">
     <!--<![endif]-->
     <img src="<?php print $vars['thumbnail'] ?>" alt="" class="dnd-dropped" width="<?php print $vars['flash_width'] ?>" />
     <!--[if !IE]>-->
