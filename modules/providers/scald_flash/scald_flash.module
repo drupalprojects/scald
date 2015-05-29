@@ -103,11 +103,16 @@ function scald_flash_scald_prerender($atom, $context, $options, $mode) {
       }
     }
     else {
-      $langcode = field_language('scald_atom', $atom, 'scald_width');
+      $flash_width = 480;
+      $flash_height = 365;
 
-      if (!empty($atom->scald_width[$langcode][0]['value']) && !empty($atom->scald_height[$langcode][0]['value'])) {
-        $flash_width = $atom->scald_width[$langcode][0]['value'] ? $atom->scald_width[$langcode][0]['value'] : 480;
-        $flash_height = $atom->scald_height[$langcode][0]['value'] ? $atom->scald_height[$langcode][0]['value'] : 365;
+      $scald_width = field_get_items('scald_atom', $atom, 'scald_width');
+      if (!empty($scald_width)) {
+        $flash_width = $scald_width[0]['value'];
+      }
+      $scald_height = field_get_items('scald_atom', $atom, 'scald_height');
+      if (!empty($scald_height)) {
+        $flash_height = $scald_height[0]['value'];
       }
 
       // Allow context configuration to override flash dimension variables.
