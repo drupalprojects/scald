@@ -605,6 +605,10 @@ Drupal.dndck4 = {
     var caption = '';
     if (widget.editables.caption) {
       caption = widget.editables.caption.getHtml();
+
+      if (caption == '') {
+        caption = Drupal.dnd.Atoms[widget.data.sid].meta.legend || '';
+      }
       widget.destroyEditable('caption');
     }
 
