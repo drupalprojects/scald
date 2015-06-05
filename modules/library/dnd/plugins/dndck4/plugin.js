@@ -361,6 +361,36 @@ Drupal.dndck4 = {
     }
   },
 
+  addOption: function(id, type, mode, name, callback) {
+    $('body').once(id, function() {
+      if (typeof CKEDITOR === 'undefined') {
+        // CKEditor is not available yet, lets try a little bit later.
+        setTimeout(function() {
+          // If It's still not available, stop trying.
+          if (typeof CKEDITOR !== 'undefined') {
+            Drupal.dndck4.processOption(id, type, mode, name, callback);
+          }
+        }, 1000);
+      }
+      else {
+        Drupal.dndck4.processOption(id, type, mode, name, callback);
+      }
+    });
+  },
+
+  processOption: function(id, type, mode, name, callback) {
+    CKEDITOR.on('dialogDefinition', function(ev) {
+      if (typeof Drupal.dndck4 !== 'undefined') {
+        if (ev.data.name == 'atomProperties') {
+          var dialogDefinition = ev.data.definition;
+          var infoTab = dialogDefinition.getContents('info');
+          callback.call(this, infoTab, dialogDefinition);
+          Drupal.dndck4.registerOptions(id, type, mode, name);
+        }
+      }
+    });
+  },
+
   dataFromAttributes: function (attributes) {
     return {
       sid : attributes['data-scald-sid'],
