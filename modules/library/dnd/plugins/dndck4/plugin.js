@@ -311,6 +311,28 @@ CKEDITOR.plugins.add('dndck4', {
       editorFocus: CKEDITOR.env.ie || CKEDITOR.env.webkit
     });
 
+  },
+
+  afterInit: function (editor) {
+    function setupAlignCommand(value) {
+      var command = editor.getCommand('justify' + value);
+      if (command) {
+        if (value in {right: 1, left: 1, center: 1}) {
+          command.on('exec', function (event) {
+            var widget = editor.widgets.focused;
+            if (widget && widget.name === 'dndck4') {
+              widget.setData({align: value});
+              event.cancel();
+            }
+          });
+        }
+      }
+    }
+
+    // Customize the behavior of the alignment commands.
+    setupAlignCommand('left');
+    setupAlignCommand('right');
+    setupAlignCommand('center');
   }
 
 });
