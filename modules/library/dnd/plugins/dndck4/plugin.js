@@ -322,10 +322,24 @@ CKEDITOR.plugins.add('dndck4', {
             var widget = editor.widgets.focused;
             if (widget && widget.name === 'dndck4') {
               widget.setData({align: value});
-              event.cancel();
             }
           });
         }
+
+        command.on('refresh', function (event) {
+          var widget = editor.widgets.focused,
+            allowed = { left: 1, center: 1, right: 1 },
+            align;
+
+          if (widget && widget.name === 'dndck4') {
+            align = widget.data.align;
+
+            this.setState(
+              (align === value) ? CKEDITOR.TRISTATE_ON : (value in allowed) ? CKEDITOR.TRISTATE_OFF : CKEDITOR.TRISTATE_DISABLED);
+
+            event.cancel();
+          }
+        });
       }
     }
 
