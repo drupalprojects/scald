@@ -475,7 +475,7 @@ Drupal.dndck4 = {
       // options in the sas code for the atom.
       options : sasData.options || '{}',
       align : 'none',
-      usesCaption : true
+      usesCaption : Drupal.settings.dnd.usesCaptionDefault
     };
   },
 
