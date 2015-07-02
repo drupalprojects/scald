@@ -39,7 +39,7 @@ function atom_reference_field_info() {
       'instance_settings' => array(
         'referencable_types' => array(),
       ),
-      'default_widget' => 'textfield',
+      'default_widget' => 'atom_reference_textfield',
       'default_formatter' => 'title',
       'property_type' => 'scald_atom',
     )
