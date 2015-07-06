@@ -293,6 +293,7 @@ function scald_atom_add_form_options($form, &$form_state) {
       '#required' => TRUE,
       '#default_value' => $atom->title,
       '#parents' => array('atom' . $delta, 'title'),
+      '#maxlength' => 255,
       '#weight' => -10,
     );
     $form['language'] = array(
