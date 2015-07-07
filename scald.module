@@ -2561,6 +2561,8 @@ function scald_atom_user_build_actions_links($atom, $query = NULL) {
     }
   }
 
+  drupal_alter('scald_atom_user_build_actions_links', $links);
+
   return $links;
 }
 

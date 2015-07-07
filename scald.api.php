@@ -378,6 +378,13 @@ function hook_scald_wysiwyg_context_list_alter(&$contexts) {
 }
 
 /**
+ * Alters links that show up in the drag and drop library.
+ */
+function hook_scald_atom_user_build_actions_links_alter(&$links) {
+  unset($links['delete']);
+}
+
+/**
  * Control access to an atom.
  *
  * This hook can be used to grant or deny access for a specific atom and
