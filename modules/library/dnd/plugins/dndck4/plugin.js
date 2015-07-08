@@ -512,7 +512,8 @@ Drupal.dndck4 = {
       liner = editor.widgets.liner,
       editable = editor.editable(),
       listeners = [],
-      sorted = [];
+      sorted = [],
+      dropRange = null;
     var relations, locations, y;
 
     // Dropping into an empty CKEditor requires special logic.
@@ -543,6 +544,7 @@ Drupal.dndck4 = {
         liner.placeLine(sorted[0]);
         liner.cleanup();
       }
+      dropRange = finder.getRange(sorted[0]);
     });
 
     // Let's have the "dragging cursor" over entire editable.
@@ -572,8 +574,8 @@ Drupal.dndck4 = {
     listeners.push(dropElement.on('drop', function (evt) {
       evt.data.preventDefault();
       var range;
-      if (editableHasContent && !CKEDITOR.tools.isEmpty(liner.visible)) {
-        range = finder.getRange(sorted[0]);
+      if (dropRange && editableHasContent && !CKEDITOR.tools.isEmpty(liner.visible)) {
+        range = dropRange;
       }
       else {
         // If no liner position was determined, insert at the end of the
@@ -585,6 +587,11 @@ Drupal.dndck4 = {
       var caption = atomInfo.meta.legend || '';
       Drupal.dndck4.insertNewWidget(editor, range, data, caption);
       cleanupDrag();
+    }));
+
+    // Prevent paste, so the new clipboard plugin will not double insert the Atom.
+    listeners.push(editor.on('paste', function (evt) {
+      return false;
     }));
 
     // On dragend (without drop), cleanup the events.
