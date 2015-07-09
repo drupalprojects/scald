@@ -209,26 +209,43 @@ function dnd_library_alter(&$libraries, $module) {
 }
 
 /**
- * Implements hook_edit_editor_attachments_alter().
+ * Implements hook_entity_view_alter().
+ *
+ * Adds the dnd library in case we have quickedit enabled and dnd enabled on the entity.
  */
-function dnd_edit_editor_attachments_alter(&$attachments, $editor, $metadata) {
-  // When Edit module uses CKEditor editor widget, add DnD library if necessary.
-  if ($editor == 'ckeditor') {
-    // If there is at least one field with CKEditor + DnD enabled, add the DnD
-    // library.
-    foreach ($metadata as $field => $data) {
-      if ($data['editor'] == 'ckeditor') {
-        list($entity_type, $entity_id, $field_name, $language, $view_mode) = explode('/', $field);
-        $entity = entity_load_single($entity_type, $entity_id);
-        list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-        $instance_info = field_info_instance($entity_type, $field_name, $bundle);
-        if (!empty($instance_info['settings']['dnd_enabled'])) {
-          $attachments['library'][] = array('dnd', 'library');
-          return;
-        }
+function dnd_entity_view_alter(&$build, $type) {
+  if (!module_exists('quickedit')) {
+    return;
+  }
+
+  if (!user_access('access in-place editing')) {
+    return;
+  }
+
+  // In-place editing is only supported on the front-end.
+  if (path_is_admin(current_path())) {
+    return;
+  }
+
+  $dnd_enabled = FALSE;
+  foreach ($build as $item) {
+    if (!is_array($item)) {
+      continue;
+    }
+    if (isset($item['#field_name'])) {
+      $instance_info = field_info_instance($type, $item['#field_name'], $build['#bundle']);
+      if (!empty($instance_info['settings']['dnd_enabled'])) {
+        $dnd_enabled = TRUE;
+      }
+      if (isset($item['#field_type']) && $item['#field_type'] === 'atom_reference') {
+        $dnd_enabled = TRUE;
       }
     }
   }
+  if ($dnd_enabled) {
+    $build['#attached']['library'][] = array('dnd', 'library');
+  }
+  return;
 }
 
 /**
