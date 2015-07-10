@@ -75,6 +75,8 @@ function dnd_library() {
     }
   }
 
+  $plugin = mee_store_format() !== 'embed_div' ? 'ckeditor' : 'dndck4';
+
   $libraries['library'] = array(
     'title' => 'DnD Library',
     'website' => 'http://drupal.org/project/scald',
@@ -90,7 +92,7 @@ function dnd_library() {
       // This file is included automatically if the CKEditor plugin is enabled.
       // However we need to load it directly in Drupal so that strings can be
       // translated.
-      $path . '/plugins/ckeditor/lang/en.js' => array(),
+      $path . '/plugins/' . $plugin . '/lang/en.js' => array(),
       // Settings for the library url.
       array(
         'type' => 'setting',
