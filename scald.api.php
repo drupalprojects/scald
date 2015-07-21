@@ -412,9 +412,9 @@ function hook_scald_atom_access($atom, $action, $account = NULL) {
  * saved to the database. Like any other hook_ENTITY_TYPE_presave() hook, it is
  * invoked before hook_entity_presave().
  *
- * @param \ScaldAtom $atom
+ * @param $atom
  */
-function hook_scald_atom_presave(ScaldAtom $atom) {
+function hook_scald_atom_presave($atom) {
 }
 
 /**
@@ -424,9 +424,9 @@ function hook_scald_atom_presave(ScaldAtom $atom) {
  * saved to the database, after field_attach_insert() and before
  * hook_entity_insert() is called.
  *
- * @param \ScaldAtom $atom
+ * @param $atom
  */
-function hook_scald_atom_insert(ScaldAtom $atom) {
+function hook_scald_atom_insert($atom) {
 }
 
 /**
@@ -436,9 +436,9 @@ function hook_scald_atom_insert(ScaldAtom $atom) {
  * is saved to the database, after field_attach_update() and before
  * hook_entity_update() is called.
  *
- * @param \ScaldAtom $atom
+ * @param $atom
  */
-function hook_scald_atom_update(ScaldAtom $atom) {
+function hook_scald_atom_update($atom) {
 }
 
 /**
@@ -448,9 +448,9 @@ function hook_scald_atom_update(ScaldAtom $atom) {
  * unregistered, before hook_entity_delete() is called and before the atom is
  * removed from scald_atoms table in the database.
  *
- * @param \ScaldAtom $atom
+ * @param $atom
  */
-function hook_scald_atom_delete(ScaldAtom $atom) {
+function hook_scald_atom_delete($atom) {
 }
 
 /**
