@@ -406,6 +406,54 @@ function hook_scald_atom_access($atom, $action, $account = NULL) {
 }
 
 /**
+ * Act on an atom being inserted or updated.
+ *
+ * This hook is invoked from ScaldAtomController::save() before the atom is
+ * saved to the database. Like any other hook_ENTITY_TYPE_presave() hook, it is
+ * invoked before hook_entity_presave().
+ *
+ * @param \ScaldAtom $atom
+ */
+function hook_scald_atom_presave(ScaldAtom $atom) {
+}
+
+/**
+ * Act on an atom being inserted.
+ *
+ * This hook is invoked from ScaldAtomController::save() after a new atom is
+ * saved to the database, after field_attach_insert() and before
+ * hook_entity_insert() is called.
+ *
+ * @param \ScaldAtom $atom
+ */
+function hook_scald_atom_insert(ScaldAtom $atom) {
+}
+
+/**
+ * Act on an atom being updated.
+ *
+ * This hook is invoked from ScaldAtomController::save() after an existing atom
+ * is saved to the database, after field_attach_update() and before
+ * hook_entity_update() is called.
+ *
+ * @param \ScaldAtom $atom
+ */
+function hook_scald_atom_update(ScaldAtom $atom) {
+}
+
+/**
+ * Act on an atom being deleted.
+ *
+ * This hook is invoked from scald_atom_delete_multiple() after the atom is
+ * unregistered, before hook_entity_delete() is called and before the atom is
+ * removed from scald_atoms table in the database.
+ *
+ * @param \ScaldAtom $atom
+ */
+function hook_scald_atom_delete(ScaldAtom $atom) {
+}
+
+/**
  * @defgroup scald_atom_provider Hooks related to Atom provider modules.
  * @{
  * Theses hooks are implemented by the Atom provider modules.
