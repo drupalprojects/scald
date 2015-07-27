@@ -1649,6 +1649,27 @@ function scald_scald_atom_access($atom, $action, $account = NULL) {
  * Define a new entity type for the Atoms.
  */
 function scald_entity_info() {
+  $translatable_field = array(
+    'type' => 'text',
+    'cardinality' => 1,
+    'translatable' => TRUE,
+  );
+
+  $translatable_field_instance = array(
+    'required' => TRUE,
+    'settings' => array(
+      'text_processing' => 0,
+    ),
+    'widget' => array(
+      'weight' => -5,
+    ),
+    'display' => array(
+      'default' => array(
+        'type' => 'hidden',
+      ),
+    ),
+  );
+
   $return = array(
     'scald_atom' => array(
       'label' => t('Atoms'),
@@ -1674,11 +1695,22 @@ function scald_entity_info() {
       'save callback' => 'scald_atom_save',
       'translation' => array(
         'entity_translation' => array(
+          'class' => 'EntityTranslationScaldHandler',
           'base path' => 'atom/%scald_atom',
           'edit path' => 'atom/%scald_atom/edit/%ctools_js',
           'edit form' => 'atom',
         ),
       ),
+      'field replacement' => array(
+        'title' => array(
+          'field' => $translatable_field,
+          'instance' => array(
+            'label' => t('Title'),
+            'description' => '',
+          ) + $translatable_field_instance,
+        ),
+      ),
+      'efq bundle conditions' => TRUE,
     ),
   );
 
@@ -2507,6 +2539,29 @@ function scald_compute_role_actions($role) {
 function scald_form_user_admin_permissions_alter(&$form, &$form_state, $form_id) {
   // Add our custom submit handler.
   $form['#submit'][] = 'scald_permissions_submit';
+}
+
+/*
+ * Implements hook_form_FORM_ID_alter().
+ * In case the title module is used the title field has to be populated from the title
+ * attribute when the user comes from the add step.
+ */
+function scald_form_scald_atom_add_form_options_alter(&$form, &$form_state, $form_id) {
+  if (module_exists('title')) {
+    $scald = $form_state['scald'];
+    if (isset($scald['type']) && title_field_replacement_enabled('scald_atom', $scald['type']->type, 'title')) {
+      // Setting default values for each created atom
+      $fr_info = title_field_replacement_info('scald_atom', 'title');
+      foreach($form as $key => $data) {
+        if (strpos($key, 'atom') === 0) {
+          if (!empty($form[$key]['title']['#default_value'])) {
+            $langcode = $form['language']['#value'];
+            $form[$key][$fr_info['field']['field_name']][$langcode][0]['value']['#default_value'] = $form[$key]['title']['#default_value'];
+          }
+        }
+      }
+    }
+  }
 }
 
 /**

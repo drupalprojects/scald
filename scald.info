@@ -11,6 +11,7 @@ dependencies[] = text
 test_dependencies[] = i18n
 test_dependencies[] = i18n_string
 
+files[] = includes/scald.translation_handler.inc
 files[] = includes/scald_views_handler_field_actions.inc
 files[] = includes/scald_views_handler_field_data.inc
 files[] = includes/scald_views_handler_field_representation.inc

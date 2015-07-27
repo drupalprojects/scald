@@ -352,8 +352,17 @@ function scald_atom_add_form_options_submit(&$form, &$form_state) {
 
     // Let entity add its properties to the atom.
     entity_form_submit_build_entity('scald_atom', $atom, $form['atom' . $delta], $form_state);
-    $atom->title = $form_state['values']['atom' . $delta]['title'];
     $atom->actions = $form_state['values']['atom' . $delta]['actions'];
+
+    // Our form structure is different from standard Entity form because we
+    // support multiple entities in a single form, so we have to process special
+    // stuffs here.
+    // Except when comes the Title module, which is a field and it takes care of
+    // the sync in title_field_attach_submit() so we don't have to do anything.
+    if (!(module_exists('title') && title_field_replacement_enabled('scald_atom', $atom->type, 'title'))) {
+      $atom->title = $form_state['values']['atom' . $delta]['title'];
+    }
+
     // Then save it...
     scald_atom_save($atom);
   }
