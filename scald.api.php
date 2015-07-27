@@ -379,8 +379,14 @@ function hook_scald_wysiwyg_context_list_alter(&$contexts) {
 
 /**
  * Alters links that show up in the drag and drop library.
+ *
+ * @param array $links
+ *   List of built action links.
+ *
+ * @param $atom
+ *   The atom that user action links are being built.
  */
-function hook_scald_atom_user_build_actions_links_alter(&$links) {
+function hook_scald_atom_user_build_actions_links_alter(&$links, $atom) {
   unset($links['delete']);
 }
 
