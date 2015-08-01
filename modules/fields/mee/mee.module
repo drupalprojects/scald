@@ -544,9 +544,18 @@ function theme_mee_resource_manager($variables) {
  *   The HTML for the atom embed.
  */
 function theme_mee_widget_embed($vars) {
+  $options = array();
+  if (isset($vars['options'])) {
+    $options = drupal_json_decode($vars['options']);
+  }
   $classes = array('dnd-widget-wrapper', 'context-' . $vars['context'], 'type-' . $vars['atom']->type);
   if ($vars['align'] != 'none') {
     $classes[] = 'atom-align-' . $vars['align'];
+  }
+  if (!empty($options['additionalClasses'])) {
+    foreach (explode(' ', $options['additionalClasses']) as $class) {
+      $classes[] = $class;
+    }
   }
   $output = '<div class="' . implode(' ', $classes) . '">';
 
