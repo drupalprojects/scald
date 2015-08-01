@@ -564,7 +564,7 @@ function theme_mee_widget_embed($vars) {
   // When displaying a widget within a CKEditor, always include a container div
   // for the editable. Otherwise, only display the caption container if there
   // is a caption.
-  if ($vars['caption'] || $vars['wysiwyg']) {
+  if (!empty($vars['caption']) || $vars['wysiwyg']) {
     // Note: The 'dnd-caption-wrapper' class is used by the CKEditor plugin to
     // identify the editable zone and should not be modified by theme overrides.
     $output .= '<div class="dnd-caption-wrapper">' . $vars['caption'] . '</div>';
