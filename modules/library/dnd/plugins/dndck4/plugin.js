@@ -1,5 +1,5 @@
 (function ($) {
-// Drop out if for some reason Drupal.dnd is not available
+// Drop out if for some reason Drupal.dnd is not available.
 if (typeof Drupal.dnd === 'undefined') {
   CKEDITOR.plugins.add('dndck4', {});
   return;
@@ -88,7 +88,10 @@ CKEDITOR.plugins.add('dndck4', {
        * initial creation or upcast).
        */
       data: function() {
-        this.refreshAtom();
+        // Don't refresh dragged atom until it's actually dropped.
+        if (this.element.$.parentNode.parentNode) {
+          this.refreshAtom();
+        }
       }
     });
 
@@ -105,7 +108,8 @@ CKEDITOR.plugins.add('dndck4', {
       // Listen to atom drags from the Library. Namespace the event so that we
       // can unbind it when the editor is disabled.
       $(document).bind('dragstart.dndck4_' + editor.name, function (evt) {
-        if (Drupal.dnd.currentAtom) {
+        var editable = editor.editable();
+        if (Drupal.dnd.currentAtom && $(editable.$).is(':visible')) {
           var dragInfo = Drupal.dnd.sas2array(Drupal.dnd.currentAtom);
           var atomInfo = Drupal.dnd.Atoms[dragInfo.sid];
           var data = Drupal.dndck4.getDefaultInsertData(editor, atomInfo);
@@ -596,7 +600,8 @@ Drupal.dndck4 = {
         range.moveToElementEditablePosition(editable, true);
       }
       Drupal.dndck4.insertWidget(widget, editor, range);
-      cleanupDrag();
+      widget.refreshAtom();
+      cleanupDrag(true);
     }));
 
     // Prevent paste, so the new clipboard plugin will not double insert the Atom.
@@ -617,12 +622,17 @@ Drupal.dndck4 = {
 //        console.log('dragleave');
 //      }));
 
-    function cleanupDrag() {
+    function cleanupDrag(dropped) {
       // Stop observing events.
       eventBuffer.reset();
       var l;
       while (l = listeners.pop()) {
         l.removeListener();
+      }
+      // Clean-up unused widget.
+      if (!dropped) {
+        widget.repository._.draggedWidget = null;
+        widget.repository.destroy(widget, true);
       }
       // Clean-up all remaining lines.
       liner.hideVisible();
@@ -703,7 +713,7 @@ Drupal.dndck4 = {
     // Replace the inner HTML.
     widgetElement.setHtml(newElement.getHtml());
 
-    // Notify external scripts of new atom rendering
+    // Notify external scripts of new atom rendering.
     Drupal.dndck4.invokeCallbacks('AjaxExpandWidget', widget);
 
     // Initialize the new caption editable, and fill it with the previous
