@@ -610,25 +610,7 @@ function _scald_types() {
  *   The Scald Contexts array
  */
 function _scald_contexts() {
-  // Build the type_format array for 'debug', which is passthrough for
-  //  every type *always*
-  $scald_config = variable_get('scald_config', 0);
-  $type_formats = array();
-  foreach (array_keys($scald_config->types) as $type) {
-    $type_formats[$type] = array(
-      'file_format' => 'passthrough',
-      'transcoder'  => 'passthrough',
-    );
-  }
-
-  // Build the hard-coded 'debug' context which shouldn't live in the database
   $scald_contexts = array();
-  $scald_contexts['debug'] = array(
-    'provider'        => 'scald',
-    'render_language' => 'XHTML',
-    'parseable'       => FALSE,
-    'type_format'     => $type_formats,
-  );
 
   // Grab all the contexts from the db
   $contexts_results = db_query('
@@ -2396,20 +2378,6 @@ function scald_scald_provider() {
       ),
     ),
     'contexts' => array(
-/**
- * The "debug" context is hard-coded into Scald Core, but this is what the
- *  Provider registration array would look like.
- *
- *    'debug' => array(
- *      'title'           => t('Debuging Display'),
- *      'description'     => t('A useful debugging display of a Scald Atom.'),
- *      'render_language' => 'XHTML',
- *      'parseable'       => FALSE,
- *      'formats'         => array(
- *        '<all>' => 'passthrough',
- *      ),
- *    ),
- */
       'no-access' => array(
         'title'           => t('No Access'),
         'description'     => t('Built-in Context used when an Atom cannot be viewed by the current User.'),
@@ -2552,9 +2520,6 @@ function scald_scald_prerender(&$atom, $mode, $context = NULL, $options = NULL) 
 
     case 'context':
       switch ($context) {
-        case 'debug':
-          break;
-
         case 'no-access':
           break;
 
@@ -2582,10 +2547,6 @@ function scald_scald_prerender(&$atom, $mode, $context = NULL, $options = NULL) 
  */
 function scald_scald_render($atom, $context, $options = NULL) {
   switch ($context) {
-    case 'debug':
-      return '<pre class="debug">' . print_r($atom, TRUE) . '</pre>';
-      break;
-
     case 'no-access':
       return theme('scald_render_error', $context, t('You do not have access to view this Atom.'));
       break;
@@ -2669,7 +2630,6 @@ function scald_init() {
 function scald_perm() {
   return array(
     'administer scald',		// Grants access to the Scald Admin Interface
-    'debug scald',        // Grants access to the Scald Debugging Console
     'use scald',          // Grants access to the basic functioning of Scald (registering Atoms, etc.)
   );
 } // end scald_perm()
@@ -2698,16 +2658,6 @@ function scald_form_system_modules_alter(&$form, &$form_state) {
  */
 function scald_menu() {
   $items = array();
-
-  $items['scald/debug/%'] = array(
-    'title'            => 'Scald Debugging Console',
-    'page callback'    => 'scald_debug_console',
-    'page arguments'   => array(2),
-    'access callback'  => 'user_access',
-    'access arguments' => array('debug scald'),
-    'file'             => 'scald.debug.inc',
-    'type'             => MENU_NORMAL_ITEM,
-  );
 
   $items['admin/content/scald'] = array(
     'title'             => 'Scald',
