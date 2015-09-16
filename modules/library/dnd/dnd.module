@@ -42,30 +42,62 @@ function dnd_theme() {
 }
 
 /**
+ * Get the list of Scald contexts that can be used in a WYSIWYG, keyed by type.
+ *
+ * @return array
+ *   Returns an associative array, keyed by the atom type machine name and whose
+ *   values are associative arrays, each keyed by the context machine name and
+ *   whose values are the user facing name of this context for this atom type.
+ */
+function dnd_scald_wysiwyg_context_list() {
+  $contexts = &drupal_static(__FUNCTION__, NULL);
+  if (!isset($contexts)) {
+    $types = scald_types();
+    foreach (scald_contexts_public() as $name => $definition) {
+      if (empty($definition['parseable'])) {
+        continue;
+      }
+
+      // There "formats" is actually used nowhere in Scald. Every context is
+      // available to all atom types.
+      $definition['formats'] = $types;
+
+      foreach ($definition['formats'] as $type => $data) {
+        $contexts[$type][$name] = $definition['title'];
+      }
+    }
+    drupal_alter('scald_wysiwyg_context_list', $contexts);
+  }
+
+  return $contexts;
+}
+
+/**
+ * Get the list of Scald contexts machine names that are allowed in WYSIWYG.
+ */
+function dnd_scald_wysiwyg_context_slugs() {
+  $contexts_type = dnd_scald_wysiwyg_context_list();
+  $slugs = array();
+  foreach ($contexts_type as $contexts) {
+    foreach ($contexts as $slug => $label) {
+      $slugs[$slug] = $slug;
+    }
+  }
+
+  return array_values($slugs);
+}
+
+/**
  * Implements hook_library().
  */
 function dnd_library() {
   $path = drupal_get_path('module', 'dnd');
-  $types = scald_types();
-  $contexts = array();
+  $contexts = dnd_scald_wysiwyg_context_list();
   $config = array();
 
-  foreach (scald_contexts() as $name => $definition) {
-    if (!empty($definition['hidden']) || empty($definition['parseable'])) {
-      continue;
-    }
-
-    // There "formats" is actually used nowhere in Scald. Every context is
-    // available to all atom types.
-    $definition['formats'] = $types;
-
-    foreach ($definition['formats'] as $type => $data) {
-      $contexts[$type][$name] = $definition['title'];
-    }
-
-    $config[$name] = scald_context_config_load($name);
+  foreach (dnd_scald_wysiwyg_context_slugs() as $slug) {
+    $config[$slug] = scald_context_config_load($slug);
   }
-  drupal_alter('scald_wysiwyg_context_list', $contexts);
 
   $qtip_settings = '';
   if (function_exists('qtip_fetch_instances_field')) {

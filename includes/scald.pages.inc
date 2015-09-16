@@ -502,7 +502,7 @@ function scald_atom_fetch_atoms($sids) {
   $atoms = scald_atom_load_multiple(explode(',', $sids));
 
   // Context can be passed via the querystring.
-  $context = isset($_GET['context']) && array_key_exists($_GET['context'], scald_contexts()) ? $_GET['context'] : '';
+  $context = isset($_GET['context']) && array_key_exists($_GET['context'], scald_contexts_public()) ? $_GET['context'] : '';
 
   foreach ($atoms as $sid => $atom) {
     $output[$sid] = array(
