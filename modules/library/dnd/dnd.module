@@ -309,16 +309,29 @@ function dnd_suppress_library($set = TRUE) {
  */
 function dnd_wysiwyg_plugin($editor, $version) {
   $plugins = array();
+  $mee_store_format = (module_exists('mee')) ? mee_store_format() : '';
   switch ($editor) {
     case 'ckeditor':
-      $plugins['dnd'] = array(
-        'path' => drupal_get_path('module', 'dnd') . '/plugins/ckeditor',
-        'filename' => 'plugin.js',
-        'buttons' => array(
-          'dnd' => t('Scald DnD integration'),
-        ),
-        'load' => TRUE,
-      );
+      if ($mee_store_format == 'sas') {
+        $plugins['dnd'] = array(
+          'path' => drupal_get_path('module', 'dnd') . '/plugins/ckeditor',
+          'filename' => 'plugin.js',
+          'buttons' => array(
+            'dnd' => t('Scald DnD integration'),
+          ),
+          'load' => TRUE,
+        );
+      }
+      elseif ($mee_store_format == 'embed_div') {
+        $plugins['dndck4'] = array(
+          'path' =>  drupal_get_path('module', 'dnd') . '/plugins/dndck4',
+          'filename' => 'plugin.js',
+          'buttons' => array(
+            'dndck4' => t('Scald DnD integration - CKEditor 4 widgets'),
+          ),
+          'load' => TRUE,
+        );
+      }
       break;
   }
 
