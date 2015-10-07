@@ -6,3 +6,5 @@ dependencies[] = text
 dependencies[] = dnd
 dependencies[] = scald
 core = 7.x
+
+stylesheets[all][] = css/editor-global.css
