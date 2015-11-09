@@ -362,14 +362,8 @@ renderLibrary: function(data, editor) {
         return Drupal.dnd.insertAtom($(this).data('atom-id'));
       })
       .bind('dragstart', function(e) {
-        var dt = e.originalEvent.dataTransfer, id = e.target.id, $this = $(this);
-        var $img;
-        if ($this.is('img')) {
-          $img = $this;
-        }
-        else {
-          $this.find('img');
-        }
+        var dt = e.originalEvent.dataTransfer, $this = $(this);
+        var $img = $this.is('img') ? $this : $this.find('img');
         var id = $img.data('atom-id');
         dt.dropEffect = 'copy';
         dt.setData("Text", Drupal.dnd.Atoms[id].sas);
