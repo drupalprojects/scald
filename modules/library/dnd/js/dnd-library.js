@@ -384,7 +384,7 @@ renderLibrary: function(data, editor) {
       });
   });
   // Makes pager links refresh the library instead of opening it in the browser window
-  library_wrapper.find('.pager a').click(function() {
+  library_wrapper.find('.pager a, .pagination a').click(function() {
     $.getJSON(this.href, function(data) {
       Drupal.behaviors.dndLibrary.renderLibrary.call(library_wrapper.get(0), data, $(editor));
     });
