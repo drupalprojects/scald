@@ -1475,7 +1475,7 @@ function _scald_context_fallback($type, $context) {
   // Determine where in the order the current Context falls so that "next" has a
   // definitive meaning.
   $current_index = array_search($context, $fallbacks);
-  if (!$current_index) {
+  if ($current_index === FALSE) {
     $current_index = -1;
   }
 
