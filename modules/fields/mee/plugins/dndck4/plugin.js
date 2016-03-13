@@ -35,7 +35,7 @@ CKEDITOR.plugins.add('dndck4', {
           allowedContent: 'a[href]; strong; em'
         }
       },
-      requiredContent: 'div[data-scald-sid](dnd-atom-wrapper)',
+      requiredContent: 'div span figure[data-scald-sid](dnd-atom-wrapper)',
       allowedContent: {},
 
       /**

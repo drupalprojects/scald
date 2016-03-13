@@ -921,7 +921,7 @@ function _mee_extract_widget_embed_info($dom) {
 
   // Collect the DOM nodes and the corresponding embed data.
   $xpath = new DOMXPath($dom);
-  $nodes = $xpath->query("//div[@class='dnd-atom-wrapper']");
+  $nodes = $xpath->query("//div[@class='dnd-atom-wrapper']|//figure[@class='dnd-atom-wrapper']|//span[@class='dnd-atom-wrapper']");
   foreach ($nodes as $node) {
     $info = array(
       'node' => $node,
@@ -932,7 +932,7 @@ function _mee_extract_widget_embed_info($dom) {
       'caption' => '',
     );
     // Extract the caption if present.
-    $result = $xpath->query("div[@class='dnd-caption-wrapper']", $node);
+    $result = $xpath->query("div[@class='dnd-caption-wrapper']|figcaption[@class='dnd-caption-wrapper']", $node);
     if ($result->length) {
       foreach ($result->item(0)->childNodes as $child) {
         $info['caption'] .= $dom->saveXML($child);
