@@ -464,8 +464,8 @@ Drupal.dndck4 = {
   },
 
   getDefaultInsertData: function (editor, atomInfo) {
-    var sasData = Drupal.dnd.sas2array(atomInfo.sas);
-    return {
+    var sasData = Drupal.dnd.sas2array(atomInfo.sas), data;
+    data = {
       sid : atomInfo.sid,
       type: atomInfo.meta.type,
       // The default context for newly embedded atoms is a setting of the text
@@ -480,6 +480,10 @@ Drupal.dndck4 = {
       align : 'none',
       usesCaption : Drupal.settings.dnd.usesCaptionDefault
     };
+
+    Drupal.dndck4.invokeCallbacks('GetDefaultInsertData', data);
+
+    return data;
   },
 
   createNewWidget: function(editor, data, caption) {
