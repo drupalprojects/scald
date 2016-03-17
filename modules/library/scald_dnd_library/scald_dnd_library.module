@@ -170,7 +170,7 @@ function scald_dnd_library_scald_render($atom, $context, $options) {
     $path = $atom->rendered->thumbnail_transcoded_url;
   }
   else {
-    $path = image_style_url('Library', $atom->thumbnail_source);
+    $path = image_style_url('library', $atom->thumbnail_source);
   }
 
   $attributes = array();
@@ -349,7 +349,7 @@ function scald_dnd_library_views_api() {
  */
 function scald_dnd_library_image_default_styles() {
   $presets = array();
-  $presets['Library'] = array(
+  $presets['library'] = array(
     'effects' => array(
       array(
         'name' => 'image_scale',
