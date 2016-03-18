@@ -365,3 +365,13 @@ function scald_dnd_library_image_default_styles() {
   return $presets;
 }
 
+/**
+ * Implements hook_admin_paths().
+ */
+function scald_dnd_library_admin_paths() {
+  if (variable_get('dnd_modal_admin', FALSE)) {
+    return array(
+      dnd_get_library() => TRUE,
+    );
+  }
+}
