@@ -134,6 +134,7 @@ CKEDITOR.plugins.add('dndck4', {
       icon: this.path + 'icons/atom.png'
     });
     editor.addCommand('atomProperties', {
+      allowedContent: 'div span figure figcaption[data-scald-sid,data-scald-align,data-scald-context,data-scald-options,data-scald-type](dnd-atom-wrapper,dnd-caption-wrapper)',
       exec: function (editor) {
         var widget = editor.widgets.focused;
         if (widget && widget.name == 'dndck4') {
