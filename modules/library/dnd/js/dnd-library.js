@@ -77,7 +77,7 @@ Drupal.dnd = {
     atom_ids = atom_ids.filter(Number);
 
     if (atom_ids.length) {
-      $.getJSON(Drupal.settings.basePath + 'atom/fetch/' + atom_ids.join() + '?context=' + context, function(data) {
+      $.getJSON(Drupal.settings.basePath + Drupal.settings.pathPrefix + 'atom/fetch/' + atom_ids.join() + '?context=' + context, function(data) {
         for (var atom_id in data) {
           if (Drupal.dnd.Atoms[atom_id]) {
             // Merge old data into the new return atom.
