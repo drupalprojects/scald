@@ -27,6 +27,8 @@
               widget.setData('options', JSON.stringify(options));
             }
           });
+        });
+        Drupal.dndck4.addOption('cmbLinkTarget', 'image', 'atom', 'scald_image', function (infoTab, dialogDefinition) {
           infoTab.add({
             id: 'cmbLinkTarget',
             type: 'select',
