@@ -2186,9 +2186,11 @@ function scald_menu() {
  * Implements hook_locale().
  */
 function scald_locale($op = 'groups') {
-  switch ($op) {
-    case 'groups':
-      return array('scald' => t('Scald'));
+  if (!module_exists('i18n_string')) {
+    switch ($op) {
+      case 'groups':
+        return array('scald' => t('Scald'));
+    }
   }
 }
 
