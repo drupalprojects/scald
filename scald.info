@@ -21,4 +21,6 @@ files[] = includes/scald_views_handler_filter_atom_type.inc
 files[] = includes/ScaldAtom.inc
 files[] = includes/ScaldAtomController.inc
 files[] = tests/scald.test
+# @codingStandardsIgnoreStart
 files[] = scald.features.inc
+# @codingStandardsIgnoreEnd
