@@ -924,7 +924,7 @@ function mee_filter_process($text) {
     // Replace each DOM node with the themed embed.
     foreach ($embed_info as $info) {
       $html = '';
-      if ($atoms[$info['sid']]) {
+      if (isset($atoms[$info['sid']])) {
         $html = theme('mee_widget_embed', array(
           'atom' => $atoms[$info['sid']],
           'context' => $info['context'],
